@@ -40,18 +40,21 @@ export default defineConfig({
     }
   },
   renderer: {
-    root: resolve('src'),
+    root: resolve('renderer'),
+    css: {
+      postcss: resolve(__dirname, 'postcss.config.cjs')
+    },
     build: {
       rollupOptions: {
         input: {
-          index: resolve(__dirname, 'src/index.html')
+          index: resolve(__dirname, 'renderer/index.html')
         }
       },
       sourcemap: true
     },
     resolve: {
       alias: {
-        '@': resolve('src'),
+        '@': resolve('renderer'),
         '@shared': resolve('shared')
       }
     },

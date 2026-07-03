@@ -40,7 +40,7 @@ npm run dev
 React Renderer → Preload (contextBridge) → IPC → Main Process
 ```
 
-- **Renderer** (`src/`): React UI, never accesses Node.js/Electron directly
+- **Renderer** (`renderer/`): React UI, never accesses Node.js/Electron directly
 - **Preload** (`electron/preload/`): Secure bridge via `contextBridge`
 - **Main** (`electron/main/`): Window management, IPC handlers, services
 - **Shared** (`shared/`): Types, constants, enums used by both processes

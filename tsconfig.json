@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["renderer/*"],
       "@shared/*": ["shared/*"],
       "@main/*": ["electron/main/*"],
       "@preload/*": ["electron/preload/*"]
