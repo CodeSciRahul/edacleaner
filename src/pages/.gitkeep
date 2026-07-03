@@ -1,0 +1,2 @@
+// Feature-specific pages live under src/features/<feature>/pages/
+// Global pages can be added here when needed for cross-feature views.
