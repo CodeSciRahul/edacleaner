@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router-dom'
-import { AppHeader } from '@/components/layout/AppHeader'
+import { Sidebar } from '@/components/layout/Sidebar'
 
 export function MainLayout(): React.ReactElement {
   return (
-    <div className="app-container">
-      <AppHeader />
-      <main className="flex-1 overflow-auto">
+    <div className="flex h-full overflow-hidden">
+      <Sidebar />
+      <main className="min-w-0 flex-1 overflow-auto bg-background">
         <Outlet />
       </main>
     </div>

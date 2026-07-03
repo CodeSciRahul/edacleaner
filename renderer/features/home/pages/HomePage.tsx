@@ -23,13 +23,15 @@ export function HomePage(): React.ReactElement {
   }, [setReady])
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Welcome</h1>
-        <p className="mt-2 text-muted-foreground">
-          Production-ready Electron template with secure IPC architecture.
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-8">
+      <header className="space-y-2">
+        <h1 className="text-[28px] font-semibold tracking-[-0.03em] text-foreground">
+          Dashboard
+        </h1>
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          Overview of your system health and optimization tools.
         </p>
-      </div>
+      </header>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
