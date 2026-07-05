@@ -1,130 +1,121 @@
-import { useEffect } from 'react'
-import { Cpu, HardDrive, Info, Layers } from 'lucide-react'
-import { useAppStore } from '@/store/app-store'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
-import { Separator } from '@/components/ui/Separator'
-import { useAppInfo, useSystemInfo } from '@/features/home/hooks/useHomeData'
-import { formatBytes } from '@shared/utils'
+import { ScanSearch, Trash2, Cpu, HardDrive } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { Toolbar } from '@/components/desktop/Toolbar'
+import { CircularProgress } from '@/components/desktop/CircularProgress'
+import { MetricCard } from '@/components/desktop/MetricCard'
+import { StatusCard } from '@/components/desktop/StatusCard'
+import { PerformanceGraph } from '@/components/desktop/PerformanceGraph'
+import { TopProcessesTable } from '@/components/desktop/TopProcessesTable'
+import { useDashboardMetrics } from '@/features/home/hooks/useDashboardMetrics'
+
+const performanceData = Array.from({ length: 24 }, (_, i) => ({
+  label: i === 0 ? '0s' : i === 23 ? '60s' : '',
+  value: 20 + Math.sin(i / 3) * 15 + Math.random() * 10
+}))
+
+const topProcesses = [
+  { name: 'Chrome', cpu: 12.4 },
+  { name: 'VS Code', cpu: 8.2 },
+  { name: 'Spotify', cpu: 4.1 },
+  { name: 'Explorer', cpu: 2.8 }
+]
 
 export function HomePage(): React.ReactElement {
-  const setReady = useAppStore((state) => state.setReady)
-  const { data: appInfo, isLoading: appLoading } = useAppInfo()
-  const { data: systemInfo, isLoading: systemLoading } = useSystemInfo()
-
-  useEffect(() => {
-    setReady(true)
-  }, [setReady])
+  const { metrics, isLoading } = useDashboardMetrics()
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-8">
-      <header className="space-y-2">
-        <h1 className="text-[28px] font-semibold tracking-[-0.03em] text-foreground">
-          Dashboard
-        </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Overview of your system health and optimization tools.
-        </p>
-      </header>
+    <>
+      <Toolbar
+        title="System Overview"
+        description="Monitor performance and run quick optimizations."
+        actions={
+          <Button size="sm" className="h-9 gap-2 rounded-lg px-4 text-[13px]">
+            <ScanSearch className="h-4 w-4" aria-hidden="true" />
+            Scan Now
+          </Button>
+        }
+      />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-lg">Application</CardTitle>
-            </div>
-            <CardDescription>Runtime information from main process</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {appLoading ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            ) : (
-              <dl className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <dt className="text-muted-foreground">Version</dt>
-                  <dd>
-                    <Badge variant="secondary">{appInfo?.version}</Badge>
-                  </dd>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <dt className="text-muted-foreground">Platform</dt>
-                  <dd>
-                    <Badge variant="outline">{appInfo?.platform}</Badge>
-                  </dd>
-                </div>
-              </dl>
-            )}
-          </CardContent>
-        </Card>
+      <div className="space-y-6 p-content-pad">
+        <StatusCard
+          icon={ScanSearch}
+          title="System Health"
+          status="good"
+          message="Your PC is running well. No critical issues detected."
+        />
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-lg">System</CardTitle>
+        <section aria-label="System metrics">
+          <h2 className="mb-4 text-section-title text-foreground">Live Metrics</h2>
+          {isLoading || !metrics ? (
+            <div className="grid grid-cols-2 gap-grid-gap lg:grid-cols-5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-36 animate-pulse rounded-xl bg-muted" />
+              ))}
             </div>
-            <CardDescription>Host system metrics via IPC</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {systemLoading ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            ) : systemInfo ? (
-              <dl className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <dt className="text-muted-foreground">Hostname</dt>
-                  <dd className="font-mono">{systemInfo.hostname}</dd>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <dt className="text-muted-foreground">CPUs</dt>
-                  <dd>
-                    <Badge variant="secondary">{systemInfo.cpuCount}</Badge>
-                  </dd>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <dt className="flex items-center gap-1 text-muted-foreground">
-                    <HardDrive className="h-3 w-3" />
-                    Memory
-                  </dt>
-                  <dd className="font-mono text-xs">
-                    {formatBytes(systemInfo.freeMemory)} / {formatBytes(systemInfo.totalMemory)}
-                  </dd>
-                </div>
-              </dl>
-            ) : null}
-          </CardContent>
-        </Card>
+          ) : (
+            <div className="grid grid-cols-2 gap-grid-gap lg:grid-cols-5">
+              <div className="flex flex-col items-center rounded-xl border border-border bg-card p-6 shadow-card">
+                <CircularProgress value={metrics.cpu} color="cpu" label="CPU" size={100} />
+              </div>
+              <div className="flex flex-col items-center rounded-xl border border-border bg-card p-6 shadow-card">
+                <CircularProgress value={metrics.ram} color="ram" label="RAM" size={100} />
+              </div>
+              <div className="flex flex-col items-center rounded-xl border border-border bg-card p-6 shadow-card">
+                <CircularProgress value={metrics.disk} color="disk" label="Disk" size={100} />
+              </div>
+              <div className="flex flex-col items-center rounded-xl border border-border bg-card p-6 shadow-card">
+                <CircularProgress value={metrics.battery} color="battery" label="Battery" size={100} />
+              </div>
+              <div className="col-span-2 flex flex-col items-center rounded-xl border border-border bg-card p-6 shadow-card lg:col-span-1">
+                <CircularProgress value={metrics.network} color="network" label="Network" size={100} />
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section aria-label="Quick actions">
+          <h2 className="mb-4 text-section-title text-foreground">Quick Actions</h2>
+          <div className="grid gap-grid-gap sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              icon={Trash2}
+              title="Junk Clean"
+              description="Remove temporary and leftover files"
+              value={metrics?.junkSize ?? '—'}
+              actionLabel="Clean Now"
+              onAction={() => undefined}
+            />
+            <MetricCard
+              icon={Cpu}
+              title="Boost RAM"
+              description="Free memory from idle processes"
+              value={metrics?.ramRecoverable ?? '—'}
+              actionLabel="Optimize"
+              onAction={() => undefined}
+            />
+            <MetricCard
+              icon={HardDrive}
+              title="Startup Manager"
+              description="Apps launching at boot"
+              value={metrics ? `${metrics.startupCount} items` : '—'}
+              actionLabel="Manage"
+              onAction={() => undefined}
+            />
+            <MetricCard
+              icon={ScanSearch}
+              title="Driver Update"
+              description="Available driver updates"
+              value={metrics ? `${metrics.driverUpdates} updates` : '—'}
+              actionLabel="Update Now"
+              onAction={() => undefined}
+            />
+          </div>
+        </section>
+
+        <div className="grid gap-grid-gap xl:grid-cols-2">
+          <PerformanceGraph title="Performance Monitor" data={performanceData} color="cpu" />
+          <TopProcessesTable processes={topProcesses} />
+        </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-lg">Architecture</CardTitle>
-          </div>
-          <CardDescription>Secure communication layers</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Badge variant="outline">React Renderer</Badge>
-            <span className="text-muted-foreground">→</span>
-            <Badge variant="outline">Preload Bridge</Badge>
-            <span className="text-muted-foreground">→</span>
-            <Badge variant="outline">IPC</Badge>
-            <span className="text-muted-foreground">→</span>
-            <Badge variant="outline">Main Process</Badge>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </>
   )
 }
