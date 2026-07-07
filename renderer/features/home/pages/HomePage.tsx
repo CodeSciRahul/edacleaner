@@ -1,4 +1,5 @@
 import { ScanSearch, Trash2, Cpu, HardDrive } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Toolbar } from '@/components/desktop/Toolbar'
 import { CircularProgress } from '@/components/desktop/CircularProgress'
@@ -21,6 +22,7 @@ const topProcesses = [
 ]
 
 export function HomePage(): React.ReactElement {
+  const navigate = useNavigate()
   const { metrics, isLoading } = useDashboardMetrics()
 
   return (
@@ -29,7 +31,11 @@ export function HomePage(): React.ReactElement {
         title="System Overview"
         description="Monitor performance and run quick optimizations."
         actions={
-          <Button size="sm" className="h-9 gap-2 rounded-lg px-4 text-[13px]">
+          <Button
+            size="sm"
+            className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+            onClick={() => navigate('/smart-scan')}
+          >
             <ScanSearch className="h-4 w-4" aria-hidden="true" />
             Scan Now
           </Button>
@@ -82,7 +88,7 @@ export function HomePage(): React.ReactElement {
               description="Remove temporary and leftover files"
               value={metrics?.junkSize ?? '—'}
               actionLabel="Clean Now"
-              onAction={() => undefined}
+              onAction={() => navigate('/cleanup')}
             />
             <MetricCard
               icon={Cpu}
@@ -90,7 +96,7 @@ export function HomePage(): React.ReactElement {
               description="Free memory from idle processes"
               value={metrics?.ramRecoverable ?? '—'}
               actionLabel="Optimize"
-              onAction={() => undefined}
+              onAction={() => navigate('/performance')}
             />
             <MetricCard
               icon={HardDrive}
@@ -98,7 +104,7 @@ export function HomePage(): React.ReactElement {
               description="Apps launching at boot"
               value={metrics ? `${metrics.startupCount} items` : '—'}
               actionLabel="Manage"
-              onAction={() => undefined}
+              onAction={() => navigate('/performance')}
             />
             <MetricCard
               icon={ScanSearch}
@@ -106,7 +112,7 @@ export function HomePage(): React.ReactElement {
               description="Available driver updates"
               value={metrics ? `${metrics.driverUpdates} updates` : '—'}
               actionLabel="Update Now"
-              onAction={() => undefined}
+              onAction={() => navigate('/settings')}
             />
           </div>
         </section>

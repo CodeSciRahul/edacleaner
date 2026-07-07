@@ -1,28 +1,18 @@
 import type { RouteObject } from 'react-router-dom'
 import { HomePage } from '@/features/home/pages/HomePage'
-import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 import { SmartScanPage } from '@/features/smart-scan/pages/SmartScanPage'
-import { ModulePlaceholder } from '@/pages/ModulePlaceholder'
-
-const placeholderPaths = [
-  '/junk-cleaner',
-  '/startup-manager',
-  '/performance',
-  '/memory-optimizer',
-  '/privacy',
-  '/drivers',
-  '/network',
-  '/disk-analyzer',
-  '/duplicate-files',
-  '/scheduled-tasks'
-]
+import { CleanupPage } from '@/features/cleanup/pages/CleanupPage'
+import { StoragePage } from '@/features/storage/pages/StoragePage'
+import { PerformancePage } from '@/features/performance/pages/PerformancePage'
+import { ReportsPage } from '@/features/reports/pages/ReportsPage'
+import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 
 export const routes: Pick<RouteObject, 'path' | 'element'>[] = [
   { path: '/', element: <HomePage /> },
   { path: '/smart-scan', element: <SmartScanPage /> },
-  { path: '/settings', element: <SettingsPage /> },
-  ...placeholderPaths.map((path) => ({
-    path,
-    element: <ModulePlaceholder />
-  }))
+  { path: '/cleanup', element: <CleanupPage /> },
+  { path: '/storage', element: <StoragePage /> },
+  { path: '/performance', element: <PerformancePage /> },
+  { path: '/reports', element: <ReportsPage /> },
+  { path: '/settings', element: <SettingsPage /> }
 ]
