@@ -11,5 +11,6 @@ export const electronService = {
   file: () => getElectron().file,
   dialog: () => getElectron().dialog,
   settings: () => getElectron().settings,
-  updater: () => getElectron().updater
+  updater: () => getElectron().updater,
+  customApi: () => getElectron().customApi
 }

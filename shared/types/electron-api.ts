@@ -48,6 +48,14 @@ export interface UpdaterApi {
   getStatus: () => Promise<unknown>
 }
 
+export interface CustomApi {
+  helloWorld: () => Promise<void>
+  myLovelyMom: () => Promise<void>
+  myFamily: () => Promise<void>
+  myFriends: () => Promise<void>
+  myWork: () => Promise<void>
+  myHobbies: () => Promise<void>
+}
 export interface ElectronApi {
   app: AppApi
   system: SystemApi
@@ -55,6 +63,7 @@ export interface ElectronApi {
   dialog: DialogApi
   settings: SettingsApi
   updater: UpdaterApi
+  customApi: CustomApi
 }
 
 declare global {

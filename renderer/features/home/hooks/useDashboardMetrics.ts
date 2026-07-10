@@ -16,6 +16,7 @@ export interface DashboardMetrics {
 
 export function useDashboardMetrics() {
   const { data: systemInfo, isLoading } = useSystemInfo()
+  console.log("systemInfo", systemInfo)
 
   const metrics = useMemo<DashboardMetrics | null>(() => {
     if (!systemInfo) return null

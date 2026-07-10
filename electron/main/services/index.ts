@@ -95,3 +95,24 @@ export const systemService = new SystemService()
 export const appService = new AppService()
 export const settingsService = new SettingsService()
 export const updaterService = new UpdaterService()
+
+/*
+ * =============================================================================
+ * SERVICES — Business logic layer (asli kaam yahan hota hai)
+ * =============================================================================
+ *
+ * IPC (ipc/index.ts)  →  sirf routing + req/res format
+ *                         - kaunsi request kis handler tak jayegi (channel match)
+ *                         - success({ data }) / failure({ error }) wrap karke jawab bhejna
+ *
+ * Service (yahan)     →  actual business logic
+ *                         - version, memory, settings, updates ka real kaam
+ *                         - Electron/Node APIs (app, os, fs) yahan use hote hain
+ *
+ * Flow:  Preload invoke → ipcMain.handle → service.method() → return → preload → React
+ *
+ * Kyun alag?
+ *   - IPC patla rahe (1 line: service call + success wrap)
+ *   - Logic ek jagah — test, reuse, badhana easy
+ *   - Singleton exports (appService, etc.) — poori app mein same instance
+ */

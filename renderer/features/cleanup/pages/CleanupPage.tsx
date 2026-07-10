@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkles, Trash2, Clock, Recycle, Globe, Database } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Toolbar } from '@/components/desktop/Toolbar'
 import { StatusCard } from '@/components/desktop/StatusCard'
 import { cn } from '@/utils/cn'
+import { useElectron } from '@/hooks/useElectron'
 
 interface CleanupCategory {
   id: string
@@ -69,6 +70,13 @@ export function CleanupPage(): React.ReactElement {
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(cleanupCategories.map((c) => c.id))
   )
+  const {customApi} = useElectron()
+  useEffect(() => {
+    async function test() {
+      await customApi().helloWorld()
+    }
+    test()
+  }, [customApi])
 
   const totalSize = '5.9 GB'
   const selectedCount = selected.size

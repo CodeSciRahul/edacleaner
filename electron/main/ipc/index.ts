@@ -130,3 +130,122 @@ export function registerAllIpc(): void {
   registerDialogIpc()
   registerFileIpc()
 }
+
+
+
+
+
+
+
+/*
+ * =============================================================================
+ * IPC — Inter-Process Communication (Express controller jaisa layer)
+ * =============================================================================
+ *
+ * Yeh file MAIN PROCESS side ka IPC layer hai.
+ * Kaam: channel match karke request receive karna → service/logic call → response bhejna
+ *
+ * Yeh file business logic define karne ki jagah NAHI hai (ideal pattern).
+ * Zyada tar handlers patle hon — service ko call karo, success()/failure() se wrap karke return.
+ * Exception: file/ dialog handlers abhi direct Node/Electron API use karte hain (baad mein
+ * FileService / DialogService mein shift ho sakta hai).
+ *
+ * -----------------------------------------------------------------------------
+ * POORA REQ → RES CYCLE (3 layers)
+ * -----------------------------------------------------------------------------
+ *
+ *   React UI
+ *     → window.electron.app.getVersion()
+ *
+ *   Preload (electron/preload/index.ts) — CLIENT side
+ *     → ipcRenderer.invoke('app:get-version')     ← REQUEST bhejta hai
+ *     → handler ka return value Promise mein milta hai
+ *     → success/error unwrap karke React ko data deta hai
+ *
+ *   Main IPC (YAHAN — electron/main/ipc/index.ts) — SERVER side
+ *     → ipcMain.handle('app:get-version', handler)  ← REQUEST receive + RESPONSE bhejta hai
+ *     → handler jo return kare woh preload tak wapas jata hai
+ *
+ *   Service (electron/main/services/) — BUSINESS LOGIC
+ *     → appService.getVersion(), systemService.getInfo(), etc.
+ *     → actual kaam (Electron app API, os, settings store)
+ *
+ * -----------------------------------------------------------------------------
+ * ipcRenderer vs ipcMain — difference
+ * -----------------------------------------------------------------------------
+ *
+ *   ipcRenderer  (preload mein)
+ *     - Renderer/preload side — message BHEJTA hai
+ *     - .invoke(channel, ...args) → Promise return (response ka wait)
+ *     - React directly use NAHI karta (security); sirf preload use karta hai
+ *
+ *   ipcMain  (yahan is file mein)
+ *     - Main process side — message SUNTA hai
+ *     - .handle(channel, handler) → channel match pe handler chalta hai
+ *     - handler ka return value automatically ipcRenderer.invoke() ko resolve karta hai
+ *
+ *   Dono ko SAME channel name chahiye → isliye shared/constants IPC_CHANNELS use hota hai
+ *
+ * -----------------------------------------------------------------------------
+ * CHANNEL — kya hota hai?
+ * -----------------------------------------------------------------------------
+ *
+ *   Channel = message ka string ID / route name (e.g. 'app:get-version', 'file:read')
+ *   ipcRenderer.invoke('app:get-version')  aur  ipcMain.handle('app:get-version', ...)
+ *   dono match hone par hi request handler tak pahunchti hai.
+ *
+ * -----------------------------------------------------------------------------
+ * success() / failure() — response format (req/res wrapper)
+ * -----------------------------------------------------------------------------
+ *
+ *   success(data)  →  { success: true, data }
+ *   failure(msg)   →  { success: false, error }
+ *
+ *   Preload invoke() helper:
+ *     - success: true  → data return karta hai React ko
+ *     - success: false → Error throw karta hai
+ *
+ *   Yeh Express controller ka res.json({ ... }) jaisa standard format hai.
+ *
+ * -----------------------------------------------------------------------------
+ * ipcMain.handle(channel, handler) — handler signature
+ * -----------------------------------------------------------------------------
+ *
+ *   handler ka return value = response jo preload ko milta hai (Promise resolve)
+ *
+ *   (_event, ...args) =>
+ *     _event  — IPC event object (zyada tar ignore; _ prefix)
+ *     ...args — preload se bheje gaye arguments (e.g. filePath, key, options)
+ *
+ *   Example:
+ *     Preload:  invoke('app:get-path', 'desktop')
+ *     Handler:  (_event, name) => success(appService.getPath(name))
+ *
+ * -----------------------------------------------------------------------------
+ * IS FILE KE FUNCTIONS — kya register karte hain
+ * -----------------------------------------------------------------------------
+ *
+ *   registerAppIpc()      → app:get-version, quit, relaunch, get-path  → appService
+ *   registerSystemIpc()   → system:get-info, get-memory                 → systemService
+ *   registerSettingsIpc() → settings:get, set, get-all, reset            → settingsService
+ *   registerUpdaterIpc()  → updater:check, download, install, status      → updaterService
+ *   registerDialogIpc()   → dialog:open, save, message, error            → dialog API (direct)
+ *   registerFileIpc()     → file:read, write, exists                     → fs API (direct)
+ *   registerAllIpc()      → bootstrap se call — saare handlers ek saath register
+ *
+ * -----------------------------------------------------------------------------
+ * IDEAL RULE (Express jaisa)
+ * -----------------------------------------------------------------------------
+ *
+ *   IPC (controller)     →  routing + channel match + success/failure wrap
+ *   Service              →  actual business logic
+ *
+ *   Flow:  invoke(channel, args) → handle match → service.method(args) → success(result)
+ *
+ * -----------------------------------------------------------------------------
+ * KAB REGISTER HOTA HAI?
+ * -----------------------------------------------------------------------------
+ *
+ *   bootstrap() → registerAllIpc() → window khulne SE PEHLE
+ *   Taaki UI load hote hi saare API endpoints ready hon.
+ */

@@ -11,6 +11,7 @@ import type { AppPath } from '@shared/types'
 
 async function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
   const response = (await ipcRenderer.invoke(channel, ...args)) as IpcResponse<T>
+  console.log("channel response", response)
   if (!response.success) {
     throw new Error(response.error ?? 'IPC call failed')
   }
@@ -56,6 +57,27 @@ const settingsApi = {
   reset: () => invoke<void>(IPC_CHANNELS.SETTINGS.RESET)
 }
 
+const myCustomApiForTest = {
+  helloWorld: () => {
+    console.log("hello world")
+  },
+  myLovelyMom: () => {
+    console.log("my lovely mom")
+  },
+  myFamily: () => {
+    console.log("Mummy", "Papa", "Sister", "Brother")
+  },
+  myFriends: () => {
+    console.log("John", "Jane", "Jim", "Jill")
+  },
+  myWork: () => {
+    console.log("Software Engineer", "Data Analyst", "Product Manager", "Marketing Specialist")
+  },
+  myHobbies: () => {
+    console.log("Reading", "Writing", "Coding", "Gaming")
+  }
+}
+
 const updaterApi = {
   check: () => invoke(IPC_CHANNELS.UPDATER.CHECK),
   download: () => invoke(IPC_CHANNELS.UPDATER.DOWNLOAD),
@@ -69,7 +91,8 @@ const electronApi = {
   file: fileApi,
   dialog: dialogApi,
   settings: settingsApi,
-  updater: updaterApi
+  updater: updaterApi,
+  customApi: myCustomApiForTest
 }
 
 contextBridge.exposeInMainWorld('electron', electronApi)
