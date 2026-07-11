@@ -91,6 +91,8 @@ export interface StorageSegment {
   label: string
   bytes: number
   percent: number
+  /** Directory to open in the system file manager when the segment is clicked. */
+  path?: string
 }
 
 export interface StorageUsageResult {
@@ -262,6 +264,8 @@ export type StartupSourceKind =
   | 'registry-hkcu'
   | 'registry-hklm'
   | 'startup-folder'
+  | 'uwp-startup-task'
+  | 'scheduled-task'
   | 'launch-agent'
   | 'autostart-desktop'
   | 'other'

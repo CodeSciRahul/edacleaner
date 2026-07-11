@@ -293,6 +293,46 @@ async function getDirectorySize(dirPath: string, maxDepth = 5): Promise<number> 
   return total
 }
 
+/**
+ * Size top-level folders on a volume (used for secondary drives that do not
+ * host the user profile categories Documents/Downloads/etc.).
+ */
+async function getTopLevelFolderSizes(
+  mountPath: string,
+  maxFolders = 12
+): Promise<Array<{ label: string; bytes: number; path: string }>> {
+  if (!(await pathExists(mountPath))) return []
+
+  let entries: Array<{ name: string; isDirectory: () => boolean; isSymbolicLink: () => boolean }>
+  try {
+    entries = await readdir(mountPath, { withFileTypes: true })
+  } catch {
+    return []
+  }
+
+  const folders = entries
+    .filter((entry) => entry.isDirectory() || entry.isSymbolicLink())
+    .filter((entry) => !shouldSkipDir(entry.name))
+    .filter((entry) => !entry.name.startsWith('$') && !entry.name.startsWith('.'))
+    .slice(0, maxFolders)
+
+  const results: Array<{ label: string; bytes: number; path: string }> = []
+
+  for (const entry of folders) {
+    const fullPath = join(mountPath, entry.name)
+    try {
+      const bytes = await getDirectorySize(fullPath, 4)
+      if (bytes > 0) {
+        results.push({ label: entry.name, bytes, path: fullPath })
+      }
+    } catch {
+      // skip unreadable folders
+    }
+  }
+
+  return results.sort((a, b) => b.bytes - a.bytes)
+}
+
 async function hashFile(filePath: string, sizeBytes: number): Promise<string> {
   return new Promise((resolveHash, reject) => {
     const hash = createHash('sha256')
@@ -356,10 +396,13 @@ export class StorageService {
 
   async analyzeUsage(mountPath?: string): Promise<StorageUsageResult> {
     const drives = await this.getDrives()
+    const requested = (mountPath ?? '').trim()
     const drive =
-      drives.find(
-        (item) => item.mountPath.toLowerCase() === (mountPath ?? '').toLowerCase()
-      ) ?? drives[0]
+      (requested
+        ? drives.find(
+            (item) => item.mountPath.toLowerCase() === requested.toLowerCase()
+          )
+        : undefined) ?? drives[0]
 
     if (!drive) {
       return { mountPath: mountPath ?? '', segments: [], analyzedBytes: 0 }
@@ -372,69 +415,89 @@ export class StorageService {
     const videos = app.getPath('videos')
     const desktop = app.getPath('desktop')
     const music = app.getPath('music')
+    const profileOnDrive = isPathOnMount(home, drive.mountPath)
 
-    const categoryDefs: Array<{ label: string; paths: string[]; depth: number }> = [
-      {
-        label: 'Applications',
-        paths: getApplicationPaths(),
-        depth: process.platform === 'linux' ? 3 : 5
-      },
-      {
-        label: 'Documents',
-        paths: [documents, desktop],
-        depth: 5
-      },
-      {
-        label: 'Media',
-        paths: [pictures, videos, music],
-        depth: 5
-      },
-      {
-        label: 'Downloads',
-        paths: [downloads],
-        depth: 5
-      },
-      {
-        label: 'System',
-        paths: getSystemPaths(drive.mountPath),
-        depth: 2
+    const rawSegments: Array<{ label: string; bytes: number; path?: string }> = []
+
+    // Profile-based categories only apply when this volume hosts the user home.
+    if (profileOnDrive) {
+      const categoryDefs: Array<{ label: string; paths: string[]; depth: number }> = [
+        {
+          label: 'Applications',
+          paths: getApplicationPaths(),
+          depth: process.platform === 'linux' ? 3 : 5
+        },
+        {
+          label: 'Documents',
+          paths: [documents, desktop],
+          depth: 5
+        },
+        {
+          label: 'Media',
+          paths: [pictures, videos, music],
+          depth: 5
+        },
+        {
+          label: 'Downloads',
+          paths: [downloads],
+          depth: 5
+        },
+        {
+          label: 'System',
+          paths: getSystemPaths(drive.mountPath),
+          depth: 2
+        }
+      ]
+
+      for (const category of categoryDefs) {
+        let bytes = 0
+        let openPath: string | undefined
+        for (const categoryPath of category.paths) {
+          if (!isPathOnMount(categoryPath, drive.mountPath)) continue
+          if (!(await pathExists(categoryPath))) continue
+          bytes += await getDirectorySize(categoryPath, category.depth)
+          if (!openPath) openPath = categoryPath
+        }
+        if (bytes > 0) {
+          rawSegments.push({ label: category.label, bytes, path: openPath })
+        }
       }
-    ]
 
-    const rawSegments: Array<{ label: string; bytes: number }> = []
-
-    for (const category of categoryDefs) {
-      let bytes = 0
-      for (const categoryPath of category.paths) {
-        if (!isPathOnMount(categoryPath, drive.mountPath)) continue
-        bytes += await getDirectorySize(categoryPath, category.depth)
-      }
-      if (bytes > 0) {
-        rawSegments.push({ label: category.label, bytes })
-      }
-    }
-
-    if (isPathOnMount(home, drive.mountPath)) {
       const profileBytes = await getDirectorySize(home, 4)
       const accounted = rawSegments.reduce((sum, segment) => sum + segment.bytes, 0)
       const otherFromProfile = Math.max(0, profileBytes - accounted)
       if (otherFromProfile > 0) {
-        rawSegments.push({ label: 'Other', bytes: otherFromProfile })
+        rawSegments.push({ label: 'Other', bytes: otherFromProfile, path: home })
+      }
+    }
+
+    // Secondary volumes (or empty category results): break down top-level folders.
+    if (!profileOnDrive || rawSegments.length === 0) {
+      const topLevel = await getTopLevelFolderSizes(drive.mountPath)
+      for (const folder of topLevel) {
+        rawSegments.push(folder)
       }
     }
 
     const analyzedBytes = rawSegments.reduce((sum, segment) => sum + segment.bytes, 0)
     const denominator = Math.max(drive.usedBytes, analyzedBytes, 1)
 
-    const merged = new Map<string, number>()
+    const merged = new Map<string, { bytes: number; path?: string }>()
     for (const segment of rawSegments) {
-      merged.set(segment.label, (merged.get(segment.label) ?? 0) + segment.bytes)
+      const existing = merged.get(segment.label)
+      if (existing) {
+        existing.bytes += segment.bytes
+        if (!existing.path && segment.path) existing.path = segment.path
+      } else {
+        merged.set(segment.label, { bytes: segment.bytes, path: segment.path })
+      }
     }
 
     const segments: StorageSegment[] = [...merged.entries()]
-      .map(([label, bytes]) => ({
+      .map(([label, { bytes, path }]) => ({
         label,
         bytes,
+        path,
         percent: Math.max(1, Math.round((bytes / denominator) * 100))
       }))
       .sort((a, b) => b.bytes - a.bytes)
@@ -533,6 +596,16 @@ export class StorageService {
   }
 
   async revealInFolder(filePath: string): Promise<void> {
+    try {
+      const info = await stat(filePath)
+      if (info.isDirectory()) {
+        // Open the folder itself in the system file manager
+        const error = await shell.openPath(filePath)
+        if (!error) return
+      }
+    } catch {
+      // fall through to showItemInFolder
+    }
     shell.showItemInFolder(filePath)
   }
 

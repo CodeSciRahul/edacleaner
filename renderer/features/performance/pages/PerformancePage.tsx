@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Zap, Power, Layers, Cpu, Activity, X } from 'lucide-react'
+import { Power, Layers, Cpu, Activity, Monitor } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Toolbar } from '@/components/desktop/Toolbar'
-import { StatusCard } from '@/components/desktop/StatusCard'
-import { MetricCard } from '@/components/desktop/MetricCard'
 import { TopProcessesTable } from '@/components/desktop/TopProcessesTable'
 import { formatBytes } from '@shared/utils'
 import { electronService } from '@/services/electron-service'
@@ -17,8 +15,14 @@ import {
   useRunBoost
 } from '@/features/performance/hooks/useBoost'
 import { useStartupApps } from '@/features/performance/hooks/useStartupApps'
-import { AppsSubnav } from '@/features/apps/components/AppsSubnav'
 import { BoostResultsCard } from '@/features/performance/components/BoostResultsCard'
+import { PerformanceHero } from '@/features/performance/components/PerformanceHero'
+import {
+  PerformanceActionGrid,
+  type PerformanceActionItem
+} from '@/features/performance/components/PerformanceActionGrid'
+import { BoostProgressPanel } from '@/features/performance/components/BoostProgressPanel'
+import { PerformanceQuickLinks } from '@/features/performance/components/PerformanceQuickLinks'
 
 function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
   let score = 100 - Math.round(usedPercent * 0.55)
@@ -57,35 +61,82 @@ export function PerformancePage(): React.ReactElement {
   const status = useMemo(() => {
     if (!performanceScore) {
       return {
-        status: 'warning' as const,
+        health: 'warning' as const,
         title: 'Measuring performance…',
-        message: 'Collecting memory, disk, and process data.'
+        message: 'Collecting memory, disk, and process data to build your score.'
       }
     }
     if (performanceScore >= 80) {
       return {
-        status: 'good' as const,
-        title: `Performance Score: ${performanceScore}`,
+        health: 'good' as const,
+        title: `Looking sharp — score ${performanceScore}`,
         message: 'System resources look healthy. Boost can still clear temp files and caches.'
       }
     }
     if (performanceScore >= 55) {
       return {
-        status: 'warning' as const,
-        title: `Performance Score: ${performanceScore}`,
+        health: 'warning' as const,
+        title: `Room to improve — score ${performanceScore}`,
         message:
           analysis?.warnings[0] ??
           'Some resources can be reclaimed safely. Review Background or Startup apps.'
       }
     }
     return {
-      status: 'critical' as const,
-      title: `Performance Score: ${performanceScore}`,
+      health: 'critical' as const,
+      title: `Needs a boost — score ${performanceScore}`,
       message:
         analysis?.warnings[0] ??
         'Memory or disk pressure is high. Run Boost or manage background apps.'
     }
   }, [performanceScore, analysis?.warnings])
+
+  const actionItems: PerformanceActionItem[] = [
+    {
+      id: 'startup',
+      icon: Power,
+      title: 'Startup Apps',
+      description: 'Apps that launch at sign-in',
+      value: startupLoading ? '…' : `${startupEnabledCount}`,
+      actionLabel: 'Manage startup',
+      onAction: () => navigate('/startup-apps'),
+      accentClass: 'bg-warning/15 text-warning'
+    },
+    {
+      id: 'background',
+      icon: Layers,
+      title: 'Background Apps',
+      description: 'Safe-to-review processes',
+      value: analysisLoading ? '…' : `${backgroundCount}`,
+      actionLabel: 'Open list',
+      onAction: () => navigate('/background-apps'),
+      accentClass: 'bg-primary/15 text-primary'
+    },
+    {
+      id: 'ram',
+      icon: Cpu,
+      title: 'Recoverable RAM',
+      description: 'From background suggestions',
+      value: snapshotLoading && !analysis ? '…' : formatBytes(recoverableEstimate),
+      actionLabel: 'Review processes',
+      onAction: () => navigate('/background-apps'),
+      accentClass: 'bg-chart-ram/15 text-chart-ram'
+    },
+    {
+      id: 'disk',
+      icon: Activity,
+      title: 'Disk free',
+      description: analysis?.diskPressure?.mountPath ?? 'System volume',
+      value: analysis?.diskPressure
+        ? formatBytes(analysis.diskPressure.freeBytes)
+        : snapshotLoading
+          ? '…'
+          : 'N/A',
+      actionLabel: 'Refresh analysis',
+      onAction: () => void refetchAnalysis(),
+      accentClass: 'bg-chart-disk/15 text-chart-disk'
+    }
+  ]
 
   const handleBoost = async (): Promise<void> => {
     setLastResult(null)
@@ -136,126 +187,73 @@ export function PerformancePage(): React.ReactElement {
     }
   }
 
+  const diskFreeLabel = analysis?.diskPressure
+    ? formatBytes(analysis.diskPressure.freeBytes)
+    : undefined
+
   return (
     <>
       <Toolbar
         title="Performance"
-        description="Safely reclaim resources and jump into app managers."
+        description="Score your PC, boost safely, and manage what runs in the background."
         actions={
-          <div className="flex items-center gap-2">
-            {isBoosting ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-9 gap-2 rounded-lg px-4 text-[13px]"
-                onClick={() => cancelBoost.mutate()}
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-                Cancel
-              </Button>
-            ) : null}
-            <Button
-              size="sm"
-              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
-              disabled={isBoosting || analysisLoading}
-              onClick={() => void handleBoost()}
-            >
-              <Zap className="h-4 w-4" aria-hidden="true" />
-              {isBoosting ? 'Boosting…' : 'Boost Now'}
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-2"
+            onClick={() => navigate('/monitoring')}
+          >
+            <Monitor className="h-4 w-4" />
+            Live Monitoring
+          </Button>
         }
       />
 
       <div className="space-y-6 p-content-pad">
-        <AppsSubnav />
-
-        <StatusCard
-          icon={Zap}
+        <PerformanceHero
+          score={performanceScore}
+          health={status.health}
           title={status.title}
-          status={status.status}
           message={status.message}
+          memory={memory}
+          diskFreeLabel={diskFreeLabel}
+          isBoosting={isBoosting}
+          isLoading={analysisLoading && !memory}
+          onBoost={() => void handleBoost()}
+          onCancel={() => cancelBoost.mutate()}
         />
 
         {isBoosting && progress ? (
-          <section
-            aria-label="Boost progress"
-            className="rounded-xl border border-border bg-card p-4 shadow-card"
-          >
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-foreground">{progress.message}</p>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {progress.percent}%
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${progress.percent}%` }}
-              />
-            </div>
-            {progress.currentItem ? (
-              <p className="mt-2 truncate text-xs text-muted-foreground">
-                {progress.currentItem}
-              </p>
-            ) : null}
-          </section>
+          <BoostProgressPanel
+            message={progress.message}
+            percent={progress.percent}
+            currentItem={progress.currentItem}
+          />
         ) : null}
 
         {lastResult ? <BoostResultsCard result={lastResult} /> : null}
 
-        <section aria-label="Performance summary">
-          <h2 className="mb-4 text-section-title text-foreground">Summary</h2>
-          <div className="grid gap-grid-gap sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard
-              icon={Power}
-              title="Startup Apps"
-              description="Launch at sign-in"
-              value={startupLoading ? '…' : `${startupEnabledCount} enabled`}
-              actionLabel="Manage"
-              onAction={() => navigate('/startup-apps')}
-            />
-            <MetricCard
-              icon={Layers}
-              title="Background Apps"
-              description="Safe-to-review processes"
-              value={analysisLoading ? '…' : `${backgroundCount} listed`}
-              actionLabel="Open"
-              onAction={() => navigate('/background-apps')}
-            />
-            <MetricCard
-              icon={Cpu}
-              title="Recoverable RAM"
-              description="From background suggestions"
-              value={
-                snapshotLoading && !analysis ? '…' : formatBytes(recoverableEstimate)
-              }
-              actionLabel="Review"
-              onAction={() => navigate('/background-apps')}
-            />
-            <MetricCard
-              icon={Activity}
-              title="Disk free"
-              description={analysis?.diskPressure?.mountPath ?? 'System volume'}
-              value={
-                analysis?.diskPressure
-                  ? formatBytes(analysis.diskPressure.freeBytes)
-                  : snapshotLoading
-                    ? '…'
-                    : 'N/A'
-              }
-              actionLabel="Analyze"
-              onAction={() => void refetchAnalysis()}
-            />
+        <PerformanceActionGrid items={actionItems} />
+
+        <section aria-label="Top processes">
+          <div className="mb-4">
+            <h2 className="text-section-title text-foreground">What’s using memory</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Highest memory consumers right now — open Background Apps to stop safe ones.
+            </p>
           </div>
+          <TopProcessesTable
+            processes={topProcesses.map((p) => ({
+              name: p.name,
+              memoryBytes: p.memoryBytes,
+              cpu: Number(p.cpuPercent.toFixed(1))
+            }))}
+          />
         </section>
 
-        <TopProcessesTable
-          processes={topProcesses.map((p) => ({
-            name: p.name,
-            memoryBytes: p.memoryBytes,
-            cpu: Number(p.cpuPercent.toFixed(1))
-          }))}
+        <PerformanceQuickLinks
+          onOpenStartup={() => navigate('/startup-apps')}
+          onOpenBackground={() => navigate('/background-apps')}
         />
       </div>
     </>

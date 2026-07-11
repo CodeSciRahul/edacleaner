@@ -17,7 +17,6 @@ const PROTECTED_NAME_PATTERNS = [
   'csrss',
   'lsass',
   'services',
-  'system',
   'igfx',
   'nvidia',
   'amd',
@@ -30,7 +29,18 @@ export function classifyStartupImpact(
   name: string
 ): 'high' | 'medium' | 'low' | 'unknown' {
   const lower = name.toLowerCase()
-  const high = ['spotify', 'discord', 'steam', 'adobe', 'teams', 'zoom', 'slack', 'epic', 'skype']
+  const high = [
+    'spotify',
+    'discord',
+    'steam',
+    'adobe',
+    'teams',
+    'zoom',
+    'slack',
+    'whatsapp',
+    'epic',
+    'skype'
+  ]
   const medium = ['onedrive', 'dropbox', 'chrome', 'edge', 'firefox', 'iTunes', 'itunes']
   if (high.some((k) => lower.includes(k))) return 'high'
   if (medium.some((k) => lower.includes(k))) return 'medium'
