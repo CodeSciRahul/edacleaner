@@ -12,7 +12,18 @@ import type {
   FindLargeFilesOptions,
   DuplicateGroup,
   FindDuplicatesOptions,
-  DeleteFilesResult
+  DeleteFilesResult,
+  BoostAnalysis,
+  BoostOptions,
+  BoostResult,
+  BoostSnapshot,
+  BoostProgressEvent,
+  StartupListResult,
+  StartupAppEntry,
+  StartupMutationResult,
+  StartupSetEnabledOptions,
+  TerminateProcessesResult,
+  BackgroundProcessesUpdate
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -84,6 +95,52 @@ const storageApi = {
     invoke<DeleteFilesResult>(IPC_CHANNELS.STORAGE.DELETE_FILES, filePaths)
 }
 
+const boostApi = {
+  analyze: () => invoke<BoostAnalysis>(IPC_CHANNELS.BOOST.ANALYZE),
+  execute: (options?: BoostOptions) =>
+    invoke<BoostResult>(IPC_CHANNELS.BOOST.EXECUTE, options),
+  cancel: () => invoke<{ cancelled: boolean }>(IPC_CHANNELS.BOOST.CANCEL),
+  getSnapshot: () => invoke<BoostSnapshot>(IPC_CHANNELS.BOOST.GET_SNAPSHOT),
+  terminateProcesses: (pids: number[]) =>
+    invoke<TerminateProcessesResult>(IPC_CHANNELS.BOOST.TERMINATE_PROCESSES, pids),
+  listProcesses: () =>
+    invoke<BackgroundProcessesUpdate>(IPC_CHANNELS.BOOST.LIST_PROCESSES),
+  startProcessWatch: () =>
+    invoke<{ watching: boolean }>(IPC_CHANNELS.BOOST.START_PROCESS_WATCH),
+  stopProcessWatch: () =>
+    invoke<{ watching: boolean }>(IPC_CHANNELS.BOOST.STOP_PROCESS_WATCH),
+  onProgress: (callback: (event: BoostProgressEvent) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, data: BoostProgressEvent): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.BOOST.PROGRESS, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.BOOST.PROGRESS, listener)
+    }
+  },
+  onProcessesUpdate: (callback: (update: BackgroundProcessesUpdate) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: BackgroundProcessesUpdate
+    ): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.BOOST.PROCESSES_UPDATE, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.BOOST.PROCESSES_UPDATE, listener)
+    }
+  }
+}
+
+const startupApi = {
+  list: (forceRefresh?: boolean) =>
+    invoke<StartupListResult>(IPC_CHANNELS.STARTUP.LIST, forceRefresh === true),
+  getDetails: (id: string) =>
+    invoke<StartupAppEntry | null>(IPC_CHANNELS.STARTUP.GET_DETAILS, id),
+  setEnabled: (options: StartupSetEnabledOptions) =>
+    invoke<StartupMutationResult>(IPC_CHANNELS.STARTUP.SET_ENABLED, options)
+}
+
 const electronApi = {
   app: appApi,
   system: systemApi,
@@ -91,7 +148,9 @@ const electronApi = {
   dialog: dialogApi,
   settings: settingsApi,
   updater: updaterApi,
-  storage: storageApi
+  storage: storageApi,
+  boost: boostApi,
+  startup: startupApi
 }
 
 contextBridge.exposeInMainWorld('electron', electronApi)

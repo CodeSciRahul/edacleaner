@@ -12,5 +12,7 @@ export const electronService = {
   dialog: () => getElectron().dialog,
   settings: () => getElectron().settings,
   updater: () => getElectron().updater,
-  storage: () => getElectron().storage
+  storage: () => getElectron().storage,
+  boost: () => getElectron().boost,
+  startup: () => getElectron().startup
 }

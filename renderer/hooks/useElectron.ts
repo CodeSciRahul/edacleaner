@@ -9,6 +9,8 @@ export function useElectron() {
   const settings = useCallback(() => electronService.settings(), [])
   const updater = useCallback(() => electronService.updater(), [])
   const storage = useCallback(() => electronService.storage(), [])
+  const boost = useCallback(() => electronService.boost(), [])
+  const startup = useCallback(() => electronService.startup(), [])
 
-  return { app, system, file, dialog, settings, updater, storage }
+  return { app, system, file, dialog, settings, updater, storage, boost, startup }
 }

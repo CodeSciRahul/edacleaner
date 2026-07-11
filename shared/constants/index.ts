@@ -45,6 +45,23 @@ export const IPC_CHANNELS = {
     FIND_DUPLICATES: 'storage:find-duplicates',
     REVEAL_IN_FOLDER: 'storage:reveal-in-folder',
     DELETE_FILES: 'storage:delete-files'
+  },
+  BOOST: {
+    ANALYZE: 'boost:analyze',
+    EXECUTE: 'boost:execute',
+    CANCEL: 'boost:cancel',
+    GET_SNAPSHOT: 'boost:get-snapshot',
+    PROGRESS: 'boost:progress',
+    TERMINATE_PROCESSES: 'boost:terminate-processes',
+    LIST_PROCESSES: 'boost:list-processes',
+    START_PROCESS_WATCH: 'boost:start-process-watch',
+    STOP_PROCESS_WATCH: 'boost:stop-process-watch',
+    PROCESSES_UPDATE: 'boost:processes-update'
+  },
+  STARTUP: {
+    LIST: 'startup:list',
+    SET_ENABLED: 'startup:set-enabled',
+    GET_DETAILS: 'startup:get-details'
   }
 } as const
 

@@ -5,11 +5,14 @@ import { IPC_CHANNELS } from '@shared/constants'
 import type { IpcResponse } from '@shared/interfaces'
 import {
   appService,
+  boostService,
   settingsService,
+  startupService,
   storageService,
   systemService,
   updaterService
 } from '@main/services'
+import type { BoostOptions } from '@shared/interfaces'
 
 function success<T>(data: T): IpcResponse<T> {
   return { success: true, data }
@@ -180,6 +183,157 @@ export function registerStorageIpc(): void {
   })
 }
 
+function validateBoostOptions(input: unknown): BoostOptions {
+  if (input == null) return {}
+  if (typeof input !== 'object') {
+    throw new Error('Invalid Boost options')
+  }
+
+  const raw = input as Record<string, unknown>
+  const terminateProcessIds = Array.isArray(raw.terminateProcessIds)
+    ? raw.terminateProcessIds.filter((id): id is number => typeof id === 'number' && id > 0)
+    : undefined
+
+  return {
+    cleanTempFiles: typeof raw.cleanTempFiles === 'boolean' ? raw.cleanTempFiles : undefined,
+    cleanAppCaches: typeof raw.cleanAppCaches === 'boolean' ? raw.cleanAppCaches : undefined,
+    emptyTrash: typeof raw.emptyTrash === 'boolean' ? raw.emptyTrash : undefined,
+    flushDnsCache: typeof raw.flushDnsCache === 'boolean' ? raw.flushDnsCache : undefined,
+    terminateProcessIds
+  }
+}
+
+export function registerBoostIpc(): void {
+  ipcMain.handle(IPC_CHANNELS.BOOST.ANALYZE, async () => {
+    try {
+      return success(await boostService.analyze())
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to analyze system')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.BOOST.GET_SNAPSHOT, async () => {
+    try {
+      return success(await boostService.getSnapshot())
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to get system snapshot')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.BOOST.CANCEL, () => {
+    try {
+      return success(boostService.cancel())
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to cancel Boost')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.BOOST.TERMINATE_PROCESSES, async (_event, rawPids?: unknown) => {
+    try {
+      if (!Array.isArray(rawPids)) {
+        return failure('Process IDs must be an array')
+      }
+      const pids = rawPids.filter((pid): pid is number => typeof pid === 'number' && pid > 0)
+      if (pids.length === 0) {
+        return failure('No valid process IDs provided')
+      }
+      if (pids.length > 20) {
+        return failure('Too many processes requested at once (max 20)')
+      }
+      return success(await boostService.terminateProcesses(pids))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to stop processes')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.BOOST.LIST_PROCESSES, async () => {
+    try {
+      return success(await boostService.listBackgroundProcesses())
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to list processes')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.BOOST.START_PROCESS_WATCH, (event) => {
+    try {
+      return success(boostService.startProcessWatch(event.sender))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to start process watch')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.BOOST.STOP_PROCESS_WATCH, (event) => {
+    try {
+      return success(boostService.stopProcessWatch(event.sender))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to stop process watch')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.BOOST.EXECUTE, async (event, rawOptions?: unknown) => {
+    try {
+      if (boostService.isRunning()) {
+        return failure('A Boost operation is already running')
+      }
+
+      const options = validateBoostOptions(rawOptions)
+      const result = await boostService.execute(options, (progress) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send(IPC_CHANNELS.BOOST.PROGRESS, progress)
+        }
+      })
+      return success(result)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Boost failed')
+    }
+  })
+}
+
+function validateStartupSetEnabled(input: unknown): { id: string; enabled: boolean } {
+  if (input == null || typeof input !== 'object') {
+    throw new Error('Invalid startup options')
+  }
+  const raw = input as Record<string, unknown>
+  if (typeof raw.id !== 'string' || !raw.id.trim()) {
+    throw new Error('Invalid startup entry id')
+  }
+  if (typeof raw.enabled !== 'boolean') {
+    throw new Error('Invalid enabled flag')
+  }
+  return { id: raw.id, enabled: raw.enabled }
+}
+
+export function registerStartupIpc(): void {
+  ipcMain.handle(IPC_CHANNELS.STARTUP.LIST, async (_event, forceRefresh?: unknown) => {
+    try {
+      const force = forceRefresh === true
+      return success(await startupService.list({ forceRefresh: force }))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to list startup apps')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.STARTUP.GET_DETAILS, async (_event, id?: unknown) => {
+    try {
+      if (typeof id !== 'string' || !id.trim()) {
+        return failure('Invalid startup entry id')
+      }
+      return success(await startupService.getDetails(id))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to get startup details')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.STARTUP.SET_ENABLED, async (_event, rawOptions?: unknown) => {
+    try {
+      const options = validateStartupSetEnabled(rawOptions)
+      return success(await startupService.setEnabled(options))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to update startup app')
+    }
+  })
+}
+
 export function registerAllIpc(): void {
   registerAppIpc()
   registerSystemIpc()
@@ -188,4 +342,6 @@ export function registerAllIpc(): void {
   registerDialogIpc()
   registerFileIpc()
   registerStorageIpc()
+  registerBoostIpc()
+  registerStartupIpc()
 }

@@ -120,3 +120,171 @@ export interface DeleteFilesResult {
   deleted: string[]
   failed: Array<{ path: string; error: string }>
 }
+
+/** Safe Boost optimization identifiers */
+export type BoostOperationId =
+  | 'clean-temp'
+  | 'clean-cache'
+  | 'empty-trash'
+  | 'flush-dns'
+  | 'terminate-processes'
+  | 'refresh-stats'
+
+export type BoostStepStatus = 'pending' | 'running' | 'completed' | 'skipped' | 'failed' | 'cancelled'
+
+export interface BoostProcessInfo {
+  pid: number
+  name: string
+  memoryBytes: number
+  cpuPercent: number
+  /** True when terminating this process is considered relatively safe (never system-critical). */
+  safeToTerminate: boolean
+}
+
+export interface BackgroundProcessesUpdate {
+  processes: BoostProcessInfo[]
+  updatedAt: number
+}
+
+export interface BoostStartupAppInfo {
+  id: string
+  name: string
+  path?: string
+  impact: 'high' | 'medium' | 'low' | 'unknown'
+  enabled: boolean
+  /** Disabling is only a suggestion in v1 — adapters may mark unsupported. */
+  canDisable: boolean
+  source: string
+}
+
+export interface BoostDiskPressure {
+  mountPath: string
+  freeBytes: number
+  totalBytes: number
+  usedPercent: number
+  isLow: boolean
+}
+
+export interface BoostAnalysis {
+  generatedAt: number
+  memory: MemoryInfo
+  diskPressure: BoostDiskPressure | null
+  estimatedTempBytes: number
+  estimatedCacheBytes: number
+  trashSupported: boolean
+  dnsFlushSupported: boolean
+  processSuggestions: BoostProcessInfo[]
+  startupSuggestions: BoostStartupAppInfo[]
+  availableOperations: BoostOperationId[]
+  unsupportedOperations: Array<{ id: BoostOperationId; reason: string }>
+  warnings: string[]
+}
+
+export interface BoostOptions {
+  cleanTempFiles?: boolean
+  cleanAppCaches?: boolean
+  emptyTrash?: boolean
+  flushDnsCache?: boolean
+  /** Explicit PIDs from analysis suggestions; never auto-kill without this list. */
+  terminateProcessIds?: number[]
+}
+
+export interface TerminateProcessesResult {
+  terminated: number
+  failed: Array<{ pid: number; error: string }>
+  skipped: Array<{ pid: number; reason: string }>
+  detail: string
+}
+
+export interface BoostStepResult {
+  id: BoostOperationId
+  label: string
+  status: BoostStepStatus
+  detail?: string
+  bytesFreed?: number
+  processesAffected?: number
+  error?: string
+}
+
+export interface BoostSkippedOp {
+  id: BoostOperationId
+  reason: string
+}
+
+export interface BoostResult {
+  success: boolean
+  cancelled: boolean
+  durationMs: number
+  memoryBeforeBytes: number
+  memoryAfterBytes: number
+  /** Honest free-memory delta (may be 0 if OS did not reclaim yet). */
+  memoryReclaimedBytes: number
+  tempFilesRemovedBytes: number
+  cacheFilesRemovedBytes: number
+  diskFreedBytes: number
+  processesTerminated: number
+  dnsFlushed: boolean
+  trashEmptied: boolean
+  steps: BoostStepResult[]
+  skipped: BoostSkippedOp[]
+  warnings: string[]
+}
+
+export interface BoostProgressEvent {
+  phase: string
+  message: string
+  percent: number
+  currentItem?: string
+}
+
+export interface BoostSnapshot {
+  memory: MemoryInfo
+  topProcesses: BoostProcessInfo[]
+  diskPressure: BoostDiskPressure | null
+  platform: string
+}
+
+export type StartupImpact = 'high' | 'medium' | 'low' | 'unknown'
+
+export type StartupSourceKind =
+  | 'registry-hkcu'
+  | 'registry-hklm'
+  | 'startup-folder'
+  | 'launch-agent'
+  | 'autostart-desktop'
+  | 'other'
+
+export interface StartupAppEntry {
+  id: string
+  name: string
+  /** Command line or file path associated with the entry */
+  location: string
+  source: string
+  sourceKind: StartupSourceKind
+  enabled: boolean
+  /** False for read-only / protected / machine-wide entries */
+  canToggle: boolean
+  impact: StartupImpact
+  /** Optional data URL from app.getFileIcon */
+  iconDataUrl?: string
+  details?: string
+  protectedReason?: string
+}
+
+export interface StartupListResult {
+  entries: StartupAppEntry[]
+  platform: string
+  warnings: string[]
+  generatedAt: number
+}
+
+export interface StartupSetEnabledOptions {
+  id: string
+  enabled: boolean
+}
+
+export interface StartupMutationResult {
+  success: boolean
+  entry?: StartupAppEntry
+  error?: string
+}

@@ -11,7 +11,18 @@ import type {
   FindLargeFilesOptions,
   DuplicateGroup,
   FindDuplicatesOptions,
-  DeleteFilesResult
+  DeleteFilesResult,
+  BoostAnalysis,
+  BoostOptions,
+  BoostResult,
+  BoostSnapshot,
+  BoostProgressEvent,
+  TerminateProcessesResult,
+  BackgroundProcessesUpdate,
+  StartupListResult,
+  StartupAppEntry,
+  StartupMutationResult,
+  StartupSetEnabledOptions
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -64,6 +75,25 @@ export interface StorageApi {
   deleteFiles: (filePaths: string[]) => Promise<DeleteFilesResult>
 }
 
+export interface BoostApi {
+  analyze: () => Promise<BoostAnalysis>
+  execute: (options?: BoostOptions) => Promise<BoostResult>
+  cancel: () => Promise<{ cancelled: boolean }>
+  getSnapshot: () => Promise<BoostSnapshot>
+  terminateProcesses: (pids: number[]) => Promise<TerminateProcessesResult>
+  listProcesses: () => Promise<BackgroundProcessesUpdate>
+  startProcessWatch: () => Promise<{ watching: boolean }>
+  stopProcessWatch: () => Promise<{ watching: boolean }>
+  onProgress: (callback: (event: BoostProgressEvent) => void) => () => void
+  onProcessesUpdate: (callback: (update: BackgroundProcessesUpdate) => void) => () => void
+}
+
+export interface StartupApi {
+  list: (forceRefresh?: boolean) => Promise<StartupListResult>
+  getDetails: (id: string) => Promise<StartupAppEntry | null>
+  setEnabled: (options: StartupSetEnabledOptions) => Promise<StartupMutationResult>
+}
+
 export interface ElectronApi {
   app: AppApi
   system: SystemApi
@@ -72,6 +102,8 @@ export interface ElectronApi {
   settings: SettingsApi
   updater: UpdaterApi
   storage: StorageApi
+  boost: BoostApi
+  startup: StartupApi
 }
 
 declare global {

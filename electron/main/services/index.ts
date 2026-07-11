@@ -97,3 +97,5 @@ export const settingsService = new SettingsService()
 export const updaterService = new UpdaterService()
 
 export { storageService, StorageService } from './storage-service'
+export { boostService, BoostService } from './boost'
+export { startupService, StartupService } from './startup'

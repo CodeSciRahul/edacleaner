@@ -37,34 +37,34 @@ export const sidebarNavItems: SidebarNavItem[] = [
     label: 'Cleanup',
     href: '/cleanup',
     icon: Sparkles,
-    description: 'Remove junk and clutter',
+    description: 'Remove junk and clutter'
   },
   {
     id: 'storage',
     label: 'Storage',
     href: '/storage',
     icon: HardDrive,
-    description: 'Free up disk space',
+    description: 'Free up disk space'
   },
   {
     id: 'performance',
     label: 'Performance',
     href: '/performance',
     icon: Zap,
-    description: 'Speed up your PC',
+    description: 'Speed up your PC'
   },
   {
     id: 'reports',
     label: 'Reports',
     href: '/reports',
     icon: BarChart3,
-    description: 'History and insights',
+    description: 'History and insights'
   },
   {
     id: 'settings',
     label: 'Settings',
     href: '/settings',
     icon: Settings,
-    description: 'Preferences',
+    description: 'Preferences'
   }
 ]
