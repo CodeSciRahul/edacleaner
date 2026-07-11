@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Zap, Power, Layers, Cpu, Activity, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { Toolbar } from '@/components/desktop/Toolbar'
 import { StatusCard } from '@/components/desktop/StatusCard'
 import { MetricCard } from '@/components/desktop/MetricCard'
@@ -20,6 +19,7 @@ import {
 } from '@/features/performance/hooks/useBoost'
 import { useStartupApps } from '@/features/performance/hooks/useStartupApps'
 import { AppsSubnav } from '@/features/apps/components/AppsSubnav'
+import { BoostResultsCard } from '@/features/performance/components/BoostResultsCard'
 
 function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
   let score = 100 - Math.round(usedPercent * 0.55)
@@ -219,50 +219,7 @@ export function PerformancePage(): React.ReactElement {
           </section>
         ) : null}
 
-        {lastResult ? (
-          <section
-            aria-label="Boost results"
-            className="rounded-xl border border-border bg-card p-4 shadow-card"
-          >
-            <h2 className="mb-3 text-section-title text-foreground">
-              {lastResult.cancelled ? 'Boost cancelled' : 'Boost results'}
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <ResultStat label="Disk freed" value={formatBytes(lastResult.diskFreedBytes)} />
-              <ResultStat
-                label="Free memory delta"
-                value={formatBytes(lastResult.memoryReclaimedBytes)}
-              />
-              <ResultStat
-                label="Processes stopped"
-                value={String(lastResult.processesTerminated)}
-              />
-              <ResultStat
-                label="Duration"
-                value={`${(lastResult.durationMs / 1000).toFixed(1)}s`}
-              />
-            </div>
-            <ul className="mt-4 space-y-2">
-              {lastResult.steps.map((step) => (
-                <li
-                  key={`${step.id}-${step.label}`}
-                  className="flex items-start justify-between gap-3 text-sm"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground">{step.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {step.detail}
-                      {step.error ? ` — ${step.error}` : ''}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="shrink-0 capitalize">
-                    {step.status}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        {lastResult ? <BoostResultsCard result={lastResult} /> : null}
 
         <section aria-label="Performance summary">
           <h2 className="mb-4 text-section-title text-foreground">Summary</h2>
@@ -324,14 +281,5 @@ export function PerformancePage(): React.ReactElement {
         />
       </div>
     </>
-  )
-}
-
-function ResultStat({ label, value }: { label: string; value: string }): React.ReactElement {
-  return (
-    <div className="rounded-lg bg-muted/40 px-3 py-2">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium tabular-nums text-foreground">{value}</p>
-    </div>
   )
 }

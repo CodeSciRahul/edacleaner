@@ -17,6 +17,7 @@ import type {
   TerminateProcessesResult
 } from '@shared/interfaces'
 import { createLogger } from '@main/utils/logger'
+import { tryGetIconDataUrl } from '@main/utils/file-icon'
 import { cleanDirectoryContents, estimateDirectorySize } from './fs-utils'
 import { createPlatformBoostAdapter } from './platforms/create-adapter'
 import type { PlatformBoostAdapter } from './platforms/platform-adapter'
@@ -68,6 +69,11 @@ function filterBackgroundProcesses(processes: BoostProcessInfo[]): BoostProcessI
     .slice(0, MAX_BACKGROUND_PROCESSES)
 }
 
+function processIconCacheKey(process: BoostProcessInfo): string {
+  if (process.path) return process.path.toLowerCase()
+  return `name:${process.name.toLowerCase()}`
+}
+
 export class BoostService {
   private readonly adapter: PlatformBoostAdapter = createPlatformBoostAdapter()
   private abortController: AbortController | null = null
@@ -81,6 +87,9 @@ export class BoostService {
   private previousCpuSample:
     | { at: number; byPid: Map<number, number> }
     | null = null
+  /** Cached OS icons keyed by exe path (or process name). null = looked up, no icon. */
+  private readonly processIconCache = new Map<string, string | null>()
+  private readonly processIconPending = new Map<string, Promise<string | null>>()
 
   isRunning(): boolean {
     return this.running
@@ -101,10 +110,84 @@ export class BoostService {
   async listBackgroundProcesses(): Promise<BackgroundProcessesUpdate> {
     const raw = await this.adapter.listProcesses(100)
     const withCpu = this.applyCpuPercents(raw)
+    const filtered = filterBackgroundProcesses(withCpu)
+    const processes = await this.attachProcessIcons(filtered, { waitForMissing: true })
     return {
-      processes: filterBackgroundProcesses(withCpu),
+      processes,
       updatedAt: Date.now()
     }
+  }
+
+  /**
+   * Attach cached icons; optionally resolve missing ones (capped concurrency).
+   * Live ticks use waitForMissing=false so polling stays light.
+   */
+  private async attachProcessIcons(
+    processes: BoostProcessInfo[],
+    options: { waitForMissing: boolean }
+  ): Promise<BoostProcessInfo[]> {
+    const missingPaths = new Map<string, string>()
+
+    const withCached = processes.map((process) => {
+      const key = processIconCacheKey(process)
+      if (this.processIconCache.has(key)) {
+        const cached = this.processIconCache.get(key)
+        return cached ? { ...process, iconDataUrl: cached } : process
+      }
+      if (process.path) missingPaths.set(key, process.path)
+      return process
+    })
+
+    if (missingPaths.size === 0) return withCached
+
+    if (!options.waitForMissing) {
+      void this.resolveProcessIcons(missingPaths)
+      return withCached
+    }
+
+    await this.resolveProcessIcons(missingPaths)
+
+    return processes.map((process) => {
+      const key = processIconCacheKey(process)
+      const cached = this.processIconCache.get(key)
+      return cached ? { ...process, iconDataUrl: cached } : process
+    })
+  }
+
+  private async resolveProcessIcons(pathsByKey: Map<string, string>): Promise<void> {
+    const entries = [...pathsByKey.entries()]
+    const batchSize = 6
+
+    for (let i = 0; i < entries.length; i += batchSize) {
+      const batch = entries.slice(i, i + batchSize)
+      await Promise.all(batch.map(([key, path]) => this.ensureProcessIcon(key, path)))
+      await new Promise((r) => setImmediate(r))
+    }
+  }
+
+  private ensureProcessIcon(key: string, path: string): Promise<string | null> {
+    if (this.processIconCache.has(key)) {
+      return Promise.resolve(this.processIconCache.get(key) ?? null)
+    }
+
+    const existing = this.processIconPending.get(key)
+    if (existing) return existing
+
+    const pending = tryGetIconDataUrl(path)
+      .then((icon) => {
+        const value = icon ?? null
+        this.processIconCache.set(key, value)
+        this.processIconPending.delete(key)
+        return value
+      })
+      .catch(() => {
+        this.processIconCache.set(key, null)
+        this.processIconPending.delete(key)
+        return null
+      })
+
+    this.processIconPending.set(key, pending)
+    return pending
   }
 
   startProcessWatch(webContents: WebContents): { watching: boolean } {
@@ -185,7 +268,7 @@ export class BoostService {
 
     this.processWatchInFlight = true
     try {
-      const update = await this.listBackgroundProcesses()
+      const update = await this.listBackgroundProcessesForWatch()
       for (const wc of active) {
         if (!wc.isDestroyed()) {
           wc.send(IPC_CHANNELS.BOOST.PROCESSES_UPDATE, update)
@@ -195,6 +278,18 @@ export class BoostService {
       log.warn('Process watch tick failed', err instanceof Error ? err.message : err)
     } finally {
       this.processWatchInFlight = false
+    }
+  }
+
+  /** Watch tick: reuse icon cache; prefetch missing without blocking. */
+  private async listBackgroundProcessesForWatch(): Promise<BackgroundProcessesUpdate> {
+    const raw = await this.adapter.listProcesses(100)
+    const withCpu = this.applyCpuPercents(raw)
+    const filtered = filterBackgroundProcesses(withCpu)
+    const processes = await this.attachProcessIcons(filtered, { waitForMissing: false })
+    return {
+      processes,
+      updatedAt: Date.now()
     }
   }
 

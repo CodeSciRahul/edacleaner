@@ -137,6 +137,10 @@ export interface BoostProcessInfo {
   name: string
   memoryBytes: number
   cpuPercent: number
+  /** Absolute path to the executable when available. */
+  path?: string
+  /** Data-URL icon from the OS (when path could be resolved). */
+  iconDataUrl?: string
   /** True when terminating this process is considered relatively safe (never system-critical). */
   safeToTerminate: boolean
 }

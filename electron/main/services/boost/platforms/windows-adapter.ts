@@ -63,12 +63,24 @@ export class WindowsBoostAdapter implements PlatformBoostAdapter {
       const { stdout } = await runCommand('powershell.exe', [
         '-NoProfile',
         '-Command',
-        `Get-Process | Sort-Object -Property WorkingSet64 -Descending | Select-Object -First ${fetchCount} Id,ProcessName,WorkingSet64,CPU | ConvertTo-Json -Compress`
+        `Get-Process | Sort-Object -Property WorkingSet64 -Descending | Select-Object -First ${fetchCount} Id,ProcessName,WorkingSet64,CPU,Path | ConvertTo-Json -Compress`
       ])
 
       const parsed = JSON.parse(stdout.trim() || '[]') as
-        | Array<{ Id: number; ProcessName: string; WorkingSet64: number; CPU: number | null }>
-        | { Id: number; ProcessName: string; WorkingSet64: number; CPU: number | null }
+        | Array<{
+            Id: number
+            ProcessName: string
+            WorkingSet64: number
+            CPU: number | null
+            Path: string | null
+          }>
+        | {
+            Id: number
+            ProcessName: string
+            WorkingSet64: number
+            CPU: number | null
+            Path: string | null
+          }
 
       const rows = Array.isArray(parsed) ? parsed : [parsed]
 
@@ -76,11 +88,16 @@ export class WindowsBoostAdapter implements PlatformBoostAdapter {
         .map((row) => {
           const name = `${row.ProcessName}.exe`
           const pid = Number(row.Id)
+          const exePath =
+            typeof row.Path === 'string' && row.Path.trim().length > 0
+              ? row.Path.trim()
+              : undefined
           return {
             pid,
             name,
             memoryBytes: Number(row.WorkingSet64) || 0,
             cpuPercent: Number(row.CPU) || 0,
+            path: exePath,
             safeToTerminate: !isProtectedProcess(name, pid)
           } satisfies BoostProcessInfo
         })

@@ -13,6 +13,17 @@ const log = createLogger('StartupService')
 
 const CACHE_TTL_MS = 15_000
 
+function dedupeStartupEntries(entries: StartupAppEntry[]): StartupAppEntry[] {
+  const seen = new Set<string>()
+  const result: StartupAppEntry[] = []
+  for (const entry of entries) {
+    if (seen.has(entry.id)) continue
+    seen.add(entry.id)
+    result.push(entry)
+  }
+  return result
+}
+
 function extractIconPath(location: string): string | null {
   // Strip arguments: `"C:\Path\app.exe" /arg` or `C:\Path\app.exe /arg`
   const quoted = location.match(/^"([^"]+\.(exe|app|lnk))"/i)
@@ -72,9 +83,10 @@ export class StartupService {
 
     // Enrich icons asynchronously with a small concurrency limit
     const enriched = await this.enrichIcons(entries)
+    const unique = dedupeStartupEntries(enriched)
 
     const result: StartupListResult = {
-      entries: enriched.sort((a, b) => a.name.localeCompare(b.name)),
+      entries: unique.sort((a, b) => a.name.localeCompare(b.name)),
       platform: this.adapter.platformId,
       warnings,
       generatedAt: Date.now()

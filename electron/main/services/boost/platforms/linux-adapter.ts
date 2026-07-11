@@ -60,7 +60,7 @@ export class LinuxBoostAdapter implements PlatformBoostAdapter {
 
   async listProcesses(limit = 25): Promise<BoostProcessInfo[]> {
     try {
-      const { stdout } = await runCommand('ps', ['-axo', 'pid=,rss=,pcpu=,comm='])
+      const { stdout } = await runCommand('ps', ['-axo', 'pid=,rss=,pcpu=,args='])
       const processes: BoostProcessInfo[] = []
 
       for (const line of stdout.split('\n')) {
@@ -71,12 +71,15 @@ export class LinuxBoostAdapter implements PlatformBoostAdapter {
         const pid = Number(match[1])
         const rssKb = Number(match[2])
         const cpu = Number(match[3])
-        const name = match[4].trim()
+        const args = match[4].trim()
+        const exePath = args.startsWith('/') ? args.split(/\s+/)[0] : undefined
+        const name = exePath ? exePath.split('/').pop() || args : args.split(/\s+/)[0] || args
         processes.push({
           pid,
           name,
           memoryBytes: rssKb * 1024,
           cpuPercent: cpu,
+          path: exePath,
           safeToTerminate: !isProtectedProcess(name, pid)
         })
       }

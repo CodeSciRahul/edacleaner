@@ -330,9 +330,17 @@ export function BackgroundAppsPage(): React.ReactElement {
                         </td>
                         <td className="px-2 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold uppercase text-primary">
-                              {appLabel.slice(0, 2)}
-                            </div>
+                            {app.iconDataUrl ? (
+                              <img
+                                src={app.iconDataUrl}
+                                alt=""
+                                className="h-9 w-9 shrink-0 rounded-lg"
+                              />
+                            ) : (
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold uppercase text-primary">
+                                {appLabel.slice(0, 2)}
+                              </div>
+                            )}
                             <div className="min-w-0">
                               <p className="truncate font-medium text-foreground">{appLabel}</p>
                               <p className="truncate text-xs text-muted-foreground">

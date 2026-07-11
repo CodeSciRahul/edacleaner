@@ -55,6 +55,14 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
 
   async listEntries(): Promise<StartupAppEntry[]> {
     const entries: StartupAppEntry[] = []
+    const seenIds = new Set<string>()
+    const pushUnique = (entry: StartupAppEntry): void => {
+      if (seenIds.has(entry.id)) return
+      seenIds.add(entry.id)
+      entries.push(entry)
+    }
+
+    const enabledHkcuNames = new Set<string>()
 
     // --- HKCU Run (toggleable) ---
     try {
@@ -64,8 +72,9 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
         { timeoutMs: 10_000 }
       )
       for (const row of parseRegQuery(stdout)) {
+        enabledHkcuNames.add(row.name.toLowerCase())
         const protectedReason = isProtectedStartupName(row.name)
-        entries.push({
+        pushUnique({
           id: encodeId(['hkcu-run', row.name]),
           name: row.name,
           location: row.command,
@@ -83,12 +92,14 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
     }
 
     // --- Disabled backups (HKCU) ---
+    // Skip names still present in Run (stale backup after manual re-enable).
     try {
       const { stdout } = await runCommand('reg', ['query', BACKUP_REG_KEY], {
         timeoutMs: 10_000
       })
       for (const row of parseRegQuery(stdout)) {
-        entries.push({
+        if (enabledHkcuNames.has(row.name.toLowerCase())) continue
+        pushUnique({
           id: encodeId(['hkcu-run', row.name]),
           name: row.name,
           location: row.command,
@@ -112,7 +123,7 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
         { timeoutMs: 10_000 }
       )
       for (const row of parseRegQuery(stdout)) {
-        entries.push({
+        pushUnique({
           id: encodeId(['hklm-run', row.name]),
           name: row.name,
           location: row.command,
@@ -130,16 +141,18 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
     }
 
     // --- User Startup folder ---
+    const enabledFolderFiles = new Set<string>()
     const startupDir = userStartupDir()
     if (await pathExists(startupDir)) {
       try {
         const files = await readdir(startupDir)
         for (const file of files) {
           if (file === 'EDACleanerDisabled' || file.startsWith('.')) continue
+          enabledFolderFiles.add(file.toLowerCase())
           const fullPath = join(startupDir, file)
           const name = file.replace(/\.(lnk|exe|bat|cmd)$/i, '')
           const protectedReason = isProtectedStartupName(name)
-          entries.push({
+          pushUnique({
             id: encodeId(['startup-folder', file]),
             name,
             location: fullPath,
@@ -164,9 +177,10 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
         const files = await readdir(disabledDir)
         for (const file of files) {
           if (file.startsWith('.')) continue
+          if (enabledFolderFiles.has(file.toLowerCase())) continue
           const fullPath = join(disabledDir, file)
           const name = file.replace(/\.(lnk|exe|bat|cmd)$/i, '')
-          entries.push({
+          pushUnique({
             id: encodeId(['startup-folder', file]),
             name,
             location: fullPath,
