@@ -70,3 +70,53 @@ export interface IpcResponse<T = unknown> {
   data?: T
   error?: string
 }
+
+export interface DriveInfo {
+  label: string
+  mountPath: string
+  usedBytes: number
+  totalBytes: number
+  freeBytes: number
+}
+
+export interface StorageSegment {
+  label: string
+  bytes: number
+  percent: number
+}
+
+export interface StorageUsageResult {
+  mountPath: string
+  segments: StorageSegment[]
+  analyzedBytes: number
+}
+
+export interface LargeFile {
+  name: string
+  path: string
+  sizeBytes: number
+}
+
+export interface FindLargeFilesOptions {
+  rootPath?: string
+  minBytes?: number
+  limit?: number
+}
+
+export interface DuplicateGroup {
+  name: string
+  paths: string[]
+  copies: number
+  sizeBytes: number
+}
+
+export interface FindDuplicatesOptions {
+  rootPath?: string
+  minBytes?: number
+  limit?: number
+}
+
+export interface DeleteFilesResult {
+  deleted: string[]
+  failed: Array<{ path: string; error: string }>
+}

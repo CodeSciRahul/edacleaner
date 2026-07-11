@@ -8,6 +8,7 @@ export function useElectron() {
   const dialog = useCallback(() => electronService.dialog(), [])
   const settings = useCallback(() => electronService.settings(), [])
   const updater = useCallback(() => electronService.updater(), [])
+  const storage = useCallback(() => electronService.storage(), [])
 
-  return { app, system, file, dialog, settings, updater }
+  return { app, system, file, dialog, settings, updater, storage }
 }

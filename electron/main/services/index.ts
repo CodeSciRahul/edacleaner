@@ -95,3 +95,5 @@ export const systemService = new SystemService()
 export const appService = new AppService()
 export const settingsService = new SettingsService()
 export const updaterService = new UpdaterService()
+
+export { storageService, StorageService } from './storage-service'

@@ -5,7 +5,14 @@ import type {
   OpenDialogOptions,
   SaveDialogOptions,
   MessageDialogOptions,
-  DialogResult
+  DialogResult,
+  DriveInfo,
+  StorageUsageResult,
+  LargeFile,
+  FindLargeFilesOptions,
+  DuplicateGroup,
+  FindDuplicatesOptions,
+  DeleteFilesResult
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -63,13 +70,28 @@ const updaterApi = {
   getStatus: () => invoke(IPC_CHANNELS.UPDATER.GET_STATUS)
 }
 
+const storageApi = {
+  getDrives: () => invoke<DriveInfo[]>(IPC_CHANNELS.STORAGE.GET_DRIVES),
+  analyzeUsage: (mountPath?: string) =>
+    invoke<StorageUsageResult>(IPC_CHANNELS.STORAGE.ANALYZE_USAGE, mountPath),
+  findLargeFiles: (options?: FindLargeFilesOptions) =>
+    invoke<LargeFile[]>(IPC_CHANNELS.STORAGE.FIND_LARGE_FILES, options),
+  findDuplicates: (options?: FindDuplicatesOptions) =>
+    invoke<DuplicateGroup[]>(IPC_CHANNELS.STORAGE.FIND_DUPLICATES, options),
+  revealInFolder: (filePath: string) =>
+    invoke<void>(IPC_CHANNELS.STORAGE.REVEAL_IN_FOLDER, filePath),
+  deleteFiles: (filePaths: string[]) =>
+    invoke<DeleteFilesResult>(IPC_CHANNELS.STORAGE.DELETE_FILES, filePaths)
+}
+
 const electronApi = {
   app: appApi,
   system: systemApi,
   file: fileApi,
   dialog: dialogApi,
   settings: settingsApi,
-  updater: updaterApi
+  updater: updaterApi,
+  storage: storageApi
 }
 
 contextBridge.exposeInMainWorld('electron', electronApi)

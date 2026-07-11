@@ -37,6 +37,14 @@ export const IPC_CHANNELS = {
     DOWNLOAD: 'updater:download',
     INSTALL: 'updater:install',
     GET_STATUS: 'updater:get-status'
+  },
+  STORAGE: {
+    GET_DRIVES: 'storage:get-drives',
+    ANALYZE_USAGE: 'storage:analyze-usage',
+    FIND_LARGE_FILES: 'storage:find-large-files',
+    FIND_DUPLICATES: 'storage:find-duplicates',
+    REVEAL_IN_FOLDER: 'storage:reveal-in-folder',
+    DELETE_FILES: 'storage:delete-files'
   }
 } as const
 

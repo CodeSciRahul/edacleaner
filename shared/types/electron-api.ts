@@ -4,7 +4,14 @@ import type {
   MessageDialogOptions,
   DialogResult,
   SystemInfo,
-  MemoryInfo
+  MemoryInfo,
+  DriveInfo,
+  StorageUsageResult,
+  LargeFile,
+  FindLargeFilesOptions,
+  DuplicateGroup,
+  FindDuplicatesOptions,
+  DeleteFilesResult
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -48,6 +55,15 @@ export interface UpdaterApi {
   getStatus: () => Promise<unknown>
 }
 
+export interface StorageApi {
+  getDrives: () => Promise<DriveInfo[]>
+  analyzeUsage: (mountPath?: string) => Promise<StorageUsageResult>
+  findLargeFiles: (options?: FindLargeFilesOptions) => Promise<LargeFile[]>
+  findDuplicates: (options?: FindDuplicatesOptions) => Promise<DuplicateGroup[]>
+  revealInFolder: (filePath: string) => Promise<void>
+  deleteFiles: (filePaths: string[]) => Promise<DeleteFilesResult>
+}
+
 export interface ElectronApi {
   app: AppApi
   system: SystemApi
@@ -55,6 +71,7 @@ export interface ElectronApi {
   dialog: DialogApi
   settings: SettingsApi
   updater: UpdaterApi
+  storage: StorageApi
 }
 
 declare global {
