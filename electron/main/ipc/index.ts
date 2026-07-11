@@ -41,6 +41,30 @@ export function registerAppIpc(): void {
 export function registerSystemIpc(): void {
   ipcMain.handle(IPC_CHANNELS.SYSTEM.GET_INFO, () => success(systemService.getInfo()))
   ipcMain.handle(IPC_CHANNELS.SYSTEM.GET_MEMORY, () => success(systemService.getMemory()))
+
+  ipcMain.handle(IPC_CHANNELS.SYSTEM.GET_METRICS_SAMPLE, () => {
+    try {
+      return success(systemService.getMetricsSample())
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to sample metrics')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SYSTEM.START_METRICS_WATCH, (event) => {
+    try {
+      return success(systemService.startMetricsWatch(event.sender))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to start metrics watch')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SYSTEM.STOP_METRICS_WATCH, (event) => {
+    try {
+      return success(systemService.stopMetricsWatch(event.sender))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to stop metrics watch')
+    }
+  })
 }
 
 export function registerSettingsIpc(): void {

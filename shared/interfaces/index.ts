@@ -17,6 +17,14 @@ export interface MemoryInfo {
   usedPercent: number
 }
 
+/** Live system telemetry sample for Performance charts. */
+export interface SystemMetricsSample {
+  at: number
+  cpuPercent: number
+  memoryPercent: number
+  memory: MemoryInfo
+}
+
 export interface AppInfo {
   name: string
   version: string

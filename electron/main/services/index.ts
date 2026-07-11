@@ -1,9 +1,30 @@
-import { app } from 'electron'
+import { app, BrowserWindow, type WebContents } from 'electron'
 import os from 'os'
 import { Platform } from '@shared/enums'
-import type { SystemInfo, MemoryInfo } from '@shared/interfaces'
+import { IPC_CHANNELS } from '@shared/constants'
+import type { SystemInfo, MemoryInfo, SystemMetricsSample } from '@shared/interfaces'
+import { createLogger } from '@main/utils/logger'
+
+const log = createLogger('SystemService')
+
+const METRICS_WATCH_INTERVAL_MS = 1000
+
+function readCpuTimes(): { idle: number; total: number } {
+  let idle = 0
+  let total = 0
+  for (const cpu of os.cpus()) {
+    const t = cpu.times
+    idle += t.idle
+    total += t.user + t.nice + t.sys + t.idle + t.irq
+  }
+  return { idle, total }
+}
 
 export class SystemService {
+  private readonly metricsWatchers = new Map<number, WebContents>()
+  private metricsWatchTimer: NodeJS.Timeout | null = null
+  private previousCpuTimes: { idle: number; total: number } | null = null
+
   getInfo(): SystemInfo {
     return {
       platform: process.platform as Platform,
@@ -26,6 +47,125 @@ export class SystemService {
       free,
       used,
       usedPercent: Math.round((used / total) * 100)
+    }
+  }
+
+  /**
+   * One-shot metrics sample. CPU % is 0 until a prior sample exists
+   * (call again ~1s later, or use the metrics watch).
+   */
+  getMetricsSample(): SystemMetricsSample {
+    return this.captureMetricsSample()
+  }
+
+  startMetricsWatch(webContents: WebContents): { watching: boolean } {
+    if (webContents.isDestroyed()) {
+      return { watching: false }
+    }
+
+    this.metricsWatchers.set(webContents.id, webContents)
+    log.info('Metrics watch started', {
+      id: webContents.id,
+      watchers: this.metricsWatchers.size
+    })
+
+    if (!this.metricsWatchTimer) {
+      this.metricsWatchTimer = setInterval(() => {
+        this.tickMetricsWatch()
+      }, METRICS_WATCH_INTERVAL_MS)
+      this.tickMetricsWatch()
+    }
+
+    return { watching: true }
+  }
+
+  stopMetricsWatch(webContents: WebContents): { watching: boolean } {
+    this.metricsWatchers.delete(webContents.id)
+    log.info('Metrics watch stopped', {
+      id: webContents.id,
+      watchers: this.metricsWatchers.size
+    })
+
+    if (this.metricsWatchers.size === 0) {
+      this.clearMetricsWatchTimer()
+      this.previousCpuTimes = null
+    }
+
+    return { watching: this.metricsWatchers.size > 0 }
+  }
+
+  private clearMetricsWatchTimer(): void {
+    if (this.metricsWatchTimer) {
+      clearInterval(this.metricsWatchTimer)
+      this.metricsWatchTimer = null
+    }
+  }
+
+  private shouldSampleWatcher(wc: WebContents): boolean {
+    if (wc.isDestroyed()) return false
+    const win = BrowserWindow.fromWebContents(wc)
+    if (!win || win.isDestroyed()) return false
+    if (win.isMinimized()) return false
+    if (!win.isFocused()) return false
+    return true
+  }
+
+  private captureMetricsSample(): SystemMetricsSample {
+    const memory = this.getMemory()
+    const current = readCpuTimes()
+    let cpuPercent = 0
+
+    const prev = this.previousCpuTimes
+    if (prev) {
+      const idleDelta = current.idle - prev.idle
+      const totalDelta = current.total - prev.total
+      if (totalDelta > 0) {
+        cpuPercent = Math.min(
+          100,
+          Math.max(0, Math.round((1 - idleDelta / totalDelta) * 1000) / 10)
+        )
+      }
+    }
+
+    this.previousCpuTimes = current
+
+    return {
+      at: Date.now(),
+      cpuPercent,
+      memoryPercent: memory.usedPercent,
+      memory
+    }
+  }
+
+  private tickMetricsWatch(): void {
+    if (this.metricsWatchers.size === 0) return
+
+    const active: WebContents[] = []
+    for (const [id, wc] of this.metricsWatchers) {
+      if (wc.isDestroyed()) {
+        this.metricsWatchers.delete(id)
+        continue
+      }
+      if (this.shouldSampleWatcher(wc)) {
+        active.push(wc)
+      }
+    }
+
+    if (this.metricsWatchers.size === 0) {
+      this.clearMetricsWatchTimer()
+      this.previousCpuTimes = null
+      return
+    }
+
+    if (active.length === 0) {
+      return
+    }
+
+    const sample = this.captureMetricsSample()
+    for (const wc of active) {
+      if (!wc.isDestroyed()) {
+        wc.send(IPC_CHANNELS.SYSTEM.METRICS_UPDATE, sample)
+      }
     }
   }
 }

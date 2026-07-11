@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button'
 import { Toolbar } from '@/components/desktop/Toolbar'
 import { StatusCard } from '@/components/desktop/StatusCard'
 import { MetricCard } from '@/components/desktop/MetricCard'
-import { PerformanceGraph } from '@/components/desktop/PerformanceGraph'
 import { TopProcessesTable } from '@/components/desktop/TopProcessesTable'
 import { formatBytes } from '@shared/utils'
 import { electronService } from '@/services/electron-service'
@@ -54,22 +53,6 @@ export function PerformancePage(): React.ReactElement {
     if (!analysis) return 0
     return analysis.processSuggestions.reduce((sum, p) => sum + p.memoryBytes, 0)
   }, [analysis])
-
-  const cpuHistory = useMemo(() => {
-    const base = memory?.usedPercent ?? 40
-    return Array.from({ length: 24 }, (_, i) => ({
-      label: i === 0 ? '0s' : i === 23 ? '60s' : '',
-      value: Math.max(5, Math.min(95, base * 0.6 + Math.sin(i / 2.5) * 12 + (i % 5)))
-    }))
-  }, [memory?.usedPercent])
-
-  const memoryHistory = useMemo(() => {
-    const base = memory?.usedPercent ?? 50
-    return Array.from({ length: 24 }, (_, i) => ({
-      label: i === 0 ? '0s' : i === 23 ? '60s' : '',
-      value: Math.max(5, Math.min(95, base + Math.cos(i / 3) * 6))
-    }))
-  }, [memory?.usedPercent])
 
   const status = useMemo(() => {
     if (!performanceScore) {
@@ -266,11 +249,6 @@ export function PerformancePage(): React.ReactElement {
             />
           </div>
         </section>
-
-        <div className="grid gap-grid-gap xl:grid-cols-2">
-          <PerformanceGraph title="CPU trend (estimated)" data={cpuHistory} color="cpu" />
-          <PerformanceGraph title="Memory usage" data={memoryHistory} color="ram" />
-        </div>
 
         <TopProcessesTable
           processes={topProcesses.map((p) => ({

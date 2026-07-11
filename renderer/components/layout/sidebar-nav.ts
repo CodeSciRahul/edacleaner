@@ -6,7 +6,8 @@ import {
   HardDrive,
   Settings,
   Sparkles,
-  BarChart3
+  BarChart3,
+  Activity
 } from 'lucide-react'
 
 export interface SidebarNavItem {
@@ -52,6 +53,13 @@ export const sidebarNavItems: SidebarNavItem[] = [
     href: '/performance',
     icon: Zap,
     description: 'Speed up your PC'
+  },
+  {
+    id: 'monitoring',
+    label: 'Monitoring',
+    href: '/monitoring',
+    icon: Activity,
+    description: 'Real-time CPU and memory health'
   },
   {
     id: 'reports',

@@ -22,7 +22,8 @@ import type {
   StartupListResult,
   StartupAppEntry,
   StartupMutationResult,
-  StartupSetEnabledOptions
+  StartupSetEnabledOptions,
+  SystemMetricsSample
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -37,6 +38,10 @@ export interface AppApi {
 export interface SystemApi {
   getInfo: () => Promise<SystemInfo>
   getMemory: () => Promise<MemoryInfo>
+  getMetricsSample: () => Promise<SystemMetricsSample>
+  startMetricsWatch: () => Promise<{ watching: boolean }>
+  stopMetricsWatch: () => Promise<{ watching: boolean }>
+  onMetricsUpdate: (callback: (sample: SystemMetricsSample) => void) => () => void
 }
 
 export interface FileApi {

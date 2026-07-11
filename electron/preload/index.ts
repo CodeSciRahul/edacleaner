@@ -23,7 +23,8 @@ import type {
   StartupMutationResult,
   StartupSetEnabledOptions,
   TerminateProcessesResult,
-  BackgroundProcessesUpdate
+  BackgroundProcessesUpdate,
+  SystemMetricsSample
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -45,7 +46,22 @@ const appApi = {
 
 const systemApi = {
   getInfo: () => invoke(IPC_CHANNELS.SYSTEM.GET_INFO),
-  getMemory: () => invoke(IPC_CHANNELS.SYSTEM.GET_MEMORY)
+  getMemory: () => invoke(IPC_CHANNELS.SYSTEM.GET_MEMORY),
+  getMetricsSample: () =>
+    invoke<SystemMetricsSample>(IPC_CHANNELS.SYSTEM.GET_METRICS_SAMPLE),
+  startMetricsWatch: () =>
+    invoke<{ watching: boolean }>(IPC_CHANNELS.SYSTEM.START_METRICS_WATCH),
+  stopMetricsWatch: () =>
+    invoke<{ watching: boolean }>(IPC_CHANNELS.SYSTEM.STOP_METRICS_WATCH),
+  onMetricsUpdate: (callback: (sample: SystemMetricsSample) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, data: SystemMetricsSample): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.SYSTEM.METRICS_UPDATE, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.SYSTEM.METRICS_UPDATE, listener)
+    }
+  }
 }
 
 const fileApi = {

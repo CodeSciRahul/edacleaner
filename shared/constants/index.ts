@@ -11,7 +11,11 @@ export const IPC_CHANNELS = {
   },
   SYSTEM: {
     GET_INFO: 'system:get-info',
-    GET_MEMORY: 'system:get-memory'
+    GET_MEMORY: 'system:get-memory',
+    GET_METRICS_SAMPLE: 'system:get-metrics-sample',
+    START_METRICS_WATCH: 'system:start-metrics-watch',
+    STOP_METRICS_WATCH: 'system:stop-metrics-watch',
+    METRICS_UPDATE: 'system:metrics-update'
   },
   FILE: {
     OPEN: 'file:open',
