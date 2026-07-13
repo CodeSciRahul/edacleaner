@@ -23,7 +23,13 @@ import type {
   StartupAppEntry,
   StartupMutationResult,
   StartupSetEnabledOptions,
-  SystemMetricsSample
+  SystemMetricsSample,
+  CleanupScanResult,
+  CleanupExecuteOptions,
+  CleanupResult,
+  CleanupProgressEvent,
+  SmartScanResult,
+  SmartScanProgressEvent
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -99,6 +105,19 @@ export interface StartupApi {
   setEnabled: (options: StartupSetEnabledOptions) => Promise<StartupMutationResult>
 }
 
+export interface CleanupApi {
+  scan: () => Promise<CleanupScanResult>
+  execute: (options: CleanupExecuteOptions) => Promise<CleanupResult>
+  cancel: () => Promise<{ cancelled: boolean }>
+  onProgress: (callback: (event: CleanupProgressEvent) => void) => () => void
+}
+
+export interface SmartScanApi {
+  run: () => Promise<SmartScanResult>
+  cancel: () => Promise<{ cancelled: boolean }>
+  onProgress: (callback: (event: SmartScanProgressEvent) => void) => () => void
+}
+
 export interface ElectronApi {
   app: AppApi
   system: SystemApi
@@ -109,6 +128,8 @@ export interface ElectronApi {
   storage: StorageApi
   boost: BoostApi
   startup: StartupApi
+  cleanup: CleanupApi
+  smartScan: SmartScanApi
 }
 
 declare global {

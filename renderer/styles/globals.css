@@ -186,6 +186,15 @@
   }
 }
 
+@keyframes cleanup-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-sidebar-tooltip {
     animation: none;

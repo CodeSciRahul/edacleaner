@@ -304,3 +304,126 @@ export interface StartupMutationResult {
   entry?: StartupAppEntry
   error?: string
 }
+
+/** Cleanup category identifiers — extensible for future modules */
+export type CleanupCategoryId =
+  | 'junk'
+  | 'temp'
+  | 'recycle'
+  | 'browser'
+  | 'system'
+
+export type CleanupRiskLevel = 'safe' | 'review'
+
+export type CleanupStepStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'skipped'
+  | 'failed'
+  | 'cancelled'
+
+export interface CleanupCategorySummary {
+  id: CleanupCategoryId
+  label: string
+  description: string
+  estimatedBytes: number
+  estimatedFiles: number
+  risk: CleanupRiskLevel
+  available: boolean
+  unavailableReason?: string
+  /** Sample target paths shown for transparency (capped). */
+  samplePaths: string[]
+}
+
+export interface CleanupScanResult {
+  scannedAt: number
+  platform: string
+  categories: CleanupCategorySummary[]
+  totalBytes: number
+  totalFiles: number
+  warnings: string[]
+  durationMs: number
+}
+
+export interface CleanupExecuteOptions {
+  /** Categories the user selected to clean. */
+  categories: CleanupCategoryId[]
+}
+
+export interface CleanupStepResult {
+  id: CleanupCategoryId
+  label: string
+  status: CleanupStepStatus
+  bytesFreed: number
+  filesRemoved: number
+  detail?: string
+  error?: string
+}
+
+export interface CleanupResult {
+  success: boolean
+  cancelled: boolean
+  durationMs: number
+  bytesFreed: number
+  filesRemoved: number
+  steps: CleanupStepResult[]
+  warnings: string[]
+}
+
+export interface CleanupProgressEvent {
+  phase: string
+  categoryId?: CleanupCategoryId
+  message: string
+  percent: number
+  currentItem?: string
+  bytesFreedSoFar?: number
+}
+
+/** Smart Scan area identifiers — extensible for future modules */
+export type SmartScanAreaId = 'cleanup' | 'storage' | 'performance' | 'security'
+
+export type SmartScanAreaStatus = 'good' | 'warning' | 'issue'
+
+export interface SmartScanAreaResult {
+  id: SmartScanAreaId
+  label: string
+  description: string
+  status: SmartScanAreaStatus
+  /** Short user-facing finding, e.g. "1.2 GB reclaimable" */
+  finding: string
+  href: string
+  reclaimableBytes?: number
+  /** Approximate items inspected in this area */
+  filesScanned?: number
+  /** Optional secondary metric for summary cards */
+  metricLabel?: string
+  metricValue?: string
+}
+
+export interface SmartScanResult {
+  scannedAt: number
+  durationMs: number
+  platform: string
+  /** 0–100 composite health score */
+  healthScore: number
+  areas: SmartScanAreaResult[]
+  totalReclaimableBytes: number
+  duplicateBytes: number
+  /** Heuristic potential boot-time improvement in seconds */
+  estimatedBootSeconds: number
+  areasNeedingAttention: number
+  /** Approximate total items inspected across modules */
+  filesScanned: number
+  summaryTitle: string
+  summaryMessage: string
+  warnings: string[]
+}
+
+export interface SmartScanProgressEvent {
+  phase: string
+  areaId?: SmartScanAreaId
+  message: string
+  percent: number
+  currentItem?: string
+}

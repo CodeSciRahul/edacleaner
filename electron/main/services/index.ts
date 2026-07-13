@@ -239,3 +239,5 @@ export const updaterService = new UpdaterService()
 export { storageService, StorageService } from './storage-service'
 export { boostService, BoostService } from './boost'
 export { startupService, StartupService } from './startup'
+export { cleanupService, CleanupService } from './cleanup'
+export { smartScanService, SmartScanService } from './smart-scan'

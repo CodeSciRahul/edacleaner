@@ -66,6 +66,17 @@ export const IPC_CHANNELS = {
     LIST: 'startup:list',
     SET_ENABLED: 'startup:set-enabled',
     GET_DETAILS: 'startup:get-details'
+  },
+  CLEANUP: {
+    SCAN: 'cleanup:scan',
+    EXECUTE: 'cleanup:execute',
+    CANCEL: 'cleanup:cancel',
+    PROGRESS: 'cleanup:progress'
+  },
+  SMART_SCAN: {
+    RUN: 'smart-scan:run',
+    CANCEL: 'smart-scan:cancel',
+    PROGRESS: 'smart-scan:progress'
   }
 } as const
 

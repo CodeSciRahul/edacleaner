@@ -96,16 +96,41 @@ export async function cleanDirectoryContents(
   return result
 }
 
+export interface DirectoryEstimate {
+  bytes: number
+  files: number
+  truncated: boolean
+}
+
 export async function estimateDirectorySize(
   dirPath: string,
   signal?: AbortSignal,
   maxEntries = 4_000
 ): Promise<number> {
-  let total = 0
+  const estimate = await estimateDirectoryStats(dirPath, signal, maxEntries)
+  return estimate.bytes
+}
+
+/**
+ * Estimates reclaimable size and file count under a directory.
+ * Caps walk depth via maxEntries and yields so the main process stays responsive.
+ */
+export async function estimateDirectoryStats(
+  dirPath: string,
+  signal?: AbortSignal,
+  maxEntries = 4_000
+): Promise<DirectoryEstimate> {
+  let bytes = 0
+  let files = 0
   let count = 0
+  let truncated = false
 
   async function walk(current: string): Promise<void> {
-    if (signal?.aborted || count >= maxEntries) return
+    if (signal?.aborted) return
+    if (count >= maxEntries) {
+      truncated = true
+      return
+    }
 
     let entries
     try {
@@ -115,7 +140,11 @@ export async function estimateDirectorySize(
     }
 
     for (const entry of entries) {
-      if (signal?.aborted || count >= maxEntries) return
+      if (signal?.aborted) return
+      if (count >= maxEntries) {
+        truncated = true
+        return
+      }
       count += 1
       const fullPath = join(current, entry.name)
 
@@ -124,10 +153,11 @@ export async function estimateDirectorySize(
           await walk(fullPath)
         } else {
           const info = await stat(fullPath)
-          total += info.size
+          bytes += info.size
+          files += 1
         }
       } catch {
-        // skip
+        // skip locked / missing entries
       }
 
       if (count % 100 === 0) {
@@ -137,5 +167,5 @@ export async function estimateDirectorySize(
   }
 
   await walk(dirPath)
-  return total
+  return { bytes, files, truncated }
 }

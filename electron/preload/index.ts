@@ -24,7 +24,13 @@ import type {
   StartupSetEnabledOptions,
   TerminateProcessesResult,
   BackgroundProcessesUpdate,
-  SystemMetricsSample
+  SystemMetricsSample,
+  CleanupScanResult,
+  CleanupExecuteOptions,
+  CleanupResult,
+  CleanupProgressEvent,
+  SmartScanResult,
+  SmartScanProgressEvent
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -157,6 +163,39 @@ const startupApi = {
     invoke<StartupMutationResult>(IPC_CHANNELS.STARTUP.SET_ENABLED, options)
 }
 
+const cleanupApi = {
+  scan: () => invoke<CleanupScanResult>(IPC_CHANNELS.CLEANUP.SCAN),
+  execute: (options: CleanupExecuteOptions) =>
+    invoke<CleanupResult>(IPC_CHANNELS.CLEANUP.EXECUTE, options),
+  cancel: () => invoke<{ cancelled: boolean }>(IPC_CHANNELS.CLEANUP.CANCEL),
+  onProgress: (callback: (event: CleanupProgressEvent) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, data: CleanupProgressEvent): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.CLEANUP.PROGRESS, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.CLEANUP.PROGRESS, listener)
+    }
+  }
+}
+
+const smartScanApi = {
+  run: () => invoke<SmartScanResult>(IPC_CHANNELS.SMART_SCAN.RUN),
+  cancel: () => invoke<{ cancelled: boolean }>(IPC_CHANNELS.SMART_SCAN.CANCEL),
+  onProgress: (callback: (event: SmartScanProgressEvent) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: SmartScanProgressEvent
+    ): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.SMART_SCAN.PROGRESS, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.SMART_SCAN.PROGRESS, listener)
+    }
+  }
+}
+
 const electronApi = {
   app: appApi,
   system: systemApi,
@@ -166,7 +205,9 @@ const electronApi = {
   updater: updaterApi,
   storage: storageApi,
   boost: boostApi,
-  startup: startupApi
+  startup: startupApi,
+  cleanup: cleanupApi,
+  smartScan: smartScanApi
 }
 
 contextBridge.exposeInMainWorld('electron', electronApi)

@@ -1,176 +1,414 @@
-import { useState } from 'react'
-import { Sparkles, Trash2, Clock, Recycle, Globe, Database } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Square,
+  CheckCheck
+} from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { Toolbar } from '@/components/desktop/Toolbar'
 import { StatusCard } from '@/components/desktop/StatusCard'
-import { cn } from '@/utils/cn'
-
-interface CleanupCategory {
-  id: string
-  label: string
-  description: string
-  icon: LucideIcon
-  size: string
-  items: number
-  risk: 'safe' | 'review'
-}
-
-const cleanupCategories: CleanupCategory[] = [
-  {
-    id: 'junk',
-    label: 'Junk Files',
-    description: 'Leftover installers, logs, and app debris',
-    icon: Trash2,
-    size: '1.8 GB',
-    items: 342,
-    risk: 'safe'
-  },
-  {
-    id: 'temp',
-    label: 'Temporary Files',
-    description: 'Windows and application temp folders',
-    icon: Clock,
-    size: '940 MB',
-    items: 128,
-    risk: 'safe'
-  },
-  {
-    id: 'recycle',
-    label: 'Recycle Bin',
-    description: 'Deleted files waiting for permanent removal',
-    icon: Recycle,
-    size: '2.1 GB',
-    items: 56,
-    risk: 'safe'
-  },
-  {
-    id: 'browser',
-    label: 'Browser Cache',
-    description: 'Chrome, Edge, and Firefox cached data',
-    icon: Globe,
-    size: '620 MB',
-    items: 4,
-    risk: 'safe'
-  },
-  {
-    id: 'system',
-    label: 'System Cache',
-    description: 'Windows update and thumbnail caches',
-    icon: Database,
-    size: '410 MB',
-    items: 19,
-    risk: 'review'
-  }
-]
+import { formatBytes } from '@shared/utils'
+import type { CleanupCategoryId, CleanupResult, CleanupScanResult } from '@shared/interfaces'
+import {
+  summarizeSelected,
+  useCancelCleanup,
+  useCleanupProgress,
+  useRunCleanup,
+  useScanCleanup
+} from '@/features/cleanup/hooks/useCleanup'
+import { CleanupHero } from '@/features/cleanup/components/CleanupHero'
+import { CleanupStatsBar } from '@/features/cleanup/components/CleanupStatsBar'
+import { CleanupCategoryCard } from '@/features/cleanup/components/CleanupCategoryCard'
+import { CleanupProgressPanel } from '@/features/cleanup/components/CleanupProgressPanel'
+import { CleanupResultsCard } from '@/features/cleanup/components/CleanupResultsCard'
+import type { CleanupWorkflowPhase } from '@/features/cleanup/lib/category-meta'
 
 export function CleanupPage(): React.ReactElement {
-  const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(cleanupCategories.map((c) => c.id))
-  )
+  const [scan, setScan] = useState<CleanupScanResult | null>(null)
+  const [selected, setSelected] = useState<Set<CleanupCategoryId>>(new Set())
+  const [lastResult, setLastResult] = useState<CleanupResult | null>(null)
+  const [selectionInitialized, setSelectionInitialized] = useState(false)
 
-  const totalSize = '5.9 GB'
-  const selectedCount = selected.size
+  const scanMutation = useScanCleanup()
+  const runCleanup = useRunCleanup()
+  const cancelCleanup = useCancelCleanup()
 
-  function toggleCategory(id: string): void {
+  const isScanning = scanMutation.isPending
+  const isCleaning = runCleanup.isPending
+  const progressActive = isScanning || isCleaning
+  const progress = useCleanupProgress(progressActive)
+
+  const phase: CleanupWorkflowPhase = useMemo(() => {
+    if (isCleaning) return 'clean'
+    if (isScanning) return 'scan'
+    if (lastResult) return 'done'
+    if (scan) return 'review'
+    return 'idle'
+  }, [isCleaning, isScanning, lastResult, scan])
+
+  useEffect(() => {
+    if (!scan || selectionInitialized) return
+    const initial = new Set<CleanupCategoryId>()
+    for (const category of scan.categories) {
+      if (category.available && category.risk === 'safe') {
+        initial.add(category.id)
+      }
+    }
+    setSelected(initial)
+    setSelectionInitialized(true)
+  }, [scan, selectionInitialized])
+
+  const summary = summarizeSelected(scan ?? undefined, selected)
+  const availableCategories = scan?.categories.filter((c) => c.available) ?? []
+  const busy = isScanning || isCleaning
+
+  function toggleCategory(id: CleanupCategoryId): void {
+    if (busy) return
     setSelected((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
+
+  function selectAllSafe(): void {
+    if (!scan || busy) return
+    setSelected(
+      new Set(
+        scan.categories
+          .filter((c) => c.available && c.risk === 'safe')
+          .map((c) => c.id)
+      )
+    )
+  }
+
+  function clearSelection(): void {
+    if (busy) return
+    setSelected(new Set())
+  }
+
+  async function handleScan(): Promise<void> {
+    setLastResult(null)
+    setSelectionInitialized(false)
+    try {
+      const result = await scanMutation.mutateAsync()
+      setScan(result)
+    } catch {
+      // error surfaced via scanMutation.error
+    }
+  }
+
+  async function handleClean(): Promise<void> {
+    if (selected.size === 0 || busy) return
+    setLastResult(null)
+    const payload = await runCleanup.mutateAsync({
+      categories: [...selected]
+    })
+    if (!payload.cancelled && payload.result) {
+      setLastResult(payload.result)
+      setScan((prev) => {
+        if (!prev) return prev
+        const freedById = new Map(
+          payload.result!.steps.map((step) => [step.id, step] as const)
+        )
+        const categories = prev.categories.map((category) => {
+          const step = freedById.get(category.id)
+          if (!step || (step.status !== 'completed' && step.status !== 'skipped')) {
+            return category
+          }
+          if (category.id === 'recycle') {
+            return {
+              ...category,
+              estimatedBytes: 0,
+              estimatedFiles: 0
+            }
+          }
+          return {
+            ...category,
+            estimatedBytes: Math.max(0, category.estimatedBytes - step.bytesFreed),
+            estimatedFiles: Math.max(0, category.estimatedFiles - step.filesRemoved)
+          }
+        })
+        return {
+          ...prev,
+          categories,
+          totalBytes: categories.reduce((sum, c) => sum + c.estimatedBytes, 0),
+          totalFiles: categories.reduce((sum, c) => sum + c.estimatedFiles, 0),
+          scannedAt: Date.now()
+        }
+      })
+    }
+  }
+
+  async function handleCancel(): Promise<void> {
+    await cancelCleanup.mutateAsync()
+  }
+
+  const status = useMemo(() => {
+    if (isScanning) {
+      return {
+        status: 'good' as const,
+        title: 'Scanning for optimization…',
+        message:
+          progress?.message ?? 'Checking junk, temp files, caches, and Trash for reclaimable space.'
+      }
+    }
+    if (isCleaning) {
+      return {
+        status: 'good' as const,
+        title: 'Optimizing your PC…',
+        message:
+          progress?.message ?? 'Cleaning selected categories safely. Your personal files stay untouched.'
+      }
+    }
+    if (scanMutation.isError) {
+      return {
+        status: 'critical' as const,
+        title: 'Scan could not finish',
+        message:
+          scanMutation.error instanceof Error
+            ? scanMutation.error.message
+            : 'Please try again in a moment.'
+      }
+    }
+    if (lastResult && !lastResult.cancelled) {
+      const freed = lastResult.bytesFreed
+      return {
+        status: 'good' as const,
+        title: freed > 0 ? 'Optimization complete' : 'System health improved',
+        message:
+          freed > 0
+            ? `Storage successfully reclaimed — ${formatBytes(freed)} freed.`
+            : 'Your PC is cleaner and ready. Everything looking good.'
+      }
+    }
+    if (scan) {
+      const hasWork =
+        scan.totalBytes > 0 || availableCategories.some((c) => c.id === 'recycle')
+      return {
+        status: 'good' as const,
+        title: hasWork ? 'Ready to optimize' : 'No action required',
+        message: hasWork
+          ? `Up to ${formatBytes(scan.totalBytes)} can be reclaimed across ${availableCategories.length} categories.`
+          : 'Your system already looks tidy. Empty Trash anytime if you like.'
+      }
+    }
+    return {
+      status: 'good' as const,
+      title: 'Ready when you are',
+      message: 'Run a quick scan to find reclaimable space and boost system health.'
+    }
+  }, [
+    isScanning,
+    isCleaning,
+    scanMutation.isError,
+    scanMutation.error,
+    lastResult,
+    scan,
+    availableCategories,
+    progress?.message
+  ])
 
   return (
     <>
       <Toolbar
         title="Cleanup"
-        description="Remove junk and clutter to reclaim disk space."
+        description="Optimize storage and keep your PC running clean."
         actions={
-          <Button size="sm" className="h-9 gap-2 rounded-lg px-4 text-[13px]">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            Clean {selectedCount > 0 ? `(${selectedCount})` : ''}
-          </Button>
+          <div className="flex items-center gap-2">
+            {busy ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 gap-2 rounded-lg px-3 text-[13px]"
+                onClick={() => void handleCancel()}
+                disabled={cancelCleanup.isPending}
+              >
+                <Square className="h-3.5 w-3.5" aria-hidden="true" />
+                Pause
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 gap-2 rounded-lg px-3 text-[13px]"
+                onClick={() => void handleScan()}
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                {scan ? 'Rescan' : 'Scan'}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+              onClick={() => void handleClean()}
+              disabled={busy || summary.count === 0 || !scan}
+            >
+              {isCleaning ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+              )}
+              Optimize{summary.count > 0 ? ` (${summary.count})` : ''}
+            </Button>
+          </div>
         }
       />
 
       <div className="space-y-6 p-content-pad">
-        <StatusCard
-          icon={Sparkles}
-          title="Cleanup Ready"
-          status="good"
-          message={`Up to ${totalSize} of reclaimable space found across ${cleanupCategories.length} categories.`}
+        <CleanupHero
+          phase={phase}
+          reclaimableBytes={scan?.totalBytes ?? 0}
+          selectedCount={summary.count}
+          scanned={Boolean(scan)}
+          lastBytesFreed={lastResult && !lastResult.cancelled ? lastResult.bytesFreed : undefined}
         />
 
-        <section aria-label="Cleanup categories">
-          <h2 className="mb-4 text-section-title text-foreground">Categories</h2>
-          <div className="space-y-3">
-            {cleanupCategories.map((category) => {
-              const Icon = category.icon
-              const isSelected = selected.has(category.id)
+        <StatusCard
+          icon={
+            scanMutation.isError
+              ? AlertCircle
+              : lastResult && !lastResult.cancelled
+                ? CheckCircle2
+                : Sparkles
+          }
+          title={status.title}
+          status={status.status}
+          message={status.message}
+        />
 
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => toggleCategory(category.id)}
-                  className={cn(
-                    'flex w-full items-center gap-4 rounded-xl border p-4 text-left',
-                    'outline-none transition-all duration-150 ease-out',
-                    'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    isSelected
-                      ? 'border-primary/30 bg-primary/[0.04] shadow-sm'
-                      : 'border-border bg-card hover:border-border hover:bg-accent/30'
-                  )}
+        {progressActive && progress ? (
+          <CleanupProgressPanel
+            mode={isCleaning ? 'clean' : 'scan'}
+            message={progress.message}
+            percent={progress.percent}
+            currentItem={progress.currentItem}
+            bytesFreedSoFar={progress.bytesFreedSoFar}
+            categoryId={progress.categoryId}
+            categories={
+              isCleaning
+                ? (scan?.categories ?? [])
+                    .filter((c) => selected.has(c.id))
+                    .map((c) => ({ id: c.id, label: c.label }))
+                : undefined
+            }
+          />
+        ) : null}
+
+        {scan ? (
+          <CleanupStatsBar
+            reclaimableBytes={summary.bytes > 0 ? summary.bytes : scan.totalBytes}
+            fileCount={summary.files > 0 ? summary.files : scan.totalFiles}
+            categoryCount={
+              summary.count > 0 ? summary.count : availableCategories.length
+            }
+          />
+        ) : null}
+
+        {lastResult ? <CleanupResultsCard result={lastResult} /> : null}
+
+        <section aria-label="Cleanup categories" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-section-title text-foreground">Categories</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Choose what to optimize. Safe categories are pre-selected after a scan.
+              </p>
+            </div>
+            {scan && !busy ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 gap-1.5 rounded-lg px-2.5 text-xs"
+                  onClick={selectAllSafe}
                 >
-                  <div
-                    className={cn(
-                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-                      isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-foreground">{category.label}</p>
-                      <Badge variant={category.risk === 'safe' ? 'secondary' : 'outline'}>
-                        {category.risk === 'safe' ? 'Safe' : 'Review'}
-                      </Badge>
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{category.description}</p>
-                  </div>
-
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-semibold tabular-nums text-foreground">
-                      {category.size}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{category.items} items</p>
-                  </div>
-
-                  <div
-                    className={cn(
-                      'flex h-5 w-5 shrink-0 items-center justify-center rounded border',
-                      isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
-                    )}
-                    aria-hidden="true"
-                  >
-                    {isSelected && (
-                      <svg viewBox="0 0 12 12" className="h-3 w-3" fill="currentColor">
-                        <path d="M10.28 2.28a1 1 0 0 1 0 1.42l-5.5 5.5a1 1 0 0 1-1.42 0l-2.5-2.5a1 1 0 1 1 1.42-1.42L4.5 7.08l4.79-4.8a1 1 0 0 1 1.42 0z" />
-                      </svg>
-                    )}
-                  </div>
-                </button>
-              )
-            })}
+                  <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                  Select safe
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 rounded-lg px-2.5 text-xs"
+                  onClick={clearSelection}
+                >
+                  Clear
+                </Button>
+              </div>
+            ) : null}
           </div>
+
+          {!scan && !isScanning ? (
+            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Sparkles className="h-7 w-7" strokeWidth={1.75} aria-hidden="true" />
+              </div>
+              <div className="max-w-sm space-y-1.5">
+                <p className="text-sm font-semibold text-foreground">Start optimizing</p>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  A quick scan finds reclaimable junk, temp files, browser caches, and Trash —
+                  then you choose what to clean.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+                onClick={() => void handleScan()}
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                Start scan
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {(scan?.categories ?? []).map((category) => (
+                <CleanupCategoryCard
+                  key={category.id}
+                  category={category}
+                  selected={selected.has(category.id)}
+                  disabled={busy}
+                  onToggle={() => toggleCategory(category.id)}
+                />
+              ))}
+              {isScanning && !scan
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={`skeleton-${i}`}
+                      className="h-[180px] animate-pulse rounded-2xl border border-border bg-muted/40"
+                      aria-hidden="true"
+                    />
+                  ))
+                : null}
+            </div>
+          )}
         </section>
+
+        {scan && summary.count > 0 && !busy ? (
+          <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success/25 bg-card/95 px-4 py-3 shadow-lg backdrop-blur-md">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                {summary.label} ready to reclaim
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {summary.count} categor{summary.count === 1 ? 'y' : 'ies'} selected
+                {summary.files > 0 ? ` · ~${summary.files.toLocaleString()} items` : ''}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+              onClick={() => void handleClean()}
+            >
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              Optimize now
+            </Button>
+          </div>
+        ) : null}
       </div>
     </>
   )

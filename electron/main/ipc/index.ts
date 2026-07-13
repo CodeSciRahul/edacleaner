@@ -6,13 +6,19 @@ import type { IpcResponse } from '@shared/interfaces'
 import {
   appService,
   boostService,
+  cleanupService,
   settingsService,
+  smartScanService,
   startupService,
   storageService,
   systemService,
   updaterService
 } from '@main/services'
-import type { BoostOptions } from '@shared/interfaces'
+import type {
+  BoostOptions,
+  CleanupCategoryId,
+  CleanupExecuteOptions
+} from '@shared/interfaces'
 
 function success<T>(data: T): IpcResponse<T> {
   return { success: true, data }
@@ -358,6 +364,108 @@ export function registerStartupIpc(): void {
   })
 }
 
+const VALID_CLEANUP_CATEGORIES = new Set<CleanupCategoryId>([
+  'junk',
+  'temp',
+  'recycle',
+  'browser',
+  'system'
+])
+
+function validateCleanupOptions(input: unknown): CleanupExecuteOptions {
+  if (input == null || typeof input !== 'object') {
+    throw new Error('Invalid cleanup options')
+  }
+  const raw = input as Record<string, unknown>
+  if (!Array.isArray(raw.categories)) {
+    throw new Error('Cleanup categories must be an array')
+  }
+  const categories = raw.categories.filter(
+    (id): id is CleanupCategoryId =>
+      typeof id === 'string' && VALID_CLEANUP_CATEGORIES.has(id as CleanupCategoryId)
+  )
+  if (categories.length === 0) {
+    throw new Error('Select at least one valid cleanup category')
+  }
+  if (categories.length > 10) {
+    throw new Error('Too many cleanup categories requested')
+  }
+  return { categories }
+}
+
+export function registerCleanupIpc(): void {
+  ipcMain.handle(IPC_CHANNELS.CLEANUP.SCAN, async (event) => {
+    try {
+      if (cleanupService.isRunning()) {
+        return failure('A cleanup operation is already running')
+      }
+      const result = await cleanupService.scan((progress) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send(IPC_CHANNELS.CLEANUP.PROGRESS, progress)
+        }
+      })
+      return success(result)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to scan for cleanup')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.CLEANUP.CANCEL, () => {
+    try {
+      return success(cleanupService.cancel())
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to cancel cleanup')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.CLEANUP.EXECUTE, async (event, rawOptions?: unknown) => {
+    try {
+      if (cleanupService.isRunning()) {
+        return failure('A cleanup operation is already running')
+      }
+      const options = validateCleanupOptions(rawOptions)
+      const result = await cleanupService.execute(options, (progress) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send(IPC_CHANNELS.CLEANUP.PROGRESS, progress)
+        }
+      })
+      return success(result)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Cleanup failed')
+    }
+  })
+}
+
+export function registerSmartScanIpc(): void {
+  ipcMain.handle(IPC_CHANNELS.SMART_SCAN.RUN, async (event) => {
+    try {
+      if (smartScanService.isRunning()) {
+        return failure('A Smart Scan is already running')
+      }
+      const result = await smartScanService.run((progress) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send(IPC_CHANNELS.SMART_SCAN.PROGRESS, progress)
+        }
+      })
+      return success(result)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Smart Scan failed'
+      if (/cancelled/i.test(message)) {
+        return failure('Smart Scan was paused')
+      }
+      return failure(message)
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SMART_SCAN.CANCEL, () => {
+    try {
+      return success(smartScanService.cancel())
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to cancel Smart Scan')
+    }
+  })
+}
+
 export function registerAllIpc(): void {
   registerAppIpc()
   registerSystemIpc()
@@ -368,4 +476,6 @@ export function registerAllIpc(): void {
   registerStorageIpc()
   registerBoostIpc()
   registerStartupIpc()
+  registerCleanupIpc()
+  registerSmartScanIpc()
 }

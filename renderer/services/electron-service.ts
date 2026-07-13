@@ -14,5 +14,7 @@ export const electronService = {
   updater: () => getElectron().updater,
   storage: () => getElectron().storage,
   boost: () => getElectron().boost,
-  startup: () => getElectron().startup
+  startup: () => getElectron().startup,
+  cleanup: () => getElectron().cleanup,
+  smartScan: () => getElectron().smartScan
 }
