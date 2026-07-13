@@ -21,6 +21,8 @@ import {
 import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
 import { AppsEmptyState } from '@/features/apps/components/AppsEmptyState'
 import { ToggleSwitch } from '@/features/apps/components/ToggleSwitch'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 type StatusFilter = 'all' | 'enabled' | 'disabled' | 'toggleable'
 type SortKey = 'name' | 'impact' | 'status' | 'source'
@@ -39,7 +41,22 @@ const impactRank: Record<StartupImpact, number> = {
   unknown: 3
 }
 
+const filterLabelKeys: Record<StatusFilter, TranslationKey> = {
+  all: 'startupApps.filterAll',
+  enabled: 'startupApps.filterEnabled',
+  disabled: 'startupApps.filterDisabled',
+  toggleable: 'startupApps.filterToggleable'
+}
+
+const sortLabelKeys: Record<SortKey, TranslationKey> = {
+  name: 'startupApps.sortName',
+  impact: 'startupApps.sortImpact',
+  status: 'startupApps.sortStatus',
+  source: 'startupApps.sortSource'
+}
+
 export function StartupAppsPage(): React.ReactElement {
+  const { t } = useTranslation()
   const { data, isLoading, isError, error, refetch } = useStartupApps()
   const refresh = useRefreshStartupApps()
   const toggle = useToggleStartupApp()
@@ -111,8 +128,8 @@ export function StartupAppsPage(): React.ReactElement {
   return (
     <>
       <Toolbar
-        title="Startup Applications"
-        description="Control which apps launch when you sign in. Changes are reversible."
+        title={t('startupApps.title')}
+        description={t('startupApps.description')}
         actions={
           <Button
             size="sm"
@@ -125,7 +142,7 @@ export function StartupAppsPage(): React.ReactElement {
             }}
           >
             <RefreshCw className={cn('h-4 w-4', refresh.isPending && 'animate-spin')} />
-            Refresh
+            {t('common.refresh')}
           </Button>
         }
       />
@@ -133,15 +150,15 @@ export function StartupAppsPage(): React.ReactElement {
       <div className="space-y-4 p-content-pad">
         <PageBreadcrumb
           items={[
-            { label: 'Performance', href: '/performance' },
-            { label: 'Startup Applications' }
+            { label: t('performance.title'), href: '/performance' },
+            { label: t('startupApps.title') }
           ]}
         />
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <SummaryChip label="Total" value={String(entries.length)} />
-          <SummaryChip label="Enabled" value={String(enabledCount)} />
-          <SummaryChip label="Manageable" value={String(toggleableCount)} />
+          <SummaryChip label={t('startupApps.total')} value={String(entries.length)} />
+          <SummaryChip label={t('startupApps.enabled')} value={String(enabledCount)} />
+          <SummaryChip label={t('startupApps.manageable')} value={String(toggleableCount)} />
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
@@ -163,10 +180,10 @@ export function StartupAppsPage(): React.ReactElement {
                   key={filter}
                   size="sm"
                   variant={statusFilter === filter ? 'default' : 'outline'}
-                  className="h-9 capitalize"
+                  className="h-9"
                   onClick={() => setStatusFilter(filter)}
                 >
-                  {filter}
+                  {t(filterLabelKeys[filter])}
                 </Button>
               ))}
               <label className="flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-2 text-xs text-muted-foreground">
@@ -177,10 +194,11 @@ export function StartupAppsPage(): React.ReactElement {
                   className="bg-transparent text-foreground outline-none"
                   aria-label="Sort startup apps"
                 >
-                  <option value="name">Name</option>
-                  <option value="impact">Impact</option>
-                  <option value="status">Status</option>
-                  <option value="source">Source</option>
+                  {(Object.keys(sortLabelKeys) as SortKey[]).map((key) => (
+                    <option key={key} value={key}>
+                      {t(sortLabelKeys[key])}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
@@ -214,7 +232,7 @@ export function StartupAppsPage(): React.ReactElement {
               description={
                 error instanceof Error ? error.message : 'Failed to read startup locations.'
               }
-              actionLabel="Try again"
+              actionLabel={t('common.retry')}
               onAction={() => void refetch()}
             />
           ) : isLoading ? (
@@ -230,13 +248,9 @@ export function StartupAppsPage(): React.ReactElement {
           ) : filtered.length === 0 ? (
             <AppsEmptyState
               icon={Power}
-              title={entries.length === 0 ? 'No startup apps found' : 'No matches'}
-              description={
-                entries.length === 0
-                  ? 'User-level startup entries will appear here when detected.'
-                  : 'Try another search or filter.'
-              }
-              actionLabel="Refresh"
+              title={t('startupApps.empty')}
+              description={t('startupApps.empty')}
+              actionLabel={t('common.refresh')}
               onAction={() => void refresh.mutateAsync()}
             />
           ) : (
@@ -244,12 +258,12 @@ export function StartupAppsPage(): React.ReactElement {
               <table className="w-full min-w-[760px] border-collapse text-sm">
                 <thead className="sticky top-0 z-10 bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
                   <tr className="border-b border-border">
-                    <th className="px-4 py-3 font-medium">Application</th>
-                    <th className="px-2 py-3 font-medium">Impact</th>
-                    <th className="px-2 py-3 font-medium">Source</th>
+                    <th className="px-4 py-3 font-medium">{t('backgroundApps.col.app')}</th>
+                    <th className="px-2 py-3 font-medium">{t('startupApps.sortImpact')}</th>
+                    <th className="px-2 py-3 font-medium">{t('startupApps.sortSource')}</th>
                     <th className="px-2 py-3 font-medium">Publisher</th>
-                    <th className="px-2 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 text-right font-medium">Enabled</th>
+                    <th className="px-2 py-3 font-medium">{t('startupApps.sortStatus')}</th>
+                    <th className="px-4 py-3 text-right font-medium">{t('startupApps.enabled')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -313,11 +327,13 @@ export function StartupAppsPage(): React.ReactElement {
                                 : 'bg-muted text-muted-foreground'
                             )}
                           >
-                            {entry.enabled ? 'Enabled' : 'Disabled'}
+                            {entry.enabled
+                              ? t('startupApps.filterEnabled')
+                              : t('startupApps.filterDisabled')}
                           </span>
                           {!entry.canToggle ? (
                             <Badge variant="outline" className="ml-2 text-[10px]">
-                              View only
+                              {t('startupApps.viewOnly')}
                             </Badge>
                           ) : null}
                         </td>
@@ -326,7 +342,7 @@ export function StartupAppsPage(): React.ReactElement {
                             <ToggleSwitch
                               checked={entry.enabled}
                               disabled={!entry.canToggle || busy}
-                              aria-label={`${entry.enabled ? 'Disable' : 'Enable'} ${entry.name}`}
+                              aria-label={`${entry.enabled ? t('startupApps.disable') : t('startupApps.enable')} ${entry.name}`}
                               onCheckedChange={() => void handleToggle(entry)}
                             />
                           </div>

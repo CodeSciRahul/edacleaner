@@ -7,10 +7,12 @@ import type { DriveInfo } from '@shared/interfaces'
 import {
   capacityBarClass,
   capacityStatusClass,
-  capacityStatusLabel,
   getCapacityStatus,
-  getUsedPercent
+  getUsedPercent,
+  type CapacityStatus
 } from '../lib/storage-health'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 interface DriveStorageCardProps {
   drive: DriveInfo
@@ -22,6 +24,12 @@ interface DriveStorageCardProps {
   onOpenDuplicates: () => void
 }
 
+const HEALTH_LABEL_KEYS: Record<CapacityStatus, TranslationKey> = {
+  normal: 'storage.health.healthy',
+  warning: 'storage.health.elevated',
+  critical: 'storage.health.critical'
+}
+
 export function DriveStorageCard({
   drive,
   selected,
@@ -31,6 +39,7 @@ export function DriveStorageCard({
   onOpenLargeFiles,
   onOpenDuplicates
 }: DriveStorageCardProps): React.ReactElement {
+  const { t } = useTranslation()
   const usedPercent = getUsedPercent(drive.usedBytes, drive.totalBytes)
   const status = getCapacityStatus(usedPercent)
 
@@ -73,22 +82,22 @@ export function DriveStorageCard({
             capacityStatusClass[status]
           )}
         >
-          {capacityStatusLabel[status]}
+          {t(HEALTH_LABEL_KEYS[status])}
         </span>
       </div>
 
       <div className="flex flex-1 items-center gap-5">
         <CircularProgress value={usedPercent} color="disk" size={96} strokeWidth={7} />
         <div className="min-w-0 flex-1 space-y-2 text-sm">
-          <StatRow label="Used" value={formatBytes(drive.usedBytes)} />
-          <StatRow label="Free" value={formatBytes(drive.freeBytes)} emphasize />
-          <StatRow label="Total" value={formatBytes(drive.totalBytes)} />
+          <StatRow label={t('storage.drive.used')} value={formatBytes(drive.usedBytes)} />
+          <StatRow label={t('storage.drive.free')} value={formatBytes(drive.freeBytes)} emphasize />
+          <StatRow label={t('storage.drive.total')} value={formatBytes(drive.totalBytes)} />
         </div>
       </div>
 
       <div className="mt-4">
         <div className="mb-1.5 flex justify-between text-[11px] text-muted-foreground">
-          <span>Capacity</span>
+          <span>{t('storage.drive.capacity')}</span>
           <span className="tabular-nums">{usedPercent}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -110,7 +119,7 @@ export function DriveStorageCard({
           }}
         >
           <ScanSearch className="h-3.5 w-3.5" />
-          {analyzing ? 'Analyzing…' : 'Analyze'}
+          {analyzing ? t('storage.analyzing') : t('storage.drive.analyze')}
         </Button>
         <Button
           size="sm"
@@ -122,7 +131,7 @@ export function DriveStorageCard({
           }}
         >
           <FileStack className="h-3.5 w-3.5" />
-          Large Files
+          {t('storage.subnav.largeFiles')}
         </Button>
         <Button
           size="sm"
@@ -134,7 +143,7 @@ export function DriveStorageCard({
           }}
         >
           <Copy className="h-3.5 w-3.5" />
-          Duplicates
+          {t('storage.subnav.duplicates')}
         </Button>
       </div>
     </article>

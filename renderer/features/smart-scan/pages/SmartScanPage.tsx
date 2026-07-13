@@ -29,18 +29,27 @@ import { SmartScanHistoryCard } from '@/features/smart-scan/components/SmartScan
 import {
   formatScanDuration,
   smartScanAreaIcons,
-  smartScanStatusLabels,
   smartScanStatusStyles
 } from '@/features/smart-scan/lib/scan-meta'
+import {
+  smartScanAreaDescKey,
+  smartScanAreaLabelKey,
+  smartScanStatusLabelKey
+} from '@/features/smart-scan/lib/area-i18n'
 import { formatRelativeScanTime } from '@/features/smart-scan/lib/scan-history'
+import { useSettingsStore } from '@/store/settings-store'
+import { useTranslation } from '@/i18n/useTranslation'
 
 const AREA_ORDER: SmartScanAreaId[] = ['cleanup', 'storage', 'performance', 'security']
 
 export function SmartScanPage(): React.ReactElement {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [result, setResult] = useState<SmartScanResult | null>(null)
   const [restoredFromHistory, setRestoredFromHistory] = useState(false)
   const [didHydrateResult, setDidHydrateResult] = useState(false)
+  const restoreLastSmartScan = useSettingsStore((s) => s.restoreLastSmartScan)
+  const showCompletionFeedback = useSettingsStore((s) => s.showCompletionFeedback)
 
   const { history, hydrated, animateKey, hasHistory, persistResult } = useSmartScanHistory()
   const runScan = useRunSmartScan()
@@ -51,12 +60,12 @@ export function SmartScanPage(): React.ReactElement {
   // Restore previous results once when local history is available
   useEffect(() => {
     if (!hydrated || didHydrateResult) return
-    if (history) {
+    if (restoreLastSmartScan && history) {
       setResult(history.lastResult)
       setRestoredFromHistory(true)
     }
     setDidHydrateResult(true)
-  }, [hydrated, history, didHydrateResult])
+  }, [hydrated, history, didHydrateResult, restoreLastSmartScan])
 
   const scanned = Boolean(result) && !isScanning
 
@@ -81,18 +90,16 @@ export function SmartScanPage(): React.ReactElement {
       return {
         icon: ScanSearch,
         status: 'good' as const,
-        title: 'Smart Scan in progress…',
-        message:
-          progress?.message ??
-          'Checking cleanup, storage, performance, and protections for easy wins.'
+        title: t('smartScan.status.scanningTitle'),
+        message: progress?.message ?? t('smartScan.status.scanningMsg')
       }
     }
     if (runScan.isError) {
       return {
         icon: ScanSearch,
         status: 'good' as const,
-        title: 'Scan paused',
-        message: 'No problem — you can start again anytime. Your PC was left unchanged.'
+        title: t('smartScan.status.pausedTitle'),
+        message: t('smartScan.status.pausedMsg')
       }
     }
     if (result) {
@@ -101,18 +108,20 @@ export function SmartScanPage(): React.ReactElement {
         status: 'good' as const,
         title: result.summaryTitle,
         message: restoredFromHistory
-          ? `${result.summaryMessage} Last scanned ${formatRelativeScanTime(result.scannedAt)}.`
+          ? t('smartScan.status.lastScanned', {
+              message: result.summaryMessage,
+              when: formatRelativeScanTime(result.scannedAt)
+            })
           : result.summaryMessage
       }
     }
     return {
       icon: ScanSearch,
       status: 'good' as const,
-      title: 'Ready to scan',
-      message:
-        'One click checks junk, storage, performance, and protections — then recommends safe fixes.'
+      title: t('smartScan.status.readyTitle'),
+      message: t('smartScan.status.readyMsg')
     }
-  }, [isScanning, progress?.message, runScan.isError, result, restoredFromHistory])
+  }, [isScanning, progress?.message, runScan.isError, result, restoredFromHistory, t])
 
   const cleanupMetric =
     result?.areas.find((a) => a.id === 'cleanup')?.metricValue ??
@@ -124,15 +133,15 @@ export function SmartScanPage(): React.ReactElement {
     result?.areas.find((a) => a.id === 'performance')?.metricValue ??
     (result && result.estimatedBootSeconds > 0
       ? `−${result.estimatedBootSeconds} sec`
-      : 'On track')
+      : t('smartScan.onTrack'))
 
   const showEmptyState = hydrated && !hasHistory && !scanned && !isScanning && !runScan.isError
 
   return (
     <>
       <Toolbar
-        title="Smart Scan"
-        description="One-click health check across junk, storage, and performance."
+        title={t('smartScan.title')}
+        description={t('smartScan.description')}
         actions={
           <div className="flex items-center gap-2">
             {isScanning ? (
@@ -144,7 +153,7 @@ export function SmartScanPage(): React.ReactElement {
                 disabled={cancelScan.isPending}
               >
                 <Square className="h-3.5 w-3.5" aria-hidden="true" />
-                Pause
+                {t('common.pause')}
               </Button>
             ) : null}
             <Button
@@ -160,11 +169,11 @@ export function SmartScanPage(): React.ReactElement {
               )}
               {scanned || hasHistory
                 ? isScanning
-                  ? 'Scanning…'
-                  : 'Rescan'
+                  ? t('common.scanning')
+                  : t('smartScan.rescan')
                 : isScanning
-                  ? 'Scanning…'
-                  : 'Start Smart Scan'}
+                  ? t('common.scanning')
+                  : t('smartScan.start')}
             </Button>
           </div>
         }
@@ -176,14 +185,13 @@ export function SmartScanPage(): React.ReactElement {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
               <ScanSearch className="h-7 w-7" strokeWidth={1.5} aria-hidden="true" />
             </div>
-            <h2 className="text-section-title text-foreground">No scans performed yet</h2>
+            <h2 className="text-section-title text-foreground">{t('smartScan.emptyTitle')}</h2>
             <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              Run your first Smart Scan to check cleanup, storage, performance, and security —
-              then we&apos;ll save your results here for next time.
+              {t('smartScan.emptyDesc')}
             </p>
             <Button className="mt-6 gap-2" onClick={() => void handleScan()}>
               <ScanSearch className="h-4 w-4" aria-hidden="true" />
-              Start your first scan
+              {t('smartScan.firstScan')}
             </Button>
           </div>
         ) : null}
@@ -204,7 +212,7 @@ export function SmartScanPage(): React.ReactElement {
 
         {scanned && result ? (
           <>
-            <SmartScanHero result={result} />
+            {showCompletionFeedback ? <SmartScanHero result={result} /> : null}
 
             <StatusCard
               icon={status.icon}
@@ -213,40 +221,40 @@ export function SmartScanPage(): React.ReactElement {
               message={status.message}
             />
 
-            <section aria-label="Scan summary">
-              <h2 className="mb-4 text-section-title text-foreground">Scan Results</h2>
+            <section aria-label={t('smartScan.results')}>
+              <h2 className="mb-4 text-section-title text-foreground">{t('smartScan.results')}</h2>
               <div className="grid gap-grid-gap sm:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                   icon={Sparkles}
-                  title="Reclaimable Space"
+                  title={t('smartScan.reclaimable')}
                   value={cleanupMetric}
-                  actionLabel="Go to Cleanup"
+                  actionLabel={t('smartScan.goCleanup')}
                   onAction={() => navigate('/cleanup')}
                 />
                 <MetricCard
                   icon={HardDrive}
-                  title="Duplicate Files"
+                  title={t('smartScan.duplicates')}
                   value={duplicateMetric}
-                  actionLabel="Go to Storage"
+                  actionLabel={t('smartScan.goStorage')}
                   onAction={() => navigate('/storage')}
                 />
                 <MetricCard
                   icon={Zap}
-                  title="Boot Impact"
+                  title={t('smartScan.bootImpact')}
                   value={bootMetric}
-                  actionLabel="Go to Performance"
+                  actionLabel={t('smartScan.goPerformance')}
                   onAction={() => navigate('/performance')}
                 />
                 <MetricCard
                   icon={ScanSearch}
-                  title="Scan Duration"
+                  title={t('smartScan.duration')}
                   value={formatScanDuration(result.durationMs)}
                 />
               </div>
             </section>
 
-            <section aria-label="Scan areas">
-              <h2 className="mb-4 text-section-title text-foreground">Areas Checked</h2>
+            <section aria-label={t('smartScan.areas')}>
+              <h2 className="mb-4 text-section-title text-foreground">{t('smartScan.areas')}</h2>
               <div className="space-y-3">
                 {result.areas.map((area) => {
                   const Icon = smartScanAreaIcons[area.id]
@@ -275,15 +283,19 @@ export function SmartScanPage(): React.ReactElement {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-foreground">{area.label}</p>
+                          <p className="text-sm font-semibold text-foreground">
+                            {t(smartScanAreaLabelKey(area.id))}
+                          </p>
                           <Badge
                             variant="outline"
                             className={cn('border-0', smartScanStatusStyles[area.status])}
                           >
-                            {smartScanStatusLabels[area.status]}
+                            {t(smartScanStatusLabelKey(area.status))}
                           </Badge>
                         </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{area.description}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {t(smartScanAreaDescKey(area.id))}
+                        </p>
                       </div>
 
                       <p className="shrink-0 text-sm font-medium text-foreground">{area.finding}</p>

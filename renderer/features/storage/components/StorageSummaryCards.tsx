@@ -4,25 +4,34 @@ import { cn } from '@/utils/cn'
 import {
   aggregateDriveTotals,
   capacityStatusClass,
-  capacityStatusLabel,
+  type CapacityStatus,
   type DriveTotals
 } from '../lib/storage-health'
 import type { DriveInfo } from '@shared/interfaces'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 interface StorageSummaryCardsProps {
   drives: DriveInfo[]
   isLoading: boolean
 }
 
+const HEALTH_LABEL_KEYS: Record<CapacityStatus, TranslationKey> = {
+  normal: 'storage.health.healthy',
+  warning: 'storage.health.elevated',
+  critical: 'storage.health.critical'
+}
+
 export function StorageSummaryCards({
   drives,
   isLoading
 }: StorageSummaryCardsProps): React.ReactElement {
+  const { t } = useTranslation()
   const totals: DriveTotals = aggregateDriveTotals(drives)
 
   if (isLoading) {
     return (
-      <section aria-label="Storage summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section aria-label={t('storage.summary.capacity')} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
@@ -36,36 +45,36 @@ export function StorageSummaryCards({
   const cards = [
     {
       id: 'total',
-      label: 'Total capacity',
+      label: t('storage.summary.capacity'),
       value: formatBytes(totals.totalBytes),
       icon: Database,
       accent: 'text-primary bg-primary/10'
     },
     {
       id: 'used',
-      label: 'Used storage',
+      label: t('storage.summary.used'),
       value: formatBytes(totals.usedBytes),
       icon: Disc3,
       accent: 'text-chart-disk bg-chart-disk/10'
     },
     {
       id: 'free',
-      label: 'Available',
+      label: t('storage.summary.available'),
       value: formatBytes(totals.freeBytes),
       icon: HardDrive,
       accent: 'text-success bg-success/10'
     },
     {
       id: 'percent',
-      label: 'Usage',
+      label: t('storage.summary.usage'),
       value: `${totals.usedPercent}%`,
       icon: Disc3,
       accent: 'text-warning bg-warning/10'
     },
     {
       id: 'health',
-      label: 'Storage health',
-      value: capacityStatusLabel[totals.overallStatus],
+      label: t('storage.summary.health'),
+      value: t(HEALTH_LABEL_KEYS[totals.overallStatus]),
       icon: HeartPulse,
       accent: 'text-foreground bg-muted',
       badge: (
@@ -82,7 +91,7 @@ export function StorageSummaryCards({
   ] as const
 
   return (
-    <section aria-label="Storage summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+    <section aria-label={t('storage.summary.capacity')} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       {cards.map((card) => {
         const Icon = card.icon
         return (

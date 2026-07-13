@@ -4,6 +4,8 @@ import { cn } from '@/utils/cn'
 import { CircularProgress } from '@/components/desktop/CircularProgress'
 import type { CleanupCategoryId } from '@shared/interfaces'
 import { getCategoryVisual } from '@/features/cleanup/lib/category-meta'
+import { cleanupCategoryLabelKey } from '@/features/cleanup/lib/category-i18n'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface CleanupCategoryStep {
   id: CleanupCategoryId
@@ -49,6 +51,7 @@ export function CleanupProgressPanel({
   categories = [],
   mode
 }: CleanupProgressPanelProps): React.ReactElement {
+  const { t } = useTranslation()
   const clamped = Math.min(100, Math.max(0, percent))
   const isClean = mode === 'clean'
   const freed = bytesFreedSoFar ?? 0
@@ -56,7 +59,7 @@ export function CleanupProgressPanel({
   if (!isClean) {
     return (
       <section
-        aria-label="Scan progress"
+        aria-label={t('cleanup.progress.scan')}
         aria-live="polite"
         className="overflow-hidden rounded-xl border border-primary/25 bg-card shadow-card animate-in fade-in-0 slide-in-from-top-1 duration-300"
       >
@@ -72,7 +75,7 @@ export function CleanupProgressPanel({
         <div className="px-5 py-4">
           <ProgressTrack percent={clamped} />
           <p className="mt-2 truncate text-xs text-muted-foreground">
-            {currentItem ?? 'Discovering optimization opportunities…'}
+            {currentItem ?? t('cleanup.progress.scan')}
           </p>
         </div>
       </section>
@@ -81,7 +84,7 @@ export function CleanupProgressPanel({
 
   return (
     <section
-      aria-label="Cleanup progress"
+      aria-label={t('cleanup.progress.clean')}
       aria-live="polite"
       className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-card via-card to-primary/[0.08] shadow-card animate-in fade-in-0 zoom-in-95 duration-300"
     >
@@ -114,13 +117,13 @@ export function CleanupProgressPanel({
             <div className="min-w-0 space-y-1">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                Optimizing your PC
+                {t('cleanup.status.cleaningTitle')}
               </div>
               <p className="text-base font-semibold text-foreground sm:text-lg">{message}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {currentItem
-                  ? `Working on ${shortPath(currentItem)}`
-                  : 'Safely reclaiming space — personal files stay untouched.'}
+                  ? t('cleanup.progress.working', { path: shortPath(currentItem) })
+                  : t('cleanup.progress.clean')}
               </p>
             </div>
 
@@ -128,7 +131,7 @@ export function CleanupProgressPanel({
               <HardDrive className="h-4 w-4 text-success" aria-hidden="true" />
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-wide text-success/80">
-                  Reclaimed so far
+                  {t('cleanup.results.reclaimed')}
                 </p>
                 <p className="text-sm font-semibold tabular-nums text-success">
                   {formatBytes(freed)}
@@ -140,7 +143,7 @@ export function CleanupProgressPanel({
           <ProgressTrack percent={clamped} animated />
 
           {categories.length > 0 ? (
-            <ol className="flex flex-wrap gap-2" aria-label="Category progress">
+            <ol className="flex flex-wrap gap-2" aria-label={t('cleanup.categories')}>
               {categories.map((category) => {
                 const state = stepState(category.id, categoryId, categories, clamped)
                 const visual = getCategoryVisual(category.id)
@@ -164,7 +167,7 @@ export function CleanupProgressPanel({
                     ) : (
                       <Icon className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
                     )}
-                    <span>{category.label}</span>
+                    <span>{t(cleanupCategoryLabelKey(category.id))}</span>
                   </li>
                 )
               })}

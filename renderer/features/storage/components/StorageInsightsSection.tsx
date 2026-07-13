@@ -1,6 +1,7 @@
 import { ArrowRight, Copy, FileStack, PieChart } from 'lucide-react'
 import { MetricCard } from '@/components/desktop/MetricCard'
 import { formatBytes } from '@shared/utils'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface StorageInsightsSectionProps {
   largeTotalBytes: number
@@ -25,46 +26,48 @@ export function StorageInsightsSection({
   onOpenDuplicates,
   onCleanup
 }: StorageInsightsSectionProps): React.ReactElement {
+  const { t } = useTranslation()
+
   return (
     <div className="space-y-6">
-      <section aria-label="Storage insights">
-        <h2 className="mb-4 text-section-title text-foreground">Storage insights</h2>
+      <section aria-label={t('storage.insights.title')}>
+        <h2 className="mb-4 text-section-title text-foreground">{t('storage.insights.title')}</h2>
         <div className="grid gap-grid-gap sm:grid-cols-3">
           <MetricCard
             icon={FileStack}
-            title="Large Files"
+            title={t('storage.insights.largeFiles')}
             description="Files over 100 MB"
             value={largeLoading ? '…' : formatBytes(largeTotalBytes)}
-            actionLabel="Open Large Files"
+            actionLabel={t('storage.insights.openLarge')}
             onAction={onOpenLargeFiles}
           />
           <MetricCard
             icon={Copy}
-            title="Duplicates"
+            title={t('storage.insights.duplicates')}
             description="Identical file copies"
             value={duplicatesLoading ? '…' : formatBytes(duplicateWasteBytes)}
-            actionLabel="Open Duplicates"
+            actionLabel={t('storage.insights.openDupes')}
             onAction={onOpenDuplicates}
           />
           <MetricCard
             icon={PieChart}
-            title="Reclaimable"
+            title={t('storage.insights.reclaimable')}
             description="Safe duplicate waste"
             value={analyzing && !hasDuplicates ? '…' : formatBytes(duplicateWasteBytes)}
-            actionLabel="Clean Up"
+            actionLabel={t('storage.insights.cleanup')}
             onAction={onCleanup}
           />
         </div>
       </section>
 
-      <section aria-label="Quick actions" className="grid gap-3 sm:grid-cols-2">
+      <section aria-label={t('storage.insights.title')} className="grid gap-3 sm:grid-cols-2">
         <QuickLink
-          title="Manage large files"
+          title={t('storage.insights.manageLarge')}
           description="Filter, select, and remove oversized files."
           onClick={onOpenLargeFiles}
         />
         <QuickLink
-          title="Review duplicates"
+          title={t('storage.insights.reviewDupes')}
           description="Keep one copy and reclaim wasted space."
           onClick={onOpenDuplicates}
         />

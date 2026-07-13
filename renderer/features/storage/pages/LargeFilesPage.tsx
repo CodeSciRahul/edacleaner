@@ -23,28 +23,35 @@ import { getExtension, getFileCategory, type FileCategory } from '@/features/sto
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import type { LargeFile } from '@shared/interfaces'
+import { useTranslation } from '@/i18n/useTranslation'
 
 type SortKey = 'size' | 'name' | 'path'
 type SizeFilter = 'all' | '100mb' | '500mb' | '1gb' | '5gb'
 
-const SIZE_FILTERS: Array<{ id: SizeFilter; label: string; minBytes: number }> = [
-  { id: 'all', label: 'Any size', minBytes: 0 },
-  { id: '100mb', label: '≥ 100 MB', minBytes: 100 * 1024 * 1024 },
-  { id: '500mb', label: '≥ 500 MB', minBytes: 500 * 1024 * 1024 },
-  { id: '1gb', label: '≥ 1 GB', minBytes: 1024 * 1024 * 1024 },
-  { id: '5gb', label: '≥ 5 GB', minBytes: 5 * 1024 * 1024 * 1024 }
-]
-
-const SORT_OPTIONS = [
-  { value: 'size', label: 'Size' },
-  { value: 'name', label: 'Name' },
-  { value: 'path', label: 'Path' }
+const SIZE_FILTER_BYTES: Array<{ id: SizeFilter; minBytes: number; fallbackLabel: string }> = [
+  { id: 'all', minBytes: 0, fallbackLabel: 'Any size' },
+  { id: '100mb', minBytes: 100 * 1024 * 1024, fallbackLabel: '≥ 100 MB' },
+  { id: '500mb', minBytes: 500 * 1024 * 1024, fallbackLabel: '≥ 500 MB' },
+  { id: '1gb', minBytes: 1024 * 1024 * 1024, fallbackLabel: '≥ 1 GB' },
+  { id: '5gb', minBytes: 5 * 1024 * 1024 * 1024, fallbackLabel: '≥ 5 GB' }
 ]
 
 export function LargeFilesPage(): React.ReactElement {
+  const { t } = useTranslation()
   const { data: files = [], isLoading, isError, error, refetch, isFetching } = useLargeFiles()
   const reveal = useRevealInFolder()
   const deleteFiles = useDeleteFiles()
+
+  const SIZE_FILTERS = SIZE_FILTER_BYTES.map((f) => ({
+    ...f,
+    label: f.id === 'all' ? t('largeFiles.anySize') : f.fallbackLabel
+  }))
+
+  const SORT_OPTIONS = [
+    { value: 'size', label: t('largeFiles.sortSize') },
+    { value: 'name', label: t('largeFiles.sortName') },
+    { value: 'path', label: t('largeFiles.sortPath') }
+  ]
 
   const [query, setQuery] = useState('')
   const [pathFilter, setPathFilter] = useState('')
@@ -54,7 +61,7 @@ export function LargeFilesPage(): React.ReactElement {
   const [selected, setSelected] = useState<string[]>([])
   const [notice, setNotice] = useState<string | null>(null)
 
-  const minBytes = SIZE_FILTERS.find((f) => f.id === sizeFilter)?.minBytes ?? 0
+  const minBytes = SIZE_FILTER_BYTES.find((f) => f.id === sizeFilter)?.minBytes ?? 0
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -139,8 +146,8 @@ export function LargeFilesPage(): React.ReactElement {
   return (
     <>
       <Toolbar
-        title="Large Files"
-        description="Find and remove oversized files taking up disk space."
+        title={t('largeFiles.title')}
+        description={t('largeFiles.description')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -154,7 +161,7 @@ export function LargeFilesPage(): React.ReactElement {
               }}
             >
               <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-              Refresh
+              {t('common.refresh')}
             </Button>
             <Button
               size="sm"
@@ -164,7 +171,7 @@ export function LargeFilesPage(): React.ReactElement {
               onClick={exportCsv}
             >
               <Download className="h-4 w-4" />
-              Export
+              {t('largeFiles.export')}
             </Button>
             <Button
               size="sm"
@@ -174,7 +181,7 @@ export function LargeFilesPage(): React.ReactElement {
               onClick={() => void handleDeleteSelected()}
             >
               <Trash2 className="h-4 w-4" />
-              Delete ({selected.length})
+              {t('largeFiles.delete', { count: selected.length })}
             </Button>
           </div>
         }
@@ -182,7 +189,10 @@ export function LargeFilesPage(): React.ReactElement {
 
       <div className="space-y-4 p-content-pad">
         <PageBreadcrumb
-          items={[{ label: 'Storage', href: '/storage' }, { label: 'Large Files' }]}
+          items={[
+            { label: t('storage.title'), href: '/storage' },
+            { label: t('largeFiles.title') }
+          ]}
         />
         <StorageSubnav />
 
@@ -204,7 +214,7 @@ export function LargeFilesPage(): React.ReactElement {
           onSortKeyChange={(v) => setSortKey(v as SortKey)}
         >
           <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-            <span className="shrink-0">Size</span>
+            <span className="shrink-0">{t('largeFiles.sortSize')}</span>
             <select
               className="bg-transparent text-sm text-foreground outline-none"
               value={sizeFilter}
@@ -241,19 +251,20 @@ export function LargeFilesPage(): React.ReactElement {
 
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
           {isLoading ? (
-            <EmptyBlock message="Scanning large files…" />
+            <EmptyBlock message={t('largeFiles.emptyScanning')} />
           ) : isError ? (
             <ErrorBlock
               message={error instanceof Error ? error.message : 'Failed to load large files'}
               onRetry={() => void refetch()}
+              retryLabel={t('common.retry')}
             />
           ) : filtered.length === 0 ? (
             <EmptyBlock
               icon
               message={
                 files.length === 0
-                  ? 'No files over 100 MB found in your user folder.'
-                  : 'No files match the current filters.'
+                  ? t('largeFiles.emptyNone')
+                  : t('largeFiles.emptyFilter')
               }
             />
           ) : (
@@ -273,11 +284,11 @@ export function LargeFilesPage(): React.ReactElement {
                         onChange={toggleAllVisible}
                       />
                     </th>
-                    <th className="px-2 py-3 font-medium">Name</th>
-                    <th className="px-2 py-3 font-medium">Type</th>
-                    <th className="px-2 py-3 font-medium">Size</th>
-                    <th className="px-2 py-3 font-medium">Path</th>
-                    <th className="px-4 py-3 text-right font-medium">Actions</th>
+                    <th className="px-2 py-3 font-medium">{t('largeFiles.col.name')}</th>
+                    <th className="px-2 py-3 font-medium">{t('largeFiles.col.type')}</th>
+                    <th className="px-2 py-3 font-medium">{t('largeFiles.col.size')}</th>
+                    <th className="px-2 py-3 font-medium">{t('largeFiles.col.path')}</th>
+                    <th className="px-4 py-3 text-right font-medium">{t('largeFiles.col.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -401,17 +412,19 @@ function EmptyBlock({
 
 function ErrorBlock({
   message,
-  onRetry
+  onRetry,
+  retryLabel
 }: {
   message: string
   onRetry: () => void
+  retryLabel: string
 }): React.ReactElement {
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
       <AlertCircle className="h-8 w-8 text-destructive" />
       <p className="text-sm text-destructive">{message}</p>
       <Button size="sm" variant="outline" onClick={onRetry}>
-        Retry
+        {retryLabel}
       </Button>
     </div>
   )

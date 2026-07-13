@@ -1,6 +1,7 @@
 import { HardDrive, Files, Layers } from 'lucide-react'
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface CleanupStatsBarProps {
   reclaimableBytes: number
@@ -15,22 +16,24 @@ export function CleanupStatsBar({
   categoryCount,
   className
 }: CleanupStatsBarProps): React.ReactElement {
+  const { t } = useTranslation()
+
   const stats = [
     {
       icon: HardDrive,
-      label: 'Ready to reclaim',
+      label: t('cleanup.stats.reclaim'),
       value: formatBytes(reclaimableBytes),
       accent: 'text-primary'
     },
     {
       icon: Files,
-      label: 'Items discovered',
+      label: t('cleanup.stats.items'),
       value: fileCount.toLocaleString(),
       accent: 'text-chart-ram'
     },
     {
       icon: Layers,
-      label: 'Ready categories',
+      label: t('cleanup.stats.categories'),
       value: String(categoryCount),
       accent: 'text-success'
     }

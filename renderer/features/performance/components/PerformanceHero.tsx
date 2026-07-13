@@ -4,6 +4,8 @@ import { cn } from '@/utils/cn'
 import { colors } from '@/theme/colors'
 import { formatBytes } from '@shared/utils'
 import type { MemoryInfo } from '@shared/interfaces'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 export type PerformanceHealth = 'good' | 'warning' | 'critical'
 
@@ -32,10 +34,10 @@ const healthChip: Record<PerformanceHealth, string> = {
   critical: 'border-destructive/30 bg-destructive/10 text-destructive'
 }
 
-const healthLabel: Record<PerformanceHealth, string> = {
-  good: 'Healthy',
-  warning: 'Needs attention',
-  critical: 'Under pressure'
+const healthLabelKey: Record<PerformanceHealth, TranslationKey> = {
+  good: 'performance.hero.healthy',
+  warning: 'performance.hero.attention',
+  critical: 'performance.hero.pressure'
 }
 
 export function PerformanceHero({
@@ -50,6 +52,7 @@ export function PerformanceHero({
   onBoost,
   onCancel
 }: PerformanceHeroProps): React.ReactElement {
+  const { t } = useTranslation()
   const size = 148
   const strokeWidth = 10
   const pct = score ?? 0
@@ -60,7 +63,7 @@ export function PerformanceHero({
 
   return (
     <section
-      aria-label="Performance overview"
+      aria-label={t('performance.hero.health')}
       className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
     >
       <div className="relative grid gap-8 p-6 lg:grid-cols-[auto_1fr] lg:items-center lg:p-8">
@@ -106,7 +109,9 @@ export function PerformanceHero({
               <span className="text-4xl font-semibold tabular-nums tracking-tight text-foreground">
                 {score == null ? '—' : score}
               </span>
-              <span className="mt-0.5 text-xs font-medium text-muted-foreground">Score</span>
+              <span className="mt-0.5 text-xs font-medium text-muted-foreground">
+                {t('performance.hero.score')}
+              </span>
             </div>
           </div>
         </div>
@@ -120,9 +125,9 @@ export function PerformanceHero({
               )}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-current" />
-              {healthLabel[health]}
+              {t(healthLabelKey[health])}
             </span>
-            <span className="text-xs text-muted-foreground">Performance health</span>
+            <span className="text-xs text-muted-foreground">{t('performance.hero.health')}</span>
           </div>
 
           <div>
@@ -132,7 +137,7 @@ export function PerformanceHero({
 
           <div className="flex flex-wrap gap-3">
             <StatPill
-              label="Memory"
+              label={t('performance.hero.memory')}
               value={
                 memory
                   ? `${memory.usedPercent}% · ${formatBytes(memory.used)}`
@@ -141,13 +146,16 @@ export function PerformanceHero({
                     : '—'
               }
             />
-            <StatPill label="Disk free" value={diskFreeLabel ?? (isLoading ? '…' : '—')} />
+            <StatPill
+              label={t('performance.hero.diskFree')}
+              value={diskFreeLabel ?? (isLoading ? '…' : '—')}
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
             {isBoosting ? (
               <Button size="sm" variant="outline" className="h-10 gap-2 px-4" onClick={onCancel}>
-                Cancel Boost
+                {t('performance.hero.cancelBoost')}
               </Button>
             ) : null}
             <Button
@@ -159,18 +167,16 @@ export function PerformanceHero({
               {isBoosting ? (
                 <>
                   <Sparkles className="h-4 w-4 animate-pulse" />
-                  Boosting…
+                  {t('performance.hero.boosting')}
                 </>
               ) : (
                 <>
                   <Zap className="h-4 w-4" />
-                  Boost Now
+                  {t('performance.hero.boost')}
                 </>
               )}
             </Button>
-            <p className="text-xs text-muted-foreground">
-              Clears temps, caches, and refreshes system stats safely.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('performance.hero.boostHint')}</p>
           </div>
         </div>
       </div>

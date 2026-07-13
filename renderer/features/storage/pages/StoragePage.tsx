@@ -20,8 +20,10 @@ import {
   buildSegmentColors
 } from '@/features/storage/components/FolderBreakdownPanel'
 import { StorageInsightsSection } from '@/features/storage/components/StorageInsightsSection'
+import { useTranslation } from '@/i18n/useTranslation'
 
 export function StoragePage(): React.ReactElement {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const {
     data: drives = [],
@@ -70,8 +72,8 @@ export function StoragePage(): React.ReactElement {
   return (
     <>
       <Toolbar
-        title="Storage"
-        description="Understand disk capacity and free up space with confidence."
+        title={t('storage.title')}
+        description={t('storage.description')}
         actions={
           <Button
             size="sm"
@@ -80,7 +82,7 @@ export function StoragePage(): React.ReactElement {
             disabled={isAnalyzing || !mountPath}
           >
             <HardDrive className="h-4 w-4" aria-hidden="true" />
-            {analyze.isPending ? 'Analyzing…' : 'Analyze Disk'}
+            {analyze.isPending ? t('storage.analyzing') : t('storage.analyze')}
           </Button>
         }
       />
@@ -95,25 +97,23 @@ export function StoragePage(): React.ReactElement {
           >
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="font-medium">Could not load drives</p>
+              <p className="font-medium">{t('storage.drivesError')}</p>
               <p className="mt-0.5 opacity-90">
                 {drivesErr instanceof Error ? drivesErr.message : 'Unknown error'}
               </p>
             </div>
             <Button size="sm" variant="outline" onClick={() => void refetchDrives()}>
-              Retry
+              {t('common.retry')}
             </Button>
           </div>
         ) : null}
 
         <StorageSummaryCards drives={drives} isLoading={drivesLoading} />
 
-        <section aria-label="Local disks">
+        <section aria-label={t('storage.localDisks')}>
           <div className="mb-4">
-            <h2 className="text-section-title text-foreground">Local disks</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Select a drive to view its folder breakdown. Analyze refreshes usage for that volume.
-            </p>
+            <h2 className="text-section-title text-foreground">{t('storage.localDisks')}</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('storage.localDisksHint')}</p>
           </div>
 
           {drivesLoading ? (
@@ -128,12 +128,12 @@ export function StoragePage(): React.ReactElement {
           ) : drives.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
               <HardDrive className="mb-3 h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium text-foreground">No local drives found</p>
+              <p className="text-sm font-medium text-foreground">{t('storage.noDrives')}</p>
               <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-                Connect a volume or retry drive discovery.
+                {t('storage.noDrivesHint')}
               </p>
               <Button size="sm" className="mt-4" onClick={() => void refetchDrives()}>
-                Retry
+                {t('common.retry')}
               </Button>
             </div>
           ) : (

@@ -9,70 +9,71 @@ import {
   BarChart3,
   Activity
 } from 'lucide-react'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 export interface SidebarNavItem {
   id: string
-  label: string
+  labelKey: TranslationKey
+  descriptionKey: TranslationKey
   href: string
   icon: LucideIcon
-  description: string
 }
 
 export const sidebarNavItems: SidebarNavItem[] = [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    labelKey: 'nav.dashboard',
+    descriptionKey: 'nav.dashboardDesc',
     href: '/',
-    icon: LayoutDashboard,
-    description: 'System overview and quick actions'
+    icon: LayoutDashboard
   },
   {
     id: 'smart-scan',
-    label: 'Smart Scan',
+    labelKey: 'nav.smartScan',
+    descriptionKey: 'nav.smartScanDesc',
     href: '/smart-scan',
-    icon: ScanSearch,
-    description: 'One-click health check'
+    icon: ScanSearch
   },
   {
     id: 'cleanup',
-    label: 'Cleanup',
+    labelKey: 'nav.cleanup',
+    descriptionKey: 'nav.cleanupDesc',
     href: '/cleanup',
-    icon: Sparkles,
-    description: 'Remove junk and clutter'
+    icon: Sparkles
   },
   {
     id: 'storage',
-    label: 'Storage',
+    labelKey: 'nav.storage',
+    descriptionKey: 'nav.storageDesc',
     href: '/storage',
-    icon: HardDrive,
-    description: 'Free up disk space'
+    icon: HardDrive
   },
   {
     id: 'performance',
-    label: 'Performance',
+    labelKey: 'nav.performance',
+    descriptionKey: 'nav.performanceDesc',
     href: '/performance',
-    icon: Zap,
-    description: 'Speed up your PC'
+    icon: Zap
   },
   {
     id: 'monitoring',
-    label: 'Monitoring',
+    labelKey: 'nav.monitoring',
+    descriptionKey: 'nav.monitoringDesc',
     href: '/monitoring',
-    icon: Activity,
-    description: 'Real-time CPU and memory health'
+    icon: Activity
   },
   {
     id: 'reports',
-    label: 'Reports',
+    labelKey: 'nav.reports',
+    descriptionKey: 'nav.reportsDesc',
     href: '/reports',
-    icon: BarChart3,
-    description: 'History and insights'
+    icon: BarChart3
   },
   {
     id: 'settings',
-    label: 'Settings',
+    labelKey: 'nav.settings',
+    descriptionKey: 'nav.settingsDesc',
     href: '/settings',
-    icon: Settings,
-    description: 'Preferences'
+    icon: Settings
   }
 ]

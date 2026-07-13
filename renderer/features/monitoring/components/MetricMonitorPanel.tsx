@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { LiveMetricChart } from './LiveMetricChart'
 import type { ChartPoint, HealthStatus, MetricDefinition, MetricStats } from '../types'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 const statusStyles: Record<HealthStatus, string> = {
   normal: 'bg-success/10 text-success border-success/20',
@@ -10,10 +12,10 @@ const statusStyles: Record<HealthStatus, string> = {
   critical: 'bg-destructive/10 text-destructive border-destructive/20'
 }
 
-const statusLabel: Record<HealthStatus, string> = {
-  normal: 'Normal',
-  warning: 'Warning',
-  critical: 'Critical'
+const statusLabelKey: Record<HealthStatus, TranslationKey> = {
+  normal: 'monitoring.level.normal',
+  warning: 'monitoring.level.warning',
+  critical: 'monitoring.level.critical'
 }
 
 interface MetricMonitorPanelProps {
@@ -31,12 +33,14 @@ export function MetricMonitorPanel({
   isLoading,
   onExpand
 }: MetricMonitorPanelProps): React.ReactElement {
+  const { t } = useTranslation()
+  const label = t(definition.labelKey)
   const Icon = definition.iconName === 'cpu' ? Cpu : MemoryStick
   const status = stats?.status ?? 'normal'
 
   return (
     <section
-      aria-label={definition.label}
+      aria-label={label}
       className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card"
     >
       <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
@@ -48,7 +52,7 @@ export function MetricMonitorPanel({
             <Icon className="h-4.5 w-4.5 h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-sm font-medium text-foreground">{definition.label}</h2>
+            <h2 className="text-sm font-medium text-foreground">{label}</h2>
             <div className="mt-1 flex flex-wrap items-baseline gap-2">
               <span className="text-3xl font-semibold tabular-nums tracking-tight text-foreground">
                 {isLoading || !stats ? '…' : stats.current.toFixed(1)}
@@ -60,7 +64,7 @@ export function MetricMonitorPanel({
                   statusStyles[status]
                 )}
               >
-                {stats ? statusLabel[status] : '—'}
+                {stats ? t(statusLabelKey[status]) : '—'}
               </span>
             </div>
           </div>
@@ -71,7 +75,7 @@ export function MetricMonitorPanel({
           variant="ghost"
           className="h-8 gap-1.5 text-muted-foreground"
           onClick={onExpand}
-          aria-label={`Expand ${definition.label}`}
+          aria-label={`Expand ${label}`}
         >
           <Maximize2 className="h-3.5 w-3.5" />
           Expand
@@ -81,22 +85,31 @@ export function MetricMonitorPanel({
       <div className="px-3 pt-2">
         {points.length === 0 ? (
           <div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground">
-            Waiting for live samples…
+            {t('monitoring.waitingSamples')}
           </div>
         ) : (
           <LiveMetricChart
             points={points}
             color={definition.color}
-            label={definition.label}
+            label={label}
             unit={definition.unit}
           />
         )}
       </div>
 
       <div className="mt-auto grid grid-cols-3 gap-px border-t border-border bg-border">
-        <FooterStat label="Min" value={stats ? `${stats.min}${definition.unit}` : '—'} />
-        <FooterStat label="Avg" value={stats ? `${stats.avg}${definition.unit}` : '—'} />
-        <FooterStat label="Max" value={stats ? `${stats.max}${definition.unit}` : '—'} />
+        <FooterStat
+          label={t('monitoring.min')}
+          value={stats ? `${stats.min}${definition.unit}` : '—'}
+        />
+        <FooterStat
+          label={t('monitoring.avg')}
+          value={stats ? `${stats.avg}${definition.unit}` : '—'}
+        />
+        <FooterStat
+          label={t('monitoring.max')}
+          value={stats ? `${stats.max}${definition.unit}` : '—'}
+        />
       </div>
     </section>
   )

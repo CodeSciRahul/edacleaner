@@ -3,6 +3,11 @@ import { cn } from '@/utils/cn'
 import { formatBytes } from '@shared/utils'
 import type { CleanupCategorySummary } from '@shared/interfaces'
 import { getCategoryVisual } from '@/features/cleanup/lib/category-meta'
+import {
+  cleanupCategoryDescKey,
+  cleanupCategoryLabelKey
+} from '@/features/cleanup/lib/category-i18n'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface CleanupCategoryCardProps {
   category: CleanupCategorySummary
@@ -17,13 +22,26 @@ export function CleanupCategoryCard({
   disabled = false,
   onToggle
 }: CleanupCategoryCardProps): React.ReactElement {
+  const { t } = useTranslation()
   const visual = getCategoryVisual(category.id)
   const Icon = visual.icon
   const isDisabled = disabled || !category.available
   const sizeLabel =
     category.id === 'recycle' && category.estimatedBytes === 0 && category.available
-      ? 'Ready'
+      ? t('cleanup.card.ready')
       : formatBytes(category.estimatedBytes)
+
+  const description = category.available
+    ? t(cleanupCategoryDescKey(category.id))
+    : category.unavailableReason ?? t('cleanup.card.nothing')
+
+  const itemHint = category.available
+    ? category.estimatedFiles > 0
+      ? t('common.items', { count: category.estimatedFiles.toLocaleString() })
+      : category.id === 'recycle'
+        ? t('cleanup.card.readyEmpty')
+        : t('cleanup.card.alreadyClear')
+    : t('cleanup.card.allClear')
 
   return (
     <button
@@ -79,16 +97,14 @@ export function CleanupCategoryCard({
 
       <div className="relative min-w-0 space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-semibold text-foreground">{category.label}</p>
+          <p className="text-sm font-semibold text-foreground">
+            {t(cleanupCategoryLabelKey(category.id))}
+          </p>
           <Badge variant={category.risk === 'safe' ? 'secondary' : 'outline'}>
-            {category.risk === 'safe' ? 'Safe' : 'Review'}
+            {category.risk === 'safe' ? t('cleanup.risk.safe') : t('cleanup.risk.review')}
           </Badge>
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          {category.available
-            ? category.description
-            : category.unavailableReason ?? 'Nothing to optimize here'}
-        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
       </div>
 
       <div className="relative mt-auto flex items-end justify-between gap-3 border-t border-border/60 pt-3">
@@ -101,15 +117,7 @@ export function CleanupCategoryCard({
           >
             {sizeLabel}
           </p>
-          <p className="text-xs text-muted-foreground">
-            {category.available
-              ? category.estimatedFiles > 0
-                ? `${category.estimatedFiles.toLocaleString()} items`
-                : category.id === 'recycle'
-                  ? 'Ready to empty'
-                  : 'Already clear'
-              : 'All clear'}
-          </p>
+          <p className="text-xs text-muted-foreground">{itemHint}</p>
         </div>
       </div>
     </button>

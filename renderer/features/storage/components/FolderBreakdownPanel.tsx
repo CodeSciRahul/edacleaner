@@ -6,6 +6,7 @@ import {
   FolderBreakdownChart,
   type BreakdownChartSegment
 } from './FolderBreakdownChart'
+import { useTranslation } from '@/i18n/useTranslation'
 
 /** Hex palette for charts + legend swatches (not Tailwind class names). */
 export const SEGMENT_PALETTE = [
@@ -48,16 +49,18 @@ export function FolderBreakdownPanel({
   isLoading,
   onOpenCategory
 }: FolderBreakdownPanelProps): React.ReactElement {
+  const { t } = useTranslation()
+
+  const subtitle = driveLabel
+    ? `${t('storage.breakdown.onDrive', { label: driveLabel })}${mountPath ? ` · ${mountPath}` : ''}`
+    : t('storage.breakdown.select')
+
   return (
-    <section aria-label="Folder breakdown">
+    <section aria-label={t('storage.breakdown.title')}>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="text-section-title text-foreground">Folder breakdown</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {driveLabel
-              ? `Where space goes on ${driveLabel}${mountPath ? ` · ${mountPath}` : ''} — click a category to open it`
-              : 'Select a drive to see how folders use space.'}
-          </p>
+          <h2 className="text-section-title text-foreground">{t('storage.breakdown.title')}</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
         </div>
       </div>
 
@@ -76,10 +79,9 @@ export function FolderBreakdownPanel({
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <FolderTree className="h-6 w-6" />
             </div>
-            <p className="text-sm font-medium text-foreground">No folder data yet</p>
+            <p className="text-sm font-medium text-foreground">{t('storage.breakdown.empty')}</p>
             <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              No measurable folders were found on this drive. Try Analyze on the drive card, or
-              pick another volume.
+              {t('storage.breakdown.select')}
             </p>
           </div>
         ) : (
@@ -87,7 +89,7 @@ export function FolderBreakdownPanel({
             <div className="relative flex items-center justify-center rounded-xl bg-gradient-to-b from-muted/40 to-transparent p-2">
               <FolderBreakdownChart
                 segments={segments}
-                centerLabel={driveLabel?.split(' ')[0] ?? 'Drive'}
+                centerLabel={driveLabel?.split(' ')[0] ?? t('storage.breakdown.drive')}
                 onSegmentClick={(segment) => {
                   if (segment.path) onOpenCategory?.(segment)
                 }}
@@ -97,10 +99,10 @@ export function FolderBreakdownPanel({
             <div className="flex min-h-0 flex-col">
               <div className="mb-3 flex items-center justify-between px-1">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Categories
+                  {t('storage.breakdown.folders')}
                 </p>
                 <p className="text-xs tabular-nums text-muted-foreground">
-                  {segments.length} items
+                  {t('common.items', { count: segments.length })}
                 </p>
               </div>
               <ul className="max-h-[300px] space-y-2 overflow-y-auto pr-1">
@@ -123,9 +125,7 @@ export function FolderBreakdownPanel({
                         )}
                         style={{ animationDelay: `${index * 40}ms` }}
                         title={
-                          segment.path
-                            ? `Open ${segment.path} in file manager`
-                            : undefined
+                          segment.path ? t('storage.breakdown.openFolder') : undefined
                         }
                       >
                         <span

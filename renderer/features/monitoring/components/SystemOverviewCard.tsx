@@ -3,6 +3,7 @@ import { formatBytes } from '@shared/utils'
 import type { HealthStatus } from '../types'
 import type { SystemMetricsSample } from '@shared/interfaces'
 import { cn } from '@/utils/cn'
+import { useTranslation } from '@/i18n/useTranslation'
 
 const healthCopy: Record<HealthStatus, string> = {
   normal: 'System load looks healthy.',
@@ -27,14 +28,22 @@ export function SystemOverviewCard({
   isLive,
   paused
 }: SystemOverviewCardProps): React.ReactElement {
+  const { t } = useTranslation()
+
+  const sessionValue = paused
+    ? `${t('monitoring.paused')} · ${sampleCount} pts · ${timeRangeLabel}`
+    : isLive
+      ? `${t('monitoring.live')} · ${sampleCount} pts · ${timeRangeLabel}`
+      : `${t('monitoring.offline')} · ${sampleCount} pts`
+
   return (
     <section
-      aria-label="System overview"
+      aria-label={t('monitoring.overview')}
       className="rounded-xl border border-border bg-card p-5 shadow-card"
     >
       <div className="mb-4 flex items-center gap-2">
         <Activity className="h-4 w-4 text-primary" aria-hidden="true" />
-        <h2 className="text-section-title text-foreground">System overview</h2>
+        <h2 className="text-section-title text-foreground">{t('monitoring.overview')}</h2>
       </div>
 
       <p
@@ -53,7 +62,7 @@ export function SystemOverviewCard({
       <div className="grid gap-3 sm:grid-cols-3">
         <OverviewItem
           icon={MemoryStick}
-          label="Memory used"
+          label={t('monitoring.memoryUsed')}
           value={
             latest
               ? `${formatBytes(latest.memory.used)} / ${formatBytes(latest.memory.total)}`
@@ -62,7 +71,7 @@ export function SystemOverviewCard({
         />
         <OverviewItem
           icon={Clock}
-          label="Last update"
+          label={t('monitoring.lastUpdate')}
           value={
             latest
               ? new Date(latest.at).toLocaleTimeString()
@@ -71,14 +80,8 @@ export function SystemOverviewCard({
         />
         <OverviewItem
           icon={Activity}
-          label="Session"
-          value={
-            paused
-              ? `Paused · ${sampleCount} pts · ${timeRangeLabel}`
-              : isLive
-                ? `Live · ${sampleCount} pts · ${timeRangeLabel}`
-                : `Offline · ${sampleCount} pts`
-          }
+          label={t('monitoring.session')}
+          value={sessionValue}
         />
       </div>
     </section>

@@ -23,6 +23,7 @@ import {
 } from '@/features/performance/components/PerformanceActionGrid'
 import { BoostProgressPanel } from '@/features/performance/components/BoostProgressPanel'
 import { PerformanceQuickLinks } from '@/features/performance/components/PerformanceQuickLinks'
+import { useTranslation } from '@/i18n/useTranslation'
 
 function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
   let score = 100 - Math.round(usedPercent * 0.55)
@@ -31,6 +32,7 @@ function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
 }
 
 export function PerformancePage(): React.ReactElement {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: analysis, isLoading: analysisLoading, refetch: refetchAnalysis } =
     useBoostAnalysis()
@@ -62,77 +64,73 @@ export function PerformancePage(): React.ReactElement {
     if (!performanceScore) {
       return {
         health: 'warning' as const,
-        title: 'Measuring performance…',
-        message: 'Collecting memory, disk, and process data to build your score.'
+        title: t('performance.measuringTitle'),
+        message: t('performance.measuringMsg')
       }
     }
     if (performanceScore >= 80) {
       return {
         health: 'good' as const,
-        title: `Looking sharp — score ${performanceScore}`,
-        message: 'System resources look healthy. Boost can still clear temp files and caches.'
+        title: t('performance.sharpTitle', { score: performanceScore }),
+        message: t('performance.sharpMsg')
       }
     }
     if (performanceScore >= 55) {
       return {
         health: 'warning' as const,
-        title: `Room to improve — score ${performanceScore}`,
-        message:
-          analysis?.warnings[0] ??
-          'Some resources can be reclaimed safely. Review Background or Startup apps.'
+        title: t('performance.improveTitle', { score: performanceScore }),
+        message: analysis?.warnings[0] ?? t('performance.improveMsg')
       }
     }
     return {
       health: 'critical' as const,
-      title: `Needs a boost — score ${performanceScore}`,
-      message:
-        analysis?.warnings[0] ??
-        'Memory or disk pressure is high. Run Boost or manage background apps.'
+      title: t('performance.needsTitle', { score: performanceScore }),
+      message: analysis?.warnings[0] ?? t('performance.needsMsg')
     }
-  }, [performanceScore, analysis?.warnings])
+  }, [performanceScore, analysis?.warnings, t])
 
   const actionItems: PerformanceActionItem[] = [
     {
       id: 'startup',
       icon: Power,
-      title: 'Startup Apps',
-      description: 'Apps that launch at sign-in',
+      title: t('performance.startupTitle'),
+      description: t('performance.startupDesc'),
       value: startupLoading ? '…' : `${startupEnabledCount}`,
-      actionLabel: 'Manage startup',
+      actionLabel: t('performance.startupAction'),
       onAction: () => navigate('/startup-apps'),
       accentClass: 'bg-warning/15 text-warning'
     },
     {
       id: 'background',
       icon: Layers,
-      title: 'Background Apps',
-      description: 'Safe-to-review processes',
+      title: t('performance.bgTitle'),
+      description: t('performance.bgDesc'),
       value: analysisLoading ? '…' : `${backgroundCount}`,
-      actionLabel: 'Open list',
+      actionLabel: t('performance.bgAction'),
       onAction: () => navigate('/background-apps'),
       accentClass: 'bg-primary/15 text-primary'
     },
     {
       id: 'ram',
       icon: Cpu,
-      title: 'Recoverable RAM',
-      description: 'From background suggestions',
+      title: t('performance.ramTitle'),
+      description: t('performance.ramDesc'),
       value: snapshotLoading && !analysis ? '…' : formatBytes(recoverableEstimate),
-      actionLabel: 'Review processes',
+      actionLabel: t('performance.bgAction'),
       onAction: () => navigate('/background-apps'),
       accentClass: 'bg-chart-ram/15 text-chart-ram'
     },
     {
       id: 'disk',
       icon: Activity,
-      title: 'Disk free',
-      description: analysis?.diskPressure?.mountPath ?? 'System volume',
+      title: t('performance.diskTitle'),
+      description: analysis?.diskPressure?.mountPath ?? t('performance.diskDesc'),
       value: analysis?.diskPressure
         ? formatBytes(analysis.diskPressure.freeBytes)
         : snapshotLoading
           ? '…'
           : 'N/A',
-      actionLabel: 'Refresh analysis',
+      actionLabel: t('common.refresh'),
       onAction: () => void refetchAnalysis(),
       accentClass: 'bg-chart-disk/15 text-chart-disk'
     }
@@ -194,8 +192,8 @@ export function PerformancePage(): React.ReactElement {
   return (
     <>
       <Toolbar
-        title="Performance"
-        description="Score your PC, boost safely, and manage what runs in the background."
+        title={t('performance.title')}
+        description={t('performance.description')}
         actions={
           <Button
             size="sm"
@@ -204,7 +202,7 @@ export function PerformancePage(): React.ReactElement {
             onClick={() => navigate('/monitoring')}
           >
             <Monitor className="h-4 w-4" />
-            Live Monitoring
+            {t('performance.liveMonitoring')}
           </Button>
         }
       />
@@ -235,11 +233,13 @@ export function PerformancePage(): React.ReactElement {
 
         <PerformanceActionGrid items={actionItems} />
 
-        <section aria-label="Top processes">
+        <section aria-label={t('performance.memorySection')}>
           <div className="mb-4">
-            <h2 className="text-section-title text-foreground">What’s using memory</h2>
+            <h2 className="text-section-title text-foreground">
+              {t('performance.memorySection')}
+            </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Highest memory consumers right now — open Background Apps to stop safe ones.
+              {t('performance.memoryHint')}
             </p>
           </div>
           <TopProcessesTable

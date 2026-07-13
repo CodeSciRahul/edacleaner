@@ -26,12 +26,17 @@ import { CleanupCategoryCard } from '@/features/cleanup/components/CleanupCatego
 import { CleanupProgressPanel } from '@/features/cleanup/components/CleanupProgressPanel'
 import { CleanupResultsCard } from '@/features/cleanup/components/CleanupResultsCard'
 import type { CleanupWorkflowPhase } from '@/features/cleanup/lib/category-meta'
+import { useSettingsStore } from '@/store/settings-store'
+import { useTranslation } from '@/i18n/useTranslation'
 
 export function CleanupPage(): React.ReactElement {
+  const { t } = useTranslation()
   const [scan, setScan] = useState<CleanupScanResult | null>(null)
   const [selected, setSelected] = useState<Set<CleanupCategoryId>>(new Set())
   const [lastResult, setLastResult] = useState<CleanupResult | null>(null)
   const [selectionInitialized, setSelectionInitialized] = useState(false)
+  const autoSelectSafeCategories = useSettingsStore((s) => s.autoSelectSafeCategories)
+  const showCompletionFeedback = useSettingsStore((s) => s.showCompletionFeedback)
 
   const scanMutation = useScanCleanup()
   const runCleanup = useRunCleanup()
@@ -52,6 +57,11 @@ export function CleanupPage(): React.ReactElement {
 
   useEffect(() => {
     if (!scan || selectionInitialized) return
+    if (!autoSelectSafeCategories) {
+      setSelected(new Set())
+      setSelectionInitialized(true)
+      return
+    }
     const initial = new Set<CleanupCategoryId>()
     for (const category of scan.categories) {
       if (category.available && category.risk === 'safe') {
@@ -60,7 +70,7 @@ export function CleanupPage(): React.ReactElement {
     }
     setSelected(initial)
     setSelectionInitialized(true)
-  }, [scan, selectionInitialized])
+  }, [scan, selectionInitialized, autoSelectSafeCategories])
 
   const summary = summarizeSelected(scan ?? undefined, selected)
   const availableCategories = scan?.categories.filter((c) => c.available) ?? []
@@ -153,38 +163,36 @@ export function CleanupPage(): React.ReactElement {
     if (isScanning) {
       return {
         status: 'good' as const,
-        title: 'Scanning for optimization…',
-        message:
-          progress?.message ?? 'Checking junk, temp files, caches, and Trash for reclaimable space.'
+        title: t('cleanup.status.scanningTitle'),
+        message: progress?.message ?? t('cleanup.status.scanningMsg')
       }
     }
     if (isCleaning) {
       return {
         status: 'good' as const,
-        title: 'Optimizing your PC…',
-        message:
-          progress?.message ?? 'Cleaning selected categories safely. Your personal files stay untouched.'
+        title: t('cleanup.status.cleaningTitle'),
+        message: progress?.message ?? t('cleanup.status.cleaningMsg')
       }
     }
     if (scanMutation.isError) {
       return {
         status: 'critical' as const,
-        title: 'Scan could not finish',
+        title: t('cleanup.status.scanErrorTitle'),
         message:
           scanMutation.error instanceof Error
             ? scanMutation.error.message
-            : 'Please try again in a moment.'
+            : t('cleanup.status.scanErrorMsg')
       }
     }
     if (lastResult && !lastResult.cancelled) {
       const freed = lastResult.bytesFreed
       return {
         status: 'good' as const,
-        title: freed > 0 ? 'Optimization complete' : 'System health improved',
+        title: freed > 0 ? t('cleanup.status.completeTitle') : t('cleanup.status.improvedTitle'),
         message:
           freed > 0
-            ? `Storage successfully reclaimed — ${formatBytes(freed)} freed.`
-            : 'Your PC is cleaner and ready. Everything looking good.'
+            ? t('cleanup.status.completeMsg', { bytes: formatBytes(freed) })
+            : t('cleanup.status.improvedMsg')
       }
     }
     if (scan) {
@@ -192,18 +200,22 @@ export function CleanupPage(): React.ReactElement {
         scan.totalBytes > 0 || availableCategories.some((c) => c.id === 'recycle')
       return {
         status: 'good' as const,
-        title: hasWork ? 'Ready to optimize' : 'No action required',
+        title: hasWork ? t('cleanup.status.readyTitle') : t('cleanup.status.noActionTitle'),
         message: hasWork
-          ? `Up to ${formatBytes(scan.totalBytes)} can be reclaimed across ${availableCategories.length} categories.`
-          : 'Your system already looks tidy. Empty Trash anytime if you like.'
+          ? t('cleanup.status.readyMsg', {
+              bytes: formatBytes(scan.totalBytes),
+              count: availableCategories.length
+            })
+          : t('cleanup.status.noActionMsg')
       }
     }
     return {
       status: 'good' as const,
-      title: 'Ready when you are',
-      message: 'Run a quick scan to find reclaimable space and boost system health.'
+      title: t('cleanup.status.idleTitle'),
+      message: t('cleanup.status.idleMsg')
     }
   }, [
+    t,
     isScanning,
     isCleaning,
     scanMutation.isError,
@@ -214,11 +226,25 @@ export function CleanupPage(): React.ReactElement {
     progress?.message
   ])
 
+  const selectionSummary =
+    summary.count === 1
+      ? summary.files > 0
+        ? t('cleanup.selectedCategoryWithItems', {
+            items: summary.files.toLocaleString()
+          })
+        : t('cleanup.selectedCategory')
+      : summary.files > 0
+        ? t('cleanup.selectedWithItems', {
+            count: summary.count,
+            items: summary.files.toLocaleString()
+          })
+        : t('cleanup.selectedCategories', { count: summary.count })
+
   return (
     <>
       <Toolbar
-        title="Cleanup"
-        description="Optimize storage and keep your PC running clean."
+        title={t('cleanup.title')}
+        description={t('cleanup.description')}
         actions={
           <div className="flex items-center gap-2">
             {busy ? (
@@ -230,7 +256,7 @@ export function CleanupPage(): React.ReactElement {
                 disabled={cancelCleanup.isPending}
               >
                 <Square className="h-3.5 w-3.5" aria-hidden="true" />
-                Pause
+                {t('common.pause')}
               </Button>
             ) : (
               <Button
@@ -240,7 +266,7 @@ export function CleanupPage(): React.ReactElement {
                 onClick={() => void handleScan()}
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                {scan ? 'Rescan' : 'Scan'}
+                {scan ? t('cleanup.rescan') : t('cleanup.scan')}
               </Button>
             )}
             <Button
@@ -254,7 +280,9 @@ export function CleanupPage(): React.ReactElement {
               ) : (
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
               )}
-              Optimize{summary.count > 0 ? ` (${summary.count})` : ''}
+              {summary.count > 0
+                ? t('cleanup.optimizeCount', { count: summary.count })
+                : t('cleanup.optimize')}
             </Button>
           </div>
         }
@@ -310,14 +338,16 @@ export function CleanupPage(): React.ReactElement {
           />
         ) : null}
 
-        {lastResult ? <CleanupResultsCard result={lastResult} /> : null}
+        {lastResult && showCompletionFeedback ? (
+          <CleanupResultsCard result={lastResult} />
+        ) : null}
 
-        <section aria-label="Cleanup categories" className="space-y-4">
+        <section aria-label={t('cleanup.categories')} className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-section-title text-foreground">Categories</h2>
+              <h2 className="text-section-title text-foreground">{t('cleanup.categories')}</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Choose what to optimize. Safe categories are pre-selected after a scan.
+                {t('cleanup.categoriesHint')}
               </p>
             </div>
             {scan && !busy ? (
@@ -329,7 +359,7 @@ export function CleanupPage(): React.ReactElement {
                   onClick={selectAllSafe}
                 >
                   <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                  Select safe
+                  {t('cleanup.selectSafe')}
                 </Button>
                 <Button
                   size="sm"
@@ -337,7 +367,7 @@ export function CleanupPage(): React.ReactElement {
                   className="h-8 rounded-lg px-2.5 text-xs"
                   onClick={clearSelection}
                 >
-                  Clear
+                  {t('common.clear')}
                 </Button>
               </div>
             ) : null}
@@ -349,10 +379,9 @@ export function CleanupPage(): React.ReactElement {
                 <Sparkles className="h-7 w-7" strokeWidth={1.75} aria-hidden="true" />
               </div>
               <div className="max-w-sm space-y-1.5">
-                <p className="text-sm font-semibold text-foreground">Start optimizing</p>
+                <p className="text-sm font-semibold text-foreground">{t('cleanup.emptyTitle')}</p>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  A quick scan finds reclaimable junk, temp files, browser caches, and Trash —
-                  then you choose what to clean.
+                  {t('cleanup.emptyDesc')}
                 </p>
               </div>
               <Button
@@ -361,7 +390,7 @@ export function CleanupPage(): React.ReactElement {
                 onClick={() => void handleScan()}
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                Start scan
+                {t('cleanup.startScan')}
               </Button>
             </div>
           ) : (
@@ -392,12 +421,9 @@ export function CleanupPage(): React.ReactElement {
           <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success/25 bg-card/95 px-4 py-3 shadow-lg backdrop-blur-md">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">
-                {summary.label} ready to reclaim
+                {t('cleanup.readyReclaim', { label: summary.label })}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {summary.count} categor{summary.count === 1 ? 'y' : 'ies'} selected
-                {summary.files > 0 ? ` · ~${summary.files.toLocaleString()} items` : ''}
-              </p>
+              <p className="text-xs text-muted-foreground">{selectionSummary}</p>
             </div>
             <Button
               size="sm"
@@ -405,7 +431,7 @@ export function CleanupPage(): React.ReactElement {
               onClick={() => void handleClean()}
             >
               <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Optimize now
+              {t('cleanup.optimizeNow')}
             </Button>
           </div>
         ) : null}

@@ -4,11 +4,13 @@ import { Toolbar } from '@/components/desktop/Toolbar'
 import { MetricCard } from '@/components/desktop/MetricCard'
 import { PerformanceGraph } from '@/components/desktop/PerformanceGraph'
 import { cn } from '@/utils/cn'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 interface ReportEntry {
   id: string
   type: 'cleanup' | 'scan' | 'storage' | 'performance'
-  title: string
+  titleKey: TranslationKey
   date: string
   duration: string
   result: string
@@ -26,7 +28,7 @@ const reportHistory: ReportEntry[] = [
   {
     id: '1',
     type: 'cleanup',
-    title: 'Full Cleanup',
+    titleKey: 'reports.entry.fullCleanup',
     date: 'Jul 6, 2026 · 2:14 PM',
     duration: '1m 42s',
     result: '2.3 GB recovered',
@@ -35,7 +37,7 @@ const reportHistory: ReportEntry[] = [
   {
     id: '2',
     type: 'scan',
-    title: 'Smart Scan',
+    titleKey: 'reports.entry.smartScan',
     date: 'Jul 5, 2026 · 9:30 AM',
     duration: '3m 08s',
     result: '4 issues found',
@@ -44,7 +46,7 @@ const reportHistory: ReportEntry[] = [
   {
     id: '3',
     type: 'storage',
-    title: 'Duplicate Removal',
+    titleKey: 'reports.entry.duplicates',
     date: 'Jul 3, 2026 · 6:45 PM',
     duration: '4m 21s',
     result: '840 MB recovered',
@@ -53,7 +55,7 @@ const reportHistory: ReportEntry[] = [
   {
     id: '4',
     type: 'performance',
-    title: 'Startup Optimization',
+    titleKey: 'reports.entry.startup',
     date: 'Jul 1, 2026 · 8:00 AM',
     duration: '48s',
     result: 'Boot time −12 sec',
@@ -62,7 +64,7 @@ const reportHistory: ReportEntry[] = [
   {
     id: '5',
     type: 'cleanup',
-    title: 'Browser Cache Clean',
+    titleKey: 'reports.entry.browser',
     date: 'Jun 28, 2026 · 11:20 AM',
     duration: '22s',
     result: '620 MB recovered',
@@ -88,52 +90,54 @@ const typeStyles: Record<ReportEntry['type'], string> = {
 }
 
 export function ReportsPage(): React.ReactElement {
+  const { t } = useTranslation()
+
   return (
     <>
       <Toolbar
-        title="Reports"
-        description="History and insights from scans, cleanups, and optimizations."
+        title={t('reports.title')}
+        description={t('reports.description')}
       />
 
       <div className="space-y-6 p-content-pad">
-        <section aria-label="Report summary">
-          <h2 className="mb-4 text-section-title text-foreground">Summary</h2>
+        <section aria-label={t('reports.summary')}>
+          <h2 className="mb-4 text-section-title text-foreground">{t('reports.summary')}</h2>
           <div className="grid gap-grid-gap sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               icon={BarChart3}
-              title="Total Cleanups"
-              description="All time"
+              title={t('reports.totalCleanups')}
+              description={t('reports.allTime')}
               value={String(reportSummary.totalCleanups)}
             />
             <MetricCard
               icon={HardDrive}
-              title="Space Recovered"
-              description="All time"
+              title={t('reports.spaceRecovered')}
+              description={t('reports.allTime')}
               value={reportSummary.spaceRecovered}
             />
             <MetricCard
               icon={Zap}
-              title="Boot Improvement"
-              description="Average gain"
+              title={t('reports.bootImprovement')}
+              description={t('reports.avgGain')}
               value={reportSummary.avgBootImprovement}
             />
             <MetricCard
               icon={ScanSearch}
-              title="Last Scan"
-              description="Most recent activity"
+              title={t('reports.lastScan')}
+              description={t('reports.recent')}
               value={reportSummary.lastScan}
             />
           </div>
         </section>
 
         <PerformanceGraph
-          title="Space Recovered This Week (GB)"
+          title={t('reports.trendTitle')}
           data={spaceRecoveredTrend}
           color="disk"
         />
 
-        <section aria-label="Report history">
-          <h2 className="mb-4 text-section-title text-foreground">Activity History</h2>
+        <section aria-label={t('reports.activity')}>
+          <h2 className="mb-4 text-section-title text-foreground">{t('reports.activity')}</h2>
           <div className="rounded-xl border border-border bg-card shadow-card">
             <ul className="divide-y divide-border">
               {reportHistory.map((entry) => {
@@ -151,7 +155,9 @@ export function ReportsPage(): React.ReactElement {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">{entry.title}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {t(entry.titleKey)}
+                      </p>
                       <p className="text-xs text-muted-foreground">{entry.date}</p>
                     </div>
 

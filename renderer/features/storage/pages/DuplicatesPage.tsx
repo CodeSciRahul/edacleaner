@@ -25,28 +25,35 @@ import { getFileCategory, type FileCategory } from '@/features/storage/lib/file-
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import type { DuplicateGroup } from '@shared/interfaces'
+import { useTranslation } from '@/i18n/useTranslation'
 
 type SortKey = 'size' | 'copies' | 'name'
 type SizeFilter = 'all' | '10mb' | '50mb' | '100mb' | '500mb'
 
-const SIZE_FILTERS: Array<{ id: SizeFilter; label: string; minBytes: number }> = [
-  { id: 'all', label: 'Any size', minBytes: 0 },
-  { id: '10mb', label: '≥ 10 MB', minBytes: 10 * 1024 * 1024 },
-  { id: '50mb', label: '≥ 50 MB', minBytes: 50 * 1024 * 1024 },
-  { id: '100mb', label: '≥ 100 MB', minBytes: 100 * 1024 * 1024 },
-  { id: '500mb', label: '≥ 500 MB', minBytes: 500 * 1024 * 1024 }
-]
-
-const SORT_OPTIONS = [
-  { value: 'size', label: 'Size' },
-  { value: 'copies', label: 'Duplicate count' },
-  { value: 'name', label: 'Name' }
+const SIZE_FILTER_BYTES: Array<{ id: SizeFilter; minBytes: number; fallbackLabel: string }> = [
+  { id: 'all', minBytes: 0, fallbackLabel: 'Any size' },
+  { id: '10mb', minBytes: 10 * 1024 * 1024, fallbackLabel: '≥ 10 MB' },
+  { id: '50mb', minBytes: 50 * 1024 * 1024, fallbackLabel: '≥ 50 MB' },
+  { id: '100mb', minBytes: 100 * 1024 * 1024, fallbackLabel: '≥ 100 MB' },
+  { id: '500mb', minBytes: 500 * 1024 * 1024, fallbackLabel: '≥ 500 MB' }
 ]
 
 export function DuplicatesPage(): React.ReactElement {
+  const { t } = useTranslation()
   const { data: groups = [], isLoading, isError, error, refetch, isFetching } = useDuplicates()
   const reveal = useRevealInFolder()
   const deleteFiles = useDeleteFiles()
+
+  const SIZE_FILTERS = SIZE_FILTER_BYTES.map((f) => ({
+    ...f,
+    label: f.id === 'all' ? t('largeFiles.anySize') : f.fallbackLabel
+  }))
+
+  const SORT_OPTIONS = [
+    { value: 'size', label: t('duplicates.sortSize') },
+    { value: 'copies', label: t('duplicates.sortCopies') },
+    { value: 'name', label: t('duplicates.sortName') }
+  ]
 
   const [query, setQuery] = useState('')
   const [pathFilter, setPathFilter] = useState('')
@@ -57,7 +64,7 @@ export function DuplicatesPage(): React.ReactElement {
   const [selected, setSelected] = useState<string[]>([])
   const [notice, setNotice] = useState<string | null>(null)
 
-  const minBytes = SIZE_FILTERS.find((f) => f.id === sizeFilter)?.minBytes ?? 0
+  const minBytes = SIZE_FILTER_BYTES.find((f) => f.id === sizeFilter)?.minBytes ?? 0
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -128,8 +135,8 @@ export function DuplicatesPage(): React.ReactElement {
   return (
     <>
       <Toolbar
-        title="Duplicate Files"
-        description="Group identical files and reclaim wasted disk space."
+        title={t('duplicates.title')}
+        description={t('duplicates.description')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -143,7 +150,7 @@ export function DuplicatesPage(): React.ReactElement {
               }}
             >
               <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-              Refresh
+              {t('common.refresh')}
             </Button>
             <Button
               size="sm"
@@ -163,7 +170,7 @@ export function DuplicatesPage(): React.ReactElement {
               onClick={clearSelection}
             >
               <X className="h-4 w-4" />
-              Clear
+              {t('common.clear')}
             </Button>
             <Button
               size="sm"
@@ -173,7 +180,7 @@ export function DuplicatesPage(): React.ReactElement {
               onClick={() => void handleDeleteSelected()}
             >
               <Trash2 className="h-4 w-4" />
-              Delete ({selected.length})
+              {t('duplicates.delete', { count: selected.length })}
             </Button>
           </div>
         }
@@ -181,7 +188,10 @@ export function DuplicatesPage(): React.ReactElement {
 
       <div className="space-y-4 p-content-pad">
         <PageBreadcrumb
-          items={[{ label: 'Storage', href: '/storage' }, { label: 'Duplicates' }]}
+          items={[
+            { label: t('storage.title'), href: '/storage' },
+            { label: t('storage.subnav.duplicates') }
+          ]}
         />
         <StorageSubnav />
 
@@ -203,7 +213,7 @@ export function DuplicatesPage(): React.ReactElement {
           onSortKeyChange={(v) => setSortKey(v as SortKey)}
         >
           <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-            <span className="shrink-0">Size</span>
+            <span className="shrink-0">{t('duplicates.sortSize')}</span>
             <select
               className="bg-transparent text-sm text-foreground outline-none"
               value={sizeFilter}
@@ -218,7 +228,7 @@ export function DuplicatesPage(): React.ReactElement {
             </select>
           </label>
           <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-            <span className="shrink-0">Copies</span>
+            <span className="shrink-0">{t('duplicates.sortCopies')}</span>
             <select
               className="bg-transparent text-sm text-foreground outline-none"
               value={String(minCopies)}
@@ -253,7 +263,7 @@ export function DuplicatesPage(): React.ReactElement {
         </div>
 
         {isLoading ? (
-          <EmptyCard message="Looking for duplicates…" />
+          <EmptyCard message={t('duplicates.emptyScanning')} />
         ) : isError ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-16 text-center shadow-card">
             <AlertCircle className="h-8 w-8 text-destructive" />
@@ -261,7 +271,7 @@ export function DuplicatesPage(): React.ReactElement {
               {error instanceof Error ? error.message : 'Failed to load duplicates'}
             </p>
             <Button size="sm" variant="outline" onClick={() => void refetch()}>
-              Retry
+              {t('common.retry')}
             </Button>
           </div>
         ) : filtered.length === 0 ? (
@@ -269,8 +279,8 @@ export function DuplicatesPage(): React.ReactElement {
             icon
             message={
               groups.length === 0
-                ? 'No duplicate groups found in your user folder.'
-                : 'No groups match the current filters.'
+                ? t('duplicates.emptyNone')
+                : t('duplicates.emptyFilter')
             }
           />
         ) : (
@@ -284,6 +294,7 @@ export function DuplicatesPage(): React.ReactElement {
                 onToggle={togglePath}
                 onReveal={(path) => reveal.mutate(path)}
                 onCopy={(path) => void copyPath(path)}
+                keepLabel={t('duplicates.keep')}
               />
             ))}
           </div>
@@ -299,7 +310,8 @@ function DuplicateGroupCard({
   busy,
   onToggle,
   onReveal,
-  onCopy
+  onCopy,
+  keepLabel
 }: {
   group: DuplicateGroup
   selected: string[]
@@ -307,6 +319,7 @@ function DuplicateGroupCard({
   onToggle: (path: string) => void
   onReveal: (path: string) => void
   onCopy: (path: string) => void
+  keepLabel: string
 }): React.ReactElement {
   const waste = group.sizeBytes * Math.max(0, group.copies - 1)
 
@@ -356,7 +369,7 @@ function DuplicateGroupCard({
                   <p className="truncate text-sm font-medium text-foreground">{name}</p>
                   {isKeep ? (
                     <Badge className="border-0 bg-success/10 text-success text-[10px]">
-                      Keep
+                      {keepLabel}
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="text-[10px]">

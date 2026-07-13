@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { cn } from '@/utils/cn'
 import type { SidebarNavItem as NavItem } from '@/components/layout/sidebar-nav'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface SidebarNavItemProps {
   item: NavItem
@@ -15,7 +16,9 @@ interface TooltipState {
 }
 
 export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps): React.ReactElement {
+  const { t } = useTranslation()
   const Icon = item.icon
+  const label = t(item.labelKey)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
   const showTooltip = useCallback(
@@ -38,7 +41,7 @@ export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps): React.
       <NavLink
         to={item.href}
         end={item.href === '/'}
-        aria-label={item.label}
+        aria-label={label}
         onMouseEnter={showTooltip}
         onMouseLeave={hideTooltip}
         onFocus={showTooltip}
@@ -73,7 +76,7 @@ export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps): React.
               strokeWidth={1.75}
               aria-hidden="true"
             />
-            {!collapsed && <span className="truncate">{item.label}</span>}
+            {!collapsed && <span className="truncate">{label}</span>}
           </>
         )}
       </NavLink>
@@ -91,7 +94,7 @@ export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps): React.
             )}
             style={{ top: tooltip.top, left: tooltip.left }}
           >
-            {item.label}
+            {label}
           </span>,
           document.body
         )}

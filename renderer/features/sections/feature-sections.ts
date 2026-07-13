@@ -13,111 +13,112 @@ import {
   Cpu,
   Activity
 } from 'lucide-react'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 export interface FeatureItem {
   id: string
-  label: string
-  description: string
+  labelKey: TranslationKey
+  descriptionKey: TranslationKey
   icon: LucideIcon
 }
 
 export interface FeatureSection {
   id: string
-  title: string
-  description: string
+  titleKey: TranslationKey
+  descriptionKey: TranslationKey
   features: FeatureItem[]
 }
 
 export const featureSections: Record<string, FeatureSection> = {
   cleanup: {
     id: 'cleanup',
-    title: 'Cleanup',
-    description: 'Clear clutter and reclaim space with targeted cleaning tools.',
+    titleKey: 'feature.cleanup.title',
+    descriptionKey: 'feature.cleanup.desc',
     features: [
       {
         id: 'junk-cleaner',
-        label: 'Junk Cleaner',
-        description: 'Remove leftover files and system clutter safely.',
+        labelKey: 'feature.cleanup.junk',
+        descriptionKey: 'feature.cleanup.junkDesc',
         icon: Trash2
       },
       {
         id: 'temporary-files',
-        label: 'Temporary Files',
-        description: 'Delete temporary files created by apps and Windows.',
+        labelKey: 'feature.cleanup.temp',
+        descriptionKey: 'feature.cleanup.tempDesc',
         icon: Clock
       },
       {
         id: 'recycle-bin',
-        label: 'Recycle Bin',
-        description: 'Empty deleted items and recover wasted space.',
+        labelKey: 'feature.cleanup.recycle',
+        descriptionKey: 'feature.cleanup.recycleDesc',
         icon: Recycle
       },
       {
         id: 'browser-cache',
-        label: 'Browser Cache',
-        description: 'Clear cached data from popular browsers.',
+        labelKey: 'feature.cleanup.browser',
+        descriptionKey: 'feature.cleanup.browserDesc',
         icon: Globe
       },
       {
         id: 'system-cache',
-        label: 'System Cache',
-        description: 'Clean system caches without affecting personal files.',
+        labelKey: 'feature.cleanup.system',
+        descriptionKey: 'feature.cleanup.systemDesc',
         icon: Database
       }
     ]
   },
   storage: {
     id: 'storage',
-    title: 'Storage',
-    description: 'Find what is using disk space and free it up intelligently.',
+    titleKey: 'feature.storage.title',
+    descriptionKey: 'feature.storage.desc',
     features: [
       {
         id: 'duplicate-files',
-        label: 'Duplicate Files',
-        description: 'Locate and remove identical copies of files.',
+        labelKey: 'feature.storage.dupes',
+        descriptionKey: 'feature.storage.dupesDesc',
         icon: Copy
       },
       {
         id: 'large-files',
-        label: 'Large Files',
-        description: 'Discover oversized files taking up valuable space.',
+        labelKey: 'feature.storage.large',
+        descriptionKey: 'feature.storage.largeDesc',
         icon: FileStack
       },
       {
         id: 'disk-usage',
-        label: 'Disk Usage Analyzer',
-        description: 'Visualize how storage is distributed across drives.',
+        labelKey: 'feature.storage.disk',
+        descriptionKey: 'feature.storage.diskDesc',
         icon: PieChart
       }
     ]
   },
   performance: {
     id: 'performance',
-    title: 'Performance',
-    description: 'Optimize startup, memory, and background activity.',
+    titleKey: 'feature.performance.title',
+    descriptionKey: 'feature.performance.desc',
     features: [
       {
         id: 'startup-manager',
-        label: 'Startup Manager',
-        description: 'Control apps that launch when your PC starts.',
+        labelKey: 'feature.performance.startup',
+        descriptionKey: 'feature.performance.startupDesc',
         icon: Power
       },
       {
         id: 'background-apps',
-        label: 'Background Apps',
-        description: 'Limit apps running quietly in the background.',
+        labelKey: 'feature.performance.bg',
+        descriptionKey: 'feature.performance.bgDesc',
         icon: Layers
       },
       {
         id: 'memory-optimization',
-        label: 'Memory Optimization',
-        description: 'Free RAM used by idle and heavy processes.',
+        labelKey: 'feature.performance.memory',
+        descriptionKey: 'feature.performance.memoryDesc',
         icon: Cpu
       },
       {
         id: 'performance-monitor',
-        label: 'Performance Monitor',
-        description: 'Track CPU, memory, and system responsiveness.',
+        labelKey: 'feature.performance.monitor',
+        descriptionKey: 'feature.performance.monitorDesc',
         icon: Activity
       }
     ]

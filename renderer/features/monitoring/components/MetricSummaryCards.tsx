@@ -1,6 +1,8 @@
 import { Cpu, MemoryStick } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import type { HealthStatus, MetricDefinition, MetricStats } from '../types'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 const statusStyles: Record<HealthStatus, string> = {
   normal: 'bg-success/10 text-success border-success/20',
@@ -8,10 +10,10 @@ const statusStyles: Record<HealthStatus, string> = {
   critical: 'bg-destructive/10 text-destructive border-destructive/20'
 }
 
-const statusLabel: Record<HealthStatus, string> = {
-  normal: 'Normal',
-  warning: 'Warning',
-  critical: 'Critical'
+const statusLabelKey: Record<HealthStatus, TranslationKey> = {
+  normal: 'monitoring.level.normal',
+  warning: 'monitoring.level.warning',
+  critical: 'monitoring.level.critical'
 }
 
 interface MetricSummaryCardsProps {
@@ -26,6 +28,8 @@ export function MetricSummaryCards({
   metrics,
   isLoading
 }: MetricSummaryCardsProps): React.ReactElement {
+  const { t } = useTranslation()
+
   return (
     <section aria-label="Performance summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {metrics.map(({ definition, stats }) => {
@@ -44,7 +48,9 @@ export function MetricSummaryCards({
               <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-muted-foreground">{definition.label}</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {t(definition.labelKey)}
+              </p>
               <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
                 {isLoading || !stats ? '…' : `${stats.current.toFixed(1)}${definition.unit}`}
               </p>
@@ -55,7 +61,7 @@ export function MetricSummaryCards({
                 statusStyles[status]
               )}
             >
-              {stats ? statusLabel[status] : '—'}
+              {stats ? t(statusLabelKey[status]) : '—'}
             </span>
           </article>
         )

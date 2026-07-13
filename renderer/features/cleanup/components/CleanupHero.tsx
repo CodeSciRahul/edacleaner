@@ -2,6 +2,7 @@ import { Search, Sparkles, ShieldCheck, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { formatBytes } from '@shared/utils'
 import type { CleanupWorkflowPhase } from '@/features/cleanup/lib/category-meta'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface CleanupHeroProps {
   phase: CleanupWorkflowPhase
@@ -11,11 +12,7 @@ interface CleanupHeroProps {
   lastBytesFreed?: number
 }
 
-const steps: Array<{ id: CleanupWorkflowPhase; label: string }> = [
-  { id: 'scan', label: 'Scan' },
-  { id: 'review', label: 'Review' },
-  { id: 'clean', label: 'Optimize' }
-]
+const STEP_IDS: CleanupWorkflowPhase[] = ['scan', 'review', 'clean']
 
 function stepIndex(phase: CleanupWorkflowPhase): number {
   if (phase === 'idle') return -1
@@ -33,8 +30,15 @@ export function CleanupHero({
   scanned,
   lastBytesFreed
 }: CleanupHeroProps): React.ReactElement {
+  const { t } = useTranslation()
   const active = stepIndex(phase)
   const optimized = phase === 'done'
+
+  const steps = [
+    { id: STEP_IDS[0], label: t('cleanup.hero.scan') },
+    { id: STEP_IDS[1], label: t('cleanup.hero.review') },
+    { id: STEP_IDS[2], label: t('cleanup.hero.optimize') }
+  ]
 
   let headline: string
   let subtext: string
@@ -42,28 +46,28 @@ export function CleanupHero({
   if (optimized) {
     headline =
       typeof lastBytesFreed === 'number' && lastBytesFreed > 0
-        ? `${formatBytes(lastBytesFreed)} successfully reclaimed`
-        : 'System health improved'
-    subtext =
-      'Your PC is cleaner and more optimized. Run another scan anytime to keep it that way.'
+        ? t('cleanup.hero.reclaimed', { bytes: formatBytes(lastBytesFreed) })
+        : t('cleanup.hero.improved')
+    subtext = t('cleanup.hero.doneSub')
   } else if (!scanned) {
-    headline = 'Clear clutter. Feel the difference.'
-    subtext =
-      'Scan junk, temp files, caches, and Trash — then optimize only what you choose. Personal files stay safe.'
+    headline = t('cleanup.hero.idleHeadline')
+    subtext = t('cleanup.hero.idleSub')
   } else if (reclaimableBytes > 0) {
-    headline = `${formatBytes(reclaimableBytes)} ready to reclaim`
+    headline = t('cleanup.hero.readyHeadline', { bytes: formatBytes(reclaimableBytes) })
     subtext =
       selectedCount > 0
-        ? `${selectedCount} categor${selectedCount === 1 ? 'y' : 'ies'} selected. Review badges, then optimize with confidence.`
-        : 'Select categories below, then start optimization.'
+        ? selectedCount === 1
+          ? t('cleanup.hero.selectedSubOne')
+          : t('cleanup.hero.selectedSub', { count: selectedCount })
+        : t('cleanup.hero.selectSub')
   } else {
-    headline = 'Looking great — no action required'
-    subtext = 'Your system already looks tidy. Empty Trash anytime if you like an extra polish.'
+    headline = t('cleanup.hero.tidyHeadline')
+    subtext = t('cleanup.hero.tidySub')
   }
 
   return (
     <section
-      aria-label="Cleanup overview"
+      aria-label={t('cleanup.hero.overview')}
       className={cn(
         'relative overflow-hidden rounded-2xl border p-6 shadow-card sm:p-7',
         optimized
@@ -91,7 +95,7 @@ export function CleanupHero({
             ) : (
               <ShieldCheck className="h-3.5 w-3.5 text-success" aria-hidden="true" />
             )}
-            {optimized ? 'Optimization successful' : 'Safe-by-default cleanup'}
+            {optimized ? t('cleanup.hero.badgeSuccess') : t('cleanup.hero.badgeSafe')}
           </div>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.65rem]">
             {headline}
@@ -99,7 +103,7 @@ export function CleanupHero({
           <p className="text-sm leading-relaxed text-muted-foreground">{subtext}</p>
         </div>
 
-        <ol className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label="Cleanup workflow">
+        <ol className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label={t('cleanup.hero.overview')}>
           {steps.map((step, index) => {
             const isActive = index === active && !optimized
             const isDone = index < active || optimized

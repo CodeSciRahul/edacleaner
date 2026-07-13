@@ -21,11 +21,26 @@ import {
 } from '@/features/performance/hooks/useBoost'
 import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
 import { AppsEmptyState } from '@/features/apps/components/AppsEmptyState'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 type StatusFilter = 'all' | 'safe' | 'selected'
 type SortKey = 'memory' | 'cpu' | 'name'
 
+const filterLabelKeys: Record<StatusFilter, TranslationKey> = {
+  all: 'backgroundApps.filterAll',
+  safe: 'backgroundApps.filterSafe',
+  selected: 'backgroundApps.filterSelected'
+}
+
+const sortLabelKeys: Record<SortKey, TranslationKey> = {
+  memory: 'backgroundApps.sortMemory',
+  cpu: 'backgroundApps.sortCpu',
+  name: 'backgroundApps.sortName'
+}
+
 export function BackgroundAppsPage(): React.ReactElement {
+  const { t } = useTranslation()
   const {
     processes: apps,
     updatedAt,
@@ -121,14 +136,14 @@ export function BackgroundAppsPage(): React.ReactElement {
 
   const updatedLabel =
     updatedAt == null
-      ? 'Waiting…'
-      : `Updated ${new Date(updatedAt).toLocaleTimeString()}`
+      ? t('backgroundApps.waiting')
+      : new Date(updatedAt).toLocaleTimeString()
 
   return (
     <>
       <Toolbar
-        title="Background Applications"
-        description="Live view of safe background processes — updates while this page is open."
+        title={t('backgroundApps.title')}
+        description={t('backgroundApps.description')}
         actions={
           <div className="flex items-center gap-2">
             <span
@@ -141,7 +156,7 @@ export function BackgroundAppsPage(): React.ReactElement {
               title={isLive ? 'Receiving live process updates' : 'Live updates paused or starting'}
             >
               <Radio className={cn('h-3.5 w-3.5', isLive && 'animate-pulse')} />
-              {isLive ? 'Live' : 'Offline'}
+              {isLive ? t('backgroundApps.live') : t('backgroundApps.offline')}
             </span>
             <Button
               size="sm"
@@ -154,7 +169,7 @@ export function BackgroundAppsPage(): React.ReactElement {
               }}
             >
               <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-              Refresh
+              {t('common.refresh')}
             </Button>
             <Button
               size="sm"
@@ -169,7 +184,7 @@ export function BackgroundAppsPage(): React.ReactElement {
               }}
             >
               <Square className="h-3.5 w-3.5" />
-              Stop selected
+              {t('backgroundApps.stopSelected')}
               {selectedPids.length > 0 ? ` (${selectedPids.length})` : ''}
             </Button>
           </div>
@@ -179,16 +194,16 @@ export function BackgroundAppsPage(): React.ReactElement {
       <div className="space-y-4 p-content-pad">
         <PageBreadcrumb
           items={[
-            { label: 'Performance', href: '/performance' },
-            { label: 'Background Applications' }
+            { label: t('performance.title'), href: '/performance' },
+            { label: t('backgroundApps.title') }
           ]}
         />
 
         <div className="grid gap-3 sm:grid-cols-4">
-          <SummaryChip label="Listed" value={String(apps.length)} />
-          <SummaryChip label="Visible" value={String(filtered.length)} />
-          <SummaryChip label="Memory (visible)" value={formatBytes(totalMemory)} />
-          <SummaryChip label="Last update" value={updatedLabel} />
+          <SummaryChip label={t('backgroundApps.listed')} value={String(apps.length)} />
+          <SummaryChip label={t('backgroundApps.visible')} value={String(filtered.length)} />
+          <SummaryChip label={t('backgroundApps.memory')} value={formatBytes(totalMemory)} />
+          <SummaryChip label={t('backgroundApps.lastUpdate')} value={updatedLabel} />
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
@@ -210,10 +225,10 @@ export function BackgroundAppsPage(): React.ReactElement {
                   key={filter}
                   size="sm"
                   variant={statusFilter === filter ? 'default' : 'outline'}
-                  className="h-9 capitalize"
+                  className="h-9"
                   onClick={() => setStatusFilter(filter)}
                 >
-                  {filter}
+                  {t(filterLabelKeys[filter])}
                 </Button>
               ))}
               <label className="flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-2 text-xs text-muted-foreground">
@@ -224,9 +239,11 @@ export function BackgroundAppsPage(): React.ReactElement {
                   className="bg-transparent text-foreground outline-none"
                   aria-label="Sort background apps"
                 >
-                  <option value="memory">Memory</option>
-                  <option value="cpu">CPU</option>
-                  <option value="name">Name</option>
+                  {(Object.keys(sortLabelKeys) as SortKey[]).map((key) => (
+                    <option key={key} value={key}>
+                      {t(sortLabelKeys[key])}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
@@ -248,7 +265,7 @@ export function BackgroundAppsPage(): React.ReactElement {
               description={
                 error instanceof Error ? error.message : 'Something went wrong while scanning processes.'
               }
-              actionLabel="Try again"
+              actionLabel={t('common.retry')}
               onAction={() => void refresh()}
             />
           ) : isLoading ? (
@@ -265,13 +282,9 @@ export function BackgroundAppsPage(): React.ReactElement {
           ) : filtered.length === 0 ? (
             <AppsEmptyState
               icon={Layers}
-              title={apps.length === 0 ? 'No background apps found' : 'No matches'}
-              description={
-                apps.length === 0
-                  ? 'Safe-to-stop processes will appear here after a scan.'
-                  : 'Try a different search or clear your filters.'
-              }
-              actionLabel="Refresh"
+              title={t('backgroundApps.empty')}
+              description={t('backgroundApps.empty')}
+              actionLabel={t('common.refresh')}
               onAction={() => void refresh()}
             />
           ) : (
@@ -293,13 +306,15 @@ export function BackgroundAppsPage(): React.ReactElement {
                         onChange={toggleAllVisible}
                       />
                     </th>
-                    <th className="px-2 py-3 font-medium">Application</th>
-                    <th className="px-2 py-3 font-medium">Process</th>
-                    <th className="px-2 py-3 font-medium">Type</th>
-                    <th className="px-2 py-3 font-medium">CPU</th>
-                    <th className="px-2 py-3 font-medium">Memory</th>
-                    <th className="px-2 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 text-right font-medium">Action</th>
+                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.app')}</th>
+                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.process')}</th>
+                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.type')}</th>
+                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.cpu')}</th>
+                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.memory')}</th>
+                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.status')}</th>
+                    <th className="px-4 py-3 text-right font-medium">
+                      {t('backgroundApps.col.action')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -356,11 +371,11 @@ export function BackgroundAppsPage(): React.ReactElement {
                           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                             {app.safeToTerminate ? (
                               <>
-                                <User className="h-3.5 w-3.5" /> User
+                                <User className="h-3.5 w-3.5" /> {t('backgroundApps.user')}
                               </>
                             ) : (
                               <>
-                                <Shield className="h-3.5 w-3.5" /> Protected
+                                <Shield className="h-3.5 w-3.5" /> {t('backgroundApps.protected')}
                               </>
                             )}
                           </span>
@@ -372,7 +387,9 @@ export function BackgroundAppsPage(): React.ReactElement {
                           {formatBytes(app.memoryBytes)}
                         </td>
                         <td className="px-2 py-3">
-                          <Badge className="border-0 bg-success/10 text-success">Running</Badge>
+                          <Badge className="border-0 bg-success/10 text-success">
+                            {t('backgroundApps.running')}
+                          </Badge>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <Button
@@ -385,7 +402,7 @@ export function BackgroundAppsPage(): React.ReactElement {
                             }
                           >
                             <Square className="h-3 w-3" />
-                            {stopping ? 'Stopping…' : 'Stop'}
+                            {stopping ? t('backgroundApps.stopping') : t('backgroundApps.stop')}
                           </Button>
                         </td>
                       </tr>

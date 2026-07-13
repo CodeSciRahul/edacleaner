@@ -12,8 +12,8 @@ import {
 export const metricDefinitions: MetricDefinition[] = [
   {
     id: 'cpu',
-    label: 'CPU Usage',
-    shortLabel: 'CPU',
+    labelKey: 'monitoring.metric.cpu',
+    shortLabelKey: 'monitoring.metric.cpuShort',
     unit: '%',
     color: colors.chart.cpu,
     iconName: 'cpu',
@@ -21,8 +21,8 @@ export const metricDefinitions: MetricDefinition[] = [
   },
   {
     id: 'memory',
-    label: 'Memory Usage',
-    shortLabel: 'Memory',
+    labelKey: 'monitoring.metric.memory',
+    shortLabelKey: 'monitoring.metric.memoryShort',
     unit: '%',
     color: colors.chart.ram,
     iconName: 'memory',

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { LiveMetricChart } from './LiveMetricChart'
 import type { ChartPoint, MetricDefinition, MetricStats } from '../types'
 import { cn } from '@/utils/cn'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface MetricExpandDialogProps {
   open: boolean
@@ -20,6 +21,9 @@ export function MetricExpandDialog({
   points,
   stats
 }: MetricExpandDialogProps): React.ReactElement | null {
+  const { t } = useTranslation()
+  const label = t(definition.labelKey)
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent): void => {
@@ -36,25 +40,31 @@ export function MetricExpandDialog({
       className="fixed inset-0 z-50 flex items-center justify-center p-6"
       role="dialog"
       aria-modal="true"
-      aria-label={`${definition.label} detailed view`}
+      aria-label={`${label} detailed view`}
     >
       <button
         type="button"
         className="absolute inset-0 bg-background/70 backdrop-blur-sm"
-        aria-label="Close detailed view"
+        aria-label={t('common.close')}
         onClick={onClose}
       />
       <div className="relative z-10 w-full max-w-4xl rounded-xl border border-border bg-card p-5 shadow-card">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-section-title text-foreground">{definition.label}</h2>
+            <h2 className="text-section-title text-foreground">{label}</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {stats
                 ? `Current ${stats.current.toFixed(1)}${definition.unit} · Avg ${stats.avg}${definition.unit}`
-                : 'Waiting for samples…'}
+                : t('monitoring.waitingSamples')}
             </p>
           </div>
-          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClose} aria-label="Close">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            onClick={onClose}
+            aria-label={t('common.close')}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -62,15 +72,24 @@ export function MetricExpandDialog({
         <LiveMetricChart
           points={points}
           color={definition.color}
-          label={definition.label}
+          label={label}
           unit={definition.unit}
           variant="expanded"
         />
 
         <div className="mt-4 grid grid-cols-3 gap-3">
-          <StatBox label="Minimum" value={stats ? `${stats.min}${definition.unit}` : '—'} />
-          <StatBox label="Average" value={stats ? `${stats.avg}${definition.unit}` : '—'} />
-          <StatBox label="Maximum" value={stats ? `${stats.max}${definition.unit}` : '—'} />
+          <StatBox
+            label={t('monitoring.min')}
+            value={stats ? `${stats.min}${definition.unit}` : '—'}
+          />
+          <StatBox
+            label={t('monitoring.avg')}
+            value={stats ? `${stats.avg}${definition.unit}` : '—'}
+          />
+          <StatBox
+            label={t('monitoring.max')}
+            value={stats ? `${stats.max}${definition.unit}` : '—'}
+          />
         </div>
       </div>
     </div>

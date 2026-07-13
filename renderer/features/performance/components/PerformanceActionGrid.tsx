@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useTranslation } from '@/i18n/useTranslation'
 
 export interface PerformanceActionItem {
   id: string
@@ -20,14 +21,15 @@ interface PerformanceActionGridProps {
 export function PerformanceActionGrid({
   items
 }: PerformanceActionGridProps): React.ReactElement {
+  const { t } = useTranslation()
+
   return (
-    <section aria-label="Quick actions">
+    <section aria-label={t('performance.optimizeFurther')}>
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <h2 className="text-section-title text-foreground">Optimize further</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Jump into managers and reclaim more resources.
-          </p>
+          <h2 className="text-section-title text-foreground">
+            {t('performance.optimizeFurther')}
+          </h2>
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

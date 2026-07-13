@@ -1,5 +1,6 @@
 import type { SystemMetricsSample } from '@shared/interfaces'
 import { colors } from '@/theme/colors'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 export type MetricId = 'cpu' | 'memory'
 
@@ -9,14 +10,14 @@ export type HealthStatus = 'normal' | 'warning' | 'critical'
 
 export interface TimeRangeOption {
   id: TimeRangeId
-  label: string
+  labelKey: TranslationKey
   sampleCount: number
 }
 
 export interface MetricDefinition {
   id: MetricId
-  label: string
-  shortLabel: string
+  labelKey: TranslationKey
+  shortLabelKey: TranslationKey
   unit: string
   color: string
   iconName: 'cpu' | 'memory'
@@ -37,11 +38,11 @@ export interface ChartPoint {
 }
 
 export const TIME_RANGE_OPTIONS: TimeRangeOption[] = [
-  { id: '30s', label: '30 seconds', sampleCount: 30 },
-  { id: '1m', label: '1 minute', sampleCount: 60 },
-  { id: '5m', label: '5 minutes', sampleCount: 300 },
-  { id: '15m', label: '15 minutes', sampleCount: 900 },
-  { id: '1h', label: '1 hour', sampleCount: 3600 }
+  { id: '30s', labelKey: 'monitoring.range.30s', sampleCount: 30 },
+  { id: '1m', labelKey: 'monitoring.range.1m', sampleCount: 60 },
+  { id: '5m', labelKey: 'monitoring.range.5m', sampleCount: 300 },
+  { id: '15m', labelKey: 'monitoring.range.15m', sampleCount: 900 },
+  { id: '1h', labelKey: 'monitoring.range.1h', sampleCount: 3600 }
 ]
 
 export const DEFAULT_VISIBLE_METRICS: MetricId[] = ['cpu', 'memory']

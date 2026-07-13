@@ -1,32 +1,41 @@
 import { NavLink } from 'react-router-dom'
 import { Copy, FileStack, HardDrive } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
-const links = [
+const links: Array<{
+  to: string
+  labelKey: TranslationKey
+  icon: typeof HardDrive
+  end: boolean
+}> = [
   {
     to: '/storage',
-    label: 'Overview',
+    labelKey: 'storage.subnav.overview',
     icon: HardDrive,
     end: true
   },
   {
     to: '/storage/large-files',
-    label: 'Large Files',
+    labelKey: 'storage.subnav.largeFiles',
     icon: FileStack,
     end: false
   },
   {
     to: '/storage/duplicates',
-    label: 'Duplicates',
+    labelKey: 'storage.subnav.duplicates',
     icon: Copy,
     end: false
   }
-] as const
+]
 
 export function StorageSubnav(): React.ReactElement {
+  const { t } = useTranslation()
+
   return (
     <nav
-      aria-label="Storage sections"
+      aria-label={t('storage.title')}
       className="flex gap-1 rounded-xl border border-border bg-muted/40 p-1"
     >
       {links.map((link) => {
@@ -46,7 +55,7 @@ export function StorageSubnav(): React.ReactElement {
             }
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span className="truncate">{link.label}</span>
+            <span className="truncate">{t(link.labelKey)}</span>
           </NavLink>
         )
       })}

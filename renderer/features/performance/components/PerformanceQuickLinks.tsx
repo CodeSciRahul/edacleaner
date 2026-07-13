@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface PerformanceQuickLinksProps {
   onOpenStartup: () => void
@@ -9,16 +10,18 @@ export function PerformanceQuickLinks({
   onOpenStartup,
   onOpenBackground
 }: PerformanceQuickLinksProps): React.ReactElement {
+  const { t } = useTranslation()
+
   return (
-    <section aria-label="Quick actions" className="grid gap-3 sm:grid-cols-2">
+    <section aria-label={t('performance.optimizeFurther')} className="grid gap-3 sm:grid-cols-2">
       <QuickLink
-        title="Manage startup apps"
-        description="Control what launches when you sign in."
+        title={t('performance.quickStartup')}
+        description={t('performance.quickStartupDesc')}
         onClick={onOpenStartup}
       />
       <QuickLink
-        title="Review background apps"
-        description="Stop safe processes and free memory."
+        title={t('performance.quickBg')}
+        description={t('performance.quickBgDesc')}
         onClick={onOpenBackground}
       />
     </section>

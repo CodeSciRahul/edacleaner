@@ -1,4 +1,5 @@
 import type { SmartScanAreaResult, SmartScanResult } from '@shared/interfaces'
+import { useLanguageStore } from '@/i18n/language-store'
 
 const STORAGE_KEY = 'eda-cleaner-smart-scan-history'
 const STORAGE_VERSION = 1 as const
@@ -159,14 +160,15 @@ export function formatLastScannedAt(timestamp: number): string {
 }
 
 export function formatRelativeScanTime(timestamp: number, now = Date.now()): string {
+  const { t } = useLanguageStore.getState()
   const deltaMs = Math.max(0, now - timestamp)
   const minutes = Math.floor(deltaMs / 60_000)
-  if (minutes < 1) return 'Just now'
-  if (minutes < 60) return `${minutes} min ago`
+  if (minutes < 1) return t('smartScan.relative.justNow')
+  if (minutes < 60) return t('smartScan.relative.minAgo', { count: minutes })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return t('smartScan.relative.hoursAgo', { count: hours })
   const days = Math.floor(hours / 24)
-  if (days === 1) return 'Yesterday'
-  if (days < 7) return `${days} days ago`
+  if (days === 1) return t('smartScan.relative.yesterday')
+  if (days < 7) return t('smartScan.relative.daysAgo', { count: days })
   return formatLastScannedAt(timestamp)
 }

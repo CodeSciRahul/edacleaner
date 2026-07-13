@@ -1,18 +1,21 @@
 import { Sparkles } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { Button } from '@/components/ui/Button'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface SidebarUpgradeCardProps {
   collapsed: boolean
 }
 
 export function SidebarUpgradeCard({ collapsed }: SidebarUpgradeCardProps): React.ReactElement {
+  const { t } = useTranslation()
+
   if (collapsed) {
     return (
       <button
         type="button"
-        title="Go Premium"
-        aria-label="Go Premium"
+        title={t('sidebar.premium')}
+        aria-label={t('sidebar.premium')}
         className={cn(
           'mx-auto flex h-11 w-11 items-center justify-center rounded-lg',
           'bg-primary/10 text-primary outline-none transition-colors duration-150',
@@ -31,14 +34,14 @@ export function SidebarUpgradeCard({ collapsed }: SidebarUpgradeCardProps): Reac
           <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <p className="text-[13px] font-semibold text-foreground">Go Premium</p>
+          <p className="text-[13px] font-semibold text-foreground">{t('sidebar.premium')}</p>
           <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-            Advanced scans and priority support.
+            {t('sidebar.premiumDesc')}
           </p>
         </div>
       </div>
       <Button size="sm" className="mt-3 h-8 w-full rounded-lg text-[13px]">
-        Upgrade Now
+        {t('sidebar.upgrade')}
       </Button>
     </div>
   )

@@ -2,17 +2,19 @@ import { CheckCircle2, Gauge, Sparkles } from 'lucide-react'
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import type { SmartScanResult } from '@shared/interfaces'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface SmartScanHeroProps {
   result: SmartScanResult
 }
 
 export function SmartScanHero({ result }: SmartScanHeroProps): React.ReactElement {
+  const { t } = useTranslation()
   const healthy = result.areasNeedingAttention === 0
 
   return (
     <section
-      aria-label="Scan overview"
+      aria-label={t('smartScan.results')}
       className={cn(
         'relative overflow-hidden rounded-2xl border p-6 shadow-card animate-in fade-in-0 slide-in-from-top-1 duration-300 sm:p-7',
         healthy
@@ -32,7 +34,7 @@ export function SmartScanHero({ result }: SmartScanHeroProps): React.ReactElemen
         <div className="max-w-xl space-y-2">
           <div className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-background/60 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm">
             <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-            Smart Scan complete
+            {t('smartScan.hero.complete')}
           </div>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.65rem]">
             {result.summaryTitle}
@@ -46,7 +48,7 @@ export function SmartScanHero({ result }: SmartScanHeroProps): React.ReactElemen
           </div>
           <div>
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Health score
+              {t('smartScan.hero.healthScore')}
             </p>
             <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
               {result.healthScore}
@@ -60,11 +62,9 @@ export function SmartScanHero({ result }: SmartScanHeroProps): React.ReactElemen
         <div className="relative mt-4 flex items-start gap-2 rounded-xl border border-success/20 bg-success/5 px-3.5 py-3">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
           <p className="text-xs leading-relaxed text-muted-foreground">
-            <span className="font-medium text-foreground">
-              Up to {formatBytes(result.totalReclaimableBytes)} can be reclaimed
-            </span>
-            {' — '}
-            open Cleanup or Storage below to apply the safest optimizations first.
+            {t('smartScan.hero.reclaimHint', {
+              bytes: formatBytes(result.totalReclaimableBytes)
+            })}
           </p>
         </div>
       ) : null}

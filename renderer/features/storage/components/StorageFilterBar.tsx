@@ -3,9 +3,19 @@ import { cn } from '@/utils/cn'
 import { Button } from '@/components/ui/Button'
 import {
   FILE_CATEGORY_CHIPS,
-  FILE_CATEGORY_LABELS,
   type FileCategory
 } from '../lib/file-type'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
+
+const FILE_CATEGORY_KEYS: Record<FileCategory, TranslationKey> = {
+  videos: 'storage.fileType.videos',
+  images: 'storage.fileType.images',
+  documents: 'storage.fileType.documents',
+  archives: 'storage.fileType.archives',
+  executables: 'storage.fileType.executables',
+  other: 'storage.fileType.other'
+}
 
 interface StorageFilterBarProps {
   query: string
@@ -32,10 +42,13 @@ export function StorageFilterBar({
   sortKey,
   sortOptions,
   onSortKeyChange,
-  searchPlaceholder = 'Search by filename…',
+  searchPlaceholder,
   className,
   children
 }: StorageFilterBarProps): React.ReactElement {
+  const { t } = useTranslation()
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t('storage.filter.search')
+
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -45,26 +58,26 @@ export function StorageFilterBar({
             type="search"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder={searchPlaceholder}
+            placeholder={resolvedSearchPlaceholder}
             className="h-10 w-full rounded-lg border border-border bg-card pl-9 pr-3 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Search by filename"
+            aria-label={t('storage.filter.search')}
           />
         </div>
         <input
           type="search"
           value={pathFilter}
           onChange={(e) => onPathFilterChange(e.target.value)}
-          placeholder="Filter by folder path…"
+          placeholder={t('storage.filter.path')}
           className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring lg:max-w-xs"
-          aria-label="Filter by folder path"
+          aria-label={t('storage.filter.path')}
         />
         <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-          <span className="shrink-0">Sort</span>
+          <span className="shrink-0">{t('storage.filter.sort')}</span>
           <select
             className="bg-transparent text-sm text-foreground outline-none"
             value={sortKey}
             onChange={(e) => onSortKeyChange(e.target.value)}
-            aria-label="Sort results"
+            aria-label={t('storage.filter.sort')}
           >
             {sortOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -80,14 +93,14 @@ export function StorageFilterBar({
         <Chip
           active={category === 'all'}
           onClick={() => onCategoryChange('all')}
-          label="All types"
+          label={t('storage.filter.allTypes')}
         />
         {FILE_CATEGORY_CHIPS.map((chip) => (
           <Chip
             key={chip}
             active={category === chip}
             onClick={() => onCategoryChange(chip)}
-            label={FILE_CATEGORY_LABELS[chip]}
+            label={t(FILE_CATEGORY_KEYS[chip])}
           />
         ))}
       </div>

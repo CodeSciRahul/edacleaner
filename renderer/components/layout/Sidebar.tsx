@@ -5,14 +5,16 @@ import { useUiStore } from '@/store/ui-store'
 import { sidebarNavItems } from '@/components/layout/sidebar-nav'
 import { SidebarNavItem } from '@/components/layout/SidebarNavItem'
 import { SidebarUpgradeCard } from '@/components/layout/SidebarUpgradeCard'
+import { useTranslation } from '@/i18n/useTranslation'
 
 export function Sidebar(): React.ReactElement {
   const collapsed = useUiStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
+  const { t } = useTranslation()
 
   return (
     <aside
-      aria-label="Main navigation"
+      aria-label={t('sidebar.navMain')}
       className={cn(
         'relative flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar',
         'transition-[width] duration-300 ease-out',
@@ -33,14 +35,14 @@ export function Sidebar(): React.ReactElement {
             <p className="truncate text-[13px] font-semibold tracking-tight text-foreground">
               {APP_NAME}
             </p>
-            <p className="truncate text-[11px] text-muted-foreground">PC Optimizer</p>
+            <p className="truncate text-[11px] text-muted-foreground">{t('sidebar.tagline')}</p>
           </div>
         )}
         {!collapsed && (
           <button
             type="button"
             onClick={toggleSidebar}
-            aria-label="Collapse sidebar"
+            aria-label={t('sidebar.collapse')}
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground',
               'transition-colors duration-150 hover:bg-sidebar-hover hover:text-foreground',
@@ -52,7 +54,7 @@ export function Sidebar(): React.ReactElement {
         )}
       </div>
 
-      <nav className="sidebar-scroll flex-1 space-y-0.5 overflow-y-auto px-2 py-3" aria-label="Primary">
+      <nav className="sidebar-scroll flex-1 space-y-0.5 overflow-y-auto px-2 py-3" aria-label={t('sidebar.navPrimary')}>
         {sidebarNavItems.map((item) => (
           <SidebarNavItem key={item.id} item={item} collapsed={collapsed} />
         ))}
@@ -67,8 +69,8 @@ export function Sidebar(): React.ReactElement {
               <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground">System Status</p>
-              <p className="text-[11px] text-muted-foreground">Good · Last scan today</p>
+              <p className="text-xs font-medium text-foreground">{t('sidebar.status')}</p>
+              <p className="text-[11px] text-muted-foreground">{t('sidebar.statusGood')}</p>
             </div>
           </div>
         )}
@@ -77,7 +79,7 @@ export function Sidebar(): React.ReactElement {
           <button
             type="button"
             onClick={toggleSidebar}
-            aria-label="Expand sidebar"
+            aria-label={t('sidebar.expand')}
             className={cn(
               'mx-auto flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground',
               'transition-colors duration-150 hover:bg-sidebar-hover hover:text-foreground',

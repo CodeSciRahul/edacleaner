@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { electronService } from '@/services/electron-service'
 import { formatBytes } from '@shared/utils'
+import { useSettingsStore } from '@/store/settings-store'
 import type {
   CleanupCategoryId,
   CleanupExecuteOptions,
@@ -58,19 +59,22 @@ export function useRunCleanup() {
         }
       }
 
-      const confirmed = await electronService.dialog().message({
-        type: 'info',
-        title: 'Optimize your PC?',
-        message: `Optimize ${options.categories.length} selected categor${
-          options.categories.length === 1 ? 'y' : 'ies'
-        }?`,
-        detail:
-          'We’ll safely reclaim junk, temp files, and caches. Personal documents are never touched. A few in-use files may be left alone so your apps stay stable.',
-        buttons: ['Not now', 'Optimize now']
-      })
+      const confirmBeforeClean = useSettingsStore.getState().confirmBeforeClean
+      if (confirmBeforeClean) {
+        const confirmed = await electronService.dialog().message({
+          type: 'info',
+          title: 'Optimize your PC?',
+          message: `Optimize ${options.categories.length} selected categor${
+            options.categories.length === 1 ? 'y' : 'ies'
+          }?`,
+          detail:
+            'We’ll safely reclaim junk, temp files, and caches. Personal documents are never touched. A few in-use files may be left alone so your apps stay stable.',
+          buttons: ['Not now', 'Optimize now']
+        })
 
-      if (confirmed.response !== 1) {
-        return { cancelled: true as const, result: null as CleanupResult | null }
+        if (confirmed.response !== 1) {
+          return { cancelled: true as const, result: null as CleanupResult | null }
+        }
       }
 
       const result = await electronService.cleanup().execute(options)

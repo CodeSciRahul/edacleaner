@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/utils/cn'
 import type { MetricId, TimeRangeId, TimeRangeOption } from '../types'
 import type { MetricDefinition } from '../types'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface MonitoringToolbarProps {
   paused: boolean
@@ -34,6 +35,8 @@ export function MonitoringToolbar({
   onTimeRangeChange,
   onToggleMetric
 }: MonitoringToolbarProps): React.ReactElement {
+  const { t } = useTranslation()
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Badge
@@ -53,18 +56,22 @@ export function MonitoringToolbar({
             paused ? 'bg-warning' : isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground'
           )}
         />
-        {paused ? 'Paused' : isLive ? 'Live' : 'Offline'}
+        {paused
+          ? t('monitoring.paused')
+          : isLive
+            ? t('monitoring.live')
+            : t('monitoring.offline')}
       </Badge>
 
       {paused ? (
         <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onResume}>
           <Play className="h-3.5 w-3.5" />
-          Resume
+          {t('monitoring.resume')}
         </Button>
       ) : (
         <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onPause}>
           <Pause className="h-3.5 w-3.5" />
-          Pause
+          {t('monitoring.pause')}
         </Button>
       )}
 
@@ -76,7 +83,7 @@ export function MonitoringToolbar({
         onClick={onRefresh}
       >
         <RefreshCw className={cn('h-3.5 w-3.5', isRefreshing && 'animate-spin')} />
-        Refresh
+        {t('common.refresh')}
       </Button>
 
       <label className="flex h-8 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-xs text-muted-foreground">
@@ -89,7 +96,7 @@ export function MonitoringToolbar({
         >
           {timeRangeOptions.map((opt) => (
             <option key={opt.id} value={opt.id}>
-              {opt.label}
+              {t(opt.labelKey)}
             </option>
           ))}
         </select>
@@ -98,6 +105,7 @@ export function MonitoringToolbar({
       <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-0.5">
         {metricDefinitions.map((metric) => {
           const visible = visibleMetrics.includes(metric.id)
+          const shortLabel = t(metric.shortLabelKey)
           return (
             <Button
               key={metric.id}
@@ -108,11 +116,11 @@ export function MonitoringToolbar({
                 visible ? 'text-foreground' : 'text-muted-foreground'
               )}
               aria-pressed={visible}
-              aria-label={`${visible ? 'Hide' : 'Show'} ${metric.shortLabel}`}
+              aria-label={`${visible ? 'Hide' : 'Show'} ${shortLabel}`}
               onClick={() => onToggleMetric(metric.id)}
             >
               {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-              {metric.shortLabel}
+              {shortLabel}
             </Button>
           )
         })}

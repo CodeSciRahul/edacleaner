@@ -8,29 +8,33 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/Card'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface FeatureHubProps {
   section: FeatureSection
 }
 
 export function FeatureHub({ section }: FeatureHubProps): React.ReactElement {
+  const { t } = useTranslation()
   const [activeId, setActiveId] = useState(section.features[0]?.id ?? '')
   const activeFeature = section.features.find((feature) => feature.id === activeId)
+  const title = t(section.titleKey)
+  const description = t(section.descriptionKey)
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-8">
       <header className="space-y-2">
         <h1 className="text-[28px] font-semibold tracking-[-0.03em] text-foreground">
-          {section.title}
+          {title}
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          {section.description}
+          {description}
         </p>
       </header>
 
       <div
         role="tablist"
-        aria-label={`${section.title} tools`}
+        aria-label={`${title} tools`}
         className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
       >
         {section.features.map((feature) => (
@@ -55,10 +59,11 @@ export function FeatureHub({ section }: FeatureHubProps): React.ReactElement {
               <Construction className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
             </div>
             <div className="space-y-1.5">
-              <CardTitle className="text-lg tracking-[-0.02em]">{activeFeature.label}</CardTitle>
+              <CardTitle className="text-lg tracking-[-0.02em]">
+                {t(activeFeature.labelKey)}
+              </CardTitle>
               <CardDescription className="text-sm leading-relaxed">
-                {activeFeature.description} This module is ready to be connected to the cleaning
-                engine without changing the app shell.
+                {t(activeFeature.descriptionKey)} {t('featureHub.ready')}
               </CardDescription>
             </div>
           </CardHeader>
@@ -75,6 +80,7 @@ interface FeatureCardProps {
 }
 
 function FeatureCard({ feature, active, onSelect }: FeatureCardProps): React.ReactElement {
+  const { t } = useTranslation()
   const Icon = feature.icon
 
   return (
@@ -104,8 +110,12 @@ function FeatureCard({ feature, active, onSelect }: FeatureCardProps): React.Rea
       </div>
 
       <div className="space-y-1">
-        <p className="text-sm font-semibold tracking-[-0.01em] text-foreground">{feature.label}</p>
-        <p className="text-xs leading-relaxed text-muted-foreground">{feature.description}</p>
+        <p className="text-sm font-semibold tracking-[-0.01em] text-foreground">
+          {t(feature.labelKey)}
+        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {t(feature.descriptionKey)}
+        </p>
       </div>
     </button>
   )

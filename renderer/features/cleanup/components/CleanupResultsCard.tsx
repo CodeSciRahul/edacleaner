@@ -19,65 +19,71 @@ import {
   softCleanupNote,
   stepDisplayStatus
 } from '@/features/cleanup/lib/positive-copy'
+import { cleanupCategoryLabelKey } from '@/features/cleanup/lib/category-i18n'
+import { useTranslation } from '@/i18n/useTranslation'
+import type { TranslationKey } from '@/i18n/locales/en'
 
 interface CleanupResultsCardProps {
   result: CleanupResult
 }
 
-const stepStatusMeta: Record<
+const stepStatusVisual: Record<
   CleanupStepStatus | 'optimized',
   {
-    label: string
+    labelKey: TranslationKey
     icon: typeof CheckCircle2
     tone: string
     badgeClass: string
   }
 > = {
   completed: {
-    label: 'Optimized',
+    labelKey: 'cleanup.results.optimized',
     icon: CheckCircle2,
     tone: 'bg-success/10 text-success border-success/20',
     badgeClass: 'border-success/30 bg-success/15 text-success'
   },
   optimized: {
-    label: 'Optimized',
+    labelKey: 'cleanup.results.optimized',
     icon: CheckCircle2,
     tone: 'bg-success/10 text-success border-success/20',
     badgeClass: 'border-success/30 bg-success/15 text-success'
   },
   failed: {
-    label: 'Needs attention',
+    labelKey: 'cleanup.results.attention',
     icon: Info,
     tone: 'bg-muted text-muted-foreground border-border',
     badgeClass: 'border-border bg-muted text-muted-foreground'
   },
   skipped: {
-    label: 'Already clear',
+    labelKey: 'cleanup.results.clear',
     icon: SkipForward,
     tone: 'bg-primary/10 text-primary border-primary/20',
     badgeClass: 'border-primary/25 bg-primary/10 text-primary'
   },
   cancelled: {
-    label: 'Paused',
+    labelKey: 'cleanup.results.paused',
     icon: MinusCircle,
     tone: 'bg-muted text-muted-foreground border-border',
     badgeClass: 'border-border bg-muted text-muted-foreground'
   },
   pending: {
-    label: 'Queued',
+    labelKey: 'cleanup.results.queued',
     icon: Clock,
     tone: 'bg-muted text-muted-foreground border-border',
     badgeClass: 'border-border bg-muted text-muted-foreground'
   },
   running: {
-    label: 'Optimizing',
+    labelKey: 'cleanup.results.optimizing',
     icon: Sparkles,
     tone: 'bg-primary/10 text-primary border-primary/20',
     badgeClass: 'border-primary/30 bg-primary/15 text-primary'
   }
 }
 
-function outcomeFor(result: CleanupResult): {
+function outcomeFor(
+  result: CleanupResult,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
+): {
   title: string
   message: string
   tone: string
@@ -95,7 +101,7 @@ function outcomeFor(result: CleanupResult): {
 
   if (result.cancelled) {
     return {
-      title: hasProgress ? 'Optimization paused' : 'Cleanup paused',
+      title: t('cleanup.results.pausedTitle'),
       message: hasProgress
         ? `Progress saved — ${formatBytes(result.bytesFreed)} already reclaimed. Resume anytime.`
         : 'No changes were made. You can start again whenever you are ready.',
@@ -109,8 +115,8 @@ function outcomeFor(result: CleanupResult): {
     return {
       title:
         result.bytesFreed > 0
-          ? 'Optimization complete'
-          : 'System health improved',
+          ? t('cleanup.results.completeTitle')
+          : t('cleanup.results.improvedTitle'),
       message:
         result.bytesFreed > 0
           ? `Storage successfully reclaimed — ${formatBytes(result.bytesFreed)} freed in ${(result.durationMs / 1000).toFixed(1)}s.`
@@ -123,7 +129,7 @@ function outcomeFor(result: CleanupResult): {
 
   if (hardFailures > 0 && completed === 0) {
     return {
-      title: 'Almost there',
+      title: t('cleanup.results.almostTitle'),
       message:
         'We could not free space this round. Close open apps and try again for best results.',
       tone: 'border-primary/25 bg-primary/5',
@@ -133,7 +139,7 @@ function outcomeFor(result: CleanupResult): {
   }
 
   return {
-    title: 'No action required',
+    title: t('cleanup.results.noActionTitle'),
     message: 'Everything looks tidy — your system is already in good shape.',
     tone: 'border-success/30 bg-success/10',
     Icon: ShieldCheck,
@@ -158,13 +164,14 @@ function stepDetailText(step: CleanupStepResult): string | undefined {
 }
 
 export function CleanupResultsCard({ result }: CleanupResultsCardProps): React.ReactElement {
-  const outcome = outcomeFor(result)
+  const { t } = useTranslation()
+  const outcome = outcomeFor(result, t)
   const OutcomeIcon = outcome.Icon
   const actionableWarnings = result.warnings.filter((w) => !isBenignCleanupNote(w))
 
   return (
     <section
-      aria-label="Optimization results"
+      aria-label={t('cleanup.results.completeTitle')}
       className="overflow-hidden rounded-2xl border border-border bg-card shadow-card animate-in fade-in-0 zoom-in-95 duration-300"
     >
       <div className={cn('flex items-start gap-3 border-b border-border px-5 py-4', outcome.tone)}>
@@ -180,19 +187,19 @@ export function CleanupResultsCard({ result }: CleanupResultsCardProps): React.R
       <div className="grid gap-3 p-5 sm:grid-cols-3">
         <ResultStat
           icon={HardDrive}
-          label="Storage reclaimed"
+          label={t('cleanup.results.reclaimed')}
           value={formatBytes(result.bytesFreed)}
           accent="text-primary"
         />
         <ResultStat
           icon={Files}
-          label="Items cleaned"
+          label={t('cleanup.results.cleaned')}
           value={result.filesRemoved.toLocaleString()}
           accent="text-success"
         />
         <ResultStat
           icon={Zap}
-          label="Optimized in"
+          label={t('cleanup.results.duration')}
           value={`${(result.durationMs / 1000).toFixed(1)}s`}
           accent="text-chart-ram"
         />
@@ -205,7 +212,7 @@ export function CleanupResultsCard({ result }: CleanupResultsCardProps): React.R
         <ul className="space-y-2.5">
           {result.steps.map((step) => {
             const display = stepDisplayStatus(step)
-            const meta = stepStatusMeta[display === 'optimized' ? 'optimized' : display]
+            const meta = stepStatusVisual[display === 'optimized' ? 'optimized' : display]
             const StatusIcon = meta.icon
             const detail = stepDetailText(step)
             const note = softCleanupNote(step.error)
@@ -226,12 +233,14 @@ export function CleanupResultsCard({ result }: CleanupResultsCardProps): React.R
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-foreground">{step.label}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {t(cleanupCategoryLabelKey(step.id))}
+                    </p>
                     <Badge
                       variant="outline"
                       className={cn('shrink-0 rounded-md font-medium', meta.badgeClass)}
                     >
-                      {meta.label}
+                      {t(meta.labelKey)}
                     </Badge>
                   </div>
                   {detail ? (
@@ -241,7 +250,7 @@ export function CleanupResultsCard({ result }: CleanupResultsCardProps): React.R
                     <p className="mt-1 text-xs font-medium tabular-nums text-success">
                       {formatBytes(step.bytesFreed)} reclaimed
                       {step.filesRemoved > 0
-                        ? ` · ${step.filesRemoved.toLocaleString()} items`
+                        ? ` · ${t('common.items', { count: step.filesRemoved.toLocaleString() })}`
                         : ''}
                     </p>
                   ) : null}
@@ -264,7 +273,7 @@ export function CleanupResultsCard({ result }: CleanupResultsCardProps): React.R
           <div className="mt-4 flex gap-2 rounded-xl border border-success/20 bg-success/5 px-3.5 py-3">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
             <div>
-              <p className="text-xs font-medium text-foreground">Smart protection active</p>
+              <p className="text-xs font-medium text-foreground">{t('cleanup.results.protection')}</p>
               <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                 A few files in active use were left alone so your apps stay stable. Run cleanup again
                 later to reclaim a little more.
@@ -275,7 +284,7 @@ export function CleanupResultsCard({ result }: CleanupResultsCardProps): React.R
 
         {actionableWarnings.length > 0 ? (
           <div className="mt-4 rounded-xl border border-border bg-muted/30 px-3.5 py-3">
-            <p className="text-xs font-medium text-foreground">Helpful tip</p>
+            <p className="text-xs font-medium text-foreground">{t('cleanup.results.tip')}</p>
             <ul className="mt-1 space-y-1">
               {actionableWarnings.slice(0, 3).map((warning) => (
                 <li key={warning} className="text-xs text-muted-foreground">

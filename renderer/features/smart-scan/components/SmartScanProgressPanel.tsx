@@ -3,6 +3,8 @@ import { cn } from '@/utils/cn'
 import { CircularProgress } from '@/components/desktop/CircularProgress'
 import type { SmartScanAreaId } from '@shared/interfaces'
 import { smartScanAreaIcons } from '@/features/smart-scan/lib/scan-meta'
+import { smartScanAreaLabelKey } from '@/features/smart-scan/lib/area-i18n'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface SmartScanProgressPanelProps {
   message: string
@@ -35,11 +37,12 @@ export function SmartScanProgressPanel({
   areaId,
   areaOrder
 }: SmartScanProgressPanelProps): React.ReactElement {
+  const { t } = useTranslation()
   const clamped = Math.min(100, Math.max(0, percent))
 
   return (
     <section
-      aria-label="Smart Scan progress"
+      aria-label={t('smartScan.status.scanningTitle')}
       aria-live="polite"
       className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-card via-card to-primary/[0.08] shadow-card animate-in fade-in-0 zoom-in-95 duration-300"
     >
@@ -65,13 +68,11 @@ export function SmartScanProgressPanel({
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
               <ScanSearch className="h-3 w-3" aria-hidden="true" />
-              Smart Scan in progress
+              {t('smartScan.status.scanningTitle')}
             </div>
             <p className="text-base font-semibold text-foreground sm:text-lg">{message}</p>
             <p className="truncate text-xs text-muted-foreground">
-              {currentItem
-                ? currentItem
-                : 'Checking cleanup, storage, performance, and protections…'}
+              {currentItem ? currentItem : t('smartScan.progress.fallback')}
             </p>
           </div>
 
@@ -93,18 +94,11 @@ export function SmartScanProgressPanel({
             </div>
           </div>
 
-          <ol className="flex flex-wrap gap-2" aria-label="Scan areas">
+          <ol className="flex flex-wrap gap-2" aria-label={t('smartScan.areas')}>
             {areaOrder.map((id) => {
               const state = areaState(id, areaId, areaOrder, clamped)
               const Icon = smartScanAreaIcons[id]
-              const label =
-                id === 'cleanup'
-                  ? 'Cleanup'
-                  : id === 'storage'
-                    ? 'Storage'
-                    : id === 'performance'
-                      ? 'Performance'
-                      : 'Security'
+              const label = t(smartScanAreaLabelKey(id))
 
               return (
                 <li
