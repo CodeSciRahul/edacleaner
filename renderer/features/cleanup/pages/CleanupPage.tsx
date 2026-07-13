@@ -27,6 +27,7 @@ import { CleanupProgressPanel } from '@/features/cleanup/components/CleanupProgr
 import { CleanupResultsCard } from '@/features/cleanup/components/CleanupResultsCard'
 import type { CleanupWorkflowPhase } from '@/features/cleanup/lib/category-meta'
 import { useSettingsStore } from '@/store/settings-store'
+import { appendCleanupActivity } from '@/features/reports/lib/activity-history'
 import { useTranslation } from '@/i18n/useTranslation'
 
 export function CleanupPage(): React.ReactElement {
@@ -121,6 +122,7 @@ export function CleanupPage(): React.ReactElement {
     })
     if (!payload.cancelled && payload.result) {
       setLastResult(payload.result)
+      appendCleanupActivity(payload.result)
       setScan((prev) => {
         if (!prev) return prev
         const freedById = new Map(

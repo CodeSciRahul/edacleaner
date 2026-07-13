@@ -24,6 +24,7 @@ import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import type { LargeFile } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
+import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
 
 type SortKey = 'size' | 'name' | 'path'
 type SizeFilter = 'all' | '100mb' | '500mb' | '1gb' | '5gb'
@@ -133,9 +134,45 @@ export function LargeFilesPage(): React.ReactElement {
   const handleDeleteSelected = async (): Promise<void> => {
     if (selected.length === 0) return
     setNotice(null)
+    const estimatedBytes = selected.reduce((sum, path) => {
+      const file = files.find((f) => f.path === path)
+      return sum + (file?.sizeBytes ?? 0)
+    }, 0)
+    const startedAt = Date.now()
     const result = await deleteFiles.mutateAsync(selected)
     if (result.canceled) return
     if (result.deleted.length > 0) {
+      const freedBytes = result.deleted.reduce((sum, path) => {
+        const file = files.find((f) => f.path === path)
+        return sum + (file?.sizeBytes ?? 0)
+      }, 0)
+      appendStorageDeleteActivity({
+        source: 'large-files',
+        deletedCount: result.deleted.length,
+        failedCount: result.failed.length,
+        estimatedBytes: freedBytes || estimatedBytes,
+        durationMs: Date.now() - startedAt
+      })
+      setSelected((prev) => prev.filter((p) => !result.deleted.includes(p)))
+      setNotice(`Moved ${result.deleted.length} file(s) to trash.`)
+    } else {
+      setNotice(result.failed[0]?.error ?? 'No files were deleted.')
+    }
+  }
+
+  const handleDeleteOne = async (file: LargeFile): Promise<void> => {
+    setNotice(null)
+    const startedAt = Date.now()
+    const result = await deleteFiles.mutateAsync([file.path])
+    if (result.canceled) return
+    if (result.deleted.length > 0) {
+      appendStorageDeleteActivity({
+        source: 'large-files',
+        deletedCount: result.deleted.length,
+        failedCount: result.failed.length,
+        estimatedBytes: file.sizeBytes,
+        durationMs: Date.now() - startedAt
+      })
       setSelected((prev) => prev.filter((p) => !result.deleted.includes(p)))
       setNotice(`Moved ${result.deleted.length} file(s) to trash.`)
     } else {
@@ -301,7 +338,7 @@ export function LargeFilesPage(): React.ReactElement {
                       onToggle={() => togglePath(file.path)}
                       onReveal={() => reveal.mutate(file.path)}
                       onCopy={() => void copyPath(file.path)}
-                      onDelete={() => void deleteFiles.mutateAsync([file.path])}
+                      onDelete={() => void handleDeleteOne(file)}
                     />
                   ))}
                 </tbody>

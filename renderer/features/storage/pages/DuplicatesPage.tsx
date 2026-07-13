@@ -26,6 +26,7 @@ import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import type { DuplicateGroup } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
+import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
 
 type SortKey = 'size' | 'copies' | 'name'
 type SizeFilter = 'all' | '10mb' | '50mb' | '100mb' | '500mb'
@@ -122,9 +123,25 @@ export function DuplicatesPage(): React.ReactElement {
   const handleDeleteSelected = async (): Promise<void> => {
     if (selected.length === 0) return
     setNotice(null)
+    const estimatedBytes = selected.reduce((sum, path) => {
+      const group = groups.find((g) => g.paths.includes(path))
+      return sum + (group?.sizeBytes ?? 0)
+    }, 0)
+    const startedAt = Date.now()
     const result = await deleteFiles.mutateAsync(selected)
     if (result.canceled) return
     if (result.deleted.length > 0) {
+      const freedBytes = result.deleted.reduce((sum, path) => {
+        const group = groups.find((g) => g.paths.includes(path))
+        return sum + (group?.sizeBytes ?? 0)
+      }, 0)
+      appendStorageDeleteActivity({
+        source: 'duplicates',
+        deletedCount: result.deleted.length,
+        failedCount: result.failed.length,
+        estimatedBytes: freedBytes || estimatedBytes,
+        durationMs: Date.now() - startedAt
+      })
       setSelected((prev) => prev.filter((p) => !result.deleted.includes(p)))
       setNotice(`Moved ${result.deleted.length} duplicate(s) to trash.`)
     } else {

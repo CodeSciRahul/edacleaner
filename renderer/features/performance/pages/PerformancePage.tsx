@@ -24,6 +24,7 @@ import {
 import { BoostProgressPanel } from '@/features/performance/components/BoostProgressPanel'
 import { PerformanceQuickLinks } from '@/features/performance/components/PerformanceQuickLinks'
 import { useTranslation } from '@/i18n/useTranslation'
+import { appendBoostActivity } from '@/features/reports/lib/activity-history'
 
 function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
   let score = 100 - Math.round(usedPercent * 0.55)
@@ -163,6 +164,9 @@ export function PerformancePage(): React.ReactElement {
         terminateProcessIds: []
       })
       setLastResult(result)
+      if (!result.cancelled) {
+        appendBoostActivity(result)
+      }
       void refetchAnalysis()
     } catch (err) {
       setLastResult({

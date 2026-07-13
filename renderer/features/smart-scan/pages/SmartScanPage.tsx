@@ -38,6 +38,7 @@ import {
 } from '@/features/smart-scan/lib/area-i18n'
 import { formatRelativeScanTime } from '@/features/smart-scan/lib/scan-history'
 import { useSettingsStore } from '@/store/settings-store'
+import { appendSmartScanActivity } from '@/features/reports/lib/activity-history'
 import { useTranslation } from '@/i18n/useTranslation'
 
 const AREA_ORDER: SmartScanAreaId[] = ['cleanup', 'storage', 'performance', 'security']
@@ -75,6 +76,7 @@ export function SmartScanPage(): React.ReactElement {
     try {
       const next = await runScan.mutateAsync()
       persistResult(next)
+      appendSmartScanActivity(next)
       setResult(next)
     } catch {
       // Soft failure — StatusCard shows a reassuring retry message
