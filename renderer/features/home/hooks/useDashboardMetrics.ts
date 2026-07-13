@@ -1,39 +1,82 @@
-import { useMemo } from 'react'
-import { useSystemInfo } from '@/features/home/hooks/useHomeData'
+import { useQuery } from '@tanstack/react-query'
+import { electronService } from '@/services/electron-service'
 import { formatBytes } from '@shared/utils'
+import type { BoostProcessInfo } from '@shared/interfaces'
 
 export interface DashboardMetrics {
   cpu: number
   ram: number
   disk: number
-  battery: number
-  network: number
-  junkSize: string
-  ramRecoverable: string
-  startupCount: number
-  driverUpdates: number
+  freeMemoryLabel: string
+  diskFreeLabel: string
+  topProcesses: Array<{ name: string; memoryBytes: number }>
 }
 
+function diskUsedPercent(used: number, total: number): number {
+  if (total <= 0) return 0
+  return Math.min(100, Math.max(0, Math.round((used / total) * 100)))
+}
+
+/**
+ * Live snapshot for the home Dashboard — real metrics only (no mock charts).
+ */
 export function useDashboardMetrics() {
-  const { data: systemInfo, isLoading } = useSystemInfo()
+  const sampleQuery = useQuery({
+    queryKey: ['dashboard', 'metrics-sample'],
+    queryFn: () => electronService.system().getMetricsSample(),
+    refetchInterval: 5_000
+  })
 
-  const metrics = useMemo<DashboardMetrics | null>(() => {
-    if (!systemInfo) return null
+  const drivesQuery = useQuery({
+    queryKey: ['dashboard', 'drives'],
+    queryFn: () => electronService.storage().getDrives(),
+    staleTime: 60_000
+  })
 
-    const ramUsed = ((systemInfo.totalMemory - systemInfo.freeMemory) / systemInfo.totalMemory) * 100
+  const snapshotQuery = useQuery({
+    queryKey: ['dashboard', 'boost-snapshot'],
+    queryFn: () => electronService.boost().getSnapshot(),
+    refetchInterval: 12_000
+  })
 
-    return {
-      cpu: Math.min(95, 18 + systemInfo.cpuCount * 4),
-      ram: Math.round(ramUsed),
-      disk: 62,
-      battery: 87,
-      network: 24,
-      junkSize: '2.4 GB',
-      ramRecoverable: formatBytes(systemInfo.freeMemory * 0.15),
-      startupCount: 8,
-      driverUpdates: 3
-    }
-  }, [systemInfo])
+  const isLoading =
+    (sampleQuery.isLoading && !sampleQuery.data) ||
+    (drivesQuery.isLoading && !drivesQuery.data)
 
-  return { metrics, isLoading }
+  const sample = sampleQuery.data
+  const drives = drivesQuery.data ?? []
+  const primaryDrive = drives[0]
+  const topProcesses = mapTopProcesses(snapshotQuery.data?.topProcesses ?? [])
+
+  const metrics: DashboardMetrics | null = sample
+    ? {
+        cpu: Math.round(sample.cpuPercent),
+        ram: Math.round(sample.memoryPercent),
+        disk: primaryDrive
+          ? diskUsedPercent(primaryDrive.usedBytes, primaryDrive.totalBytes)
+          : 0,
+        freeMemoryLabel: formatBytes(sample.memory.free),
+        diskFreeLabel: primaryDrive ? formatBytes(primaryDrive.freeBytes) : '—',
+        topProcesses
+      }
+    : null
+
+  return {
+    metrics,
+    isLoading,
+    isRefreshing: sampleQuery.isFetching && Boolean(sampleQuery.data)
+  }
+}
+
+function mapTopProcesses(
+  processes: BoostProcessInfo[]
+): Array<{ name: string; memoryBytes: number }> {
+  return processes
+    .slice()
+    .sort((a, b) => b.memoryBytes - a.memoryBytes)
+    .slice(0, 5)
+    .map((p) => ({
+      name: p.name || p.path || `PID ${p.pid}`,
+      memoryBytes: p.memoryBytes
+    }))
 }
