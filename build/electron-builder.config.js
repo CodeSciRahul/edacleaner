@@ -5,7 +5,7 @@ module.exports = {
   appId: 'com.edacleaner.app',
   productName: 'EDA Cleaner',
   directories: {
-    output: 'release',
+    output: 'release-fix',
     buildResources: 'resources'
   },
   files: ['out/**/*', 'package.json'],
@@ -18,6 +18,10 @@ module.exports = {
   // afterSign: 'build/notarize.js',
 
   win: {
+    icon: 'resources/icons/icon.png',
+    // Avoid winCodeSign symlink extract (needs Windows Developer Mode / admin).
+    // Re-enable for production signing + exe icon embedding.
+    signAndEditExecutable: false,
     target: [
       {
         target: 'nsis',
