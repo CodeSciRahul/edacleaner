@@ -10,5 +10,3 @@ Thumbs.db
 .env.*.local
 .cursor/
 .cursor/rules/
-release-out/
-release-fix/

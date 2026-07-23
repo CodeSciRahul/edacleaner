@@ -30,7 +30,9 @@ import type {
   CleanupResult,
   CleanupProgressEvent,
   SmartScanResult,
-  SmartScanProgressEvent
+  SmartScanProgressEvent,
+  UploadFileOptions,
+  UploadFileResult
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -196,6 +198,11 @@ const smartScanApi = {
   }
 }
 
+const uploadApi = {
+  file: (options: UploadFileOptions) =>
+    invoke<UploadFileResult>(IPC_CHANNELS.UPLOAD.FILE, options)
+}
+
 const electronApi = {
   app: appApi,
   system: systemApi,
@@ -207,7 +214,8 @@ const electronApi = {
   boost: boostApi,
   startup: startupApi,
   cleanup: cleanupApi,
-  smartScan: smartScanApi
+  smartScan: smartScanApi,
+  upload: uploadApi
 }
 
 contextBridge.exposeInMainWorld('electron', electronApi)

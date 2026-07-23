@@ -77,6 +77,9 @@ export const IPC_CHANNELS = {
     RUN: 'smart-scan:run',
     CANCEL: 'smart-scan:cancel',
     PROGRESS: 'smart-scan:progress'
+  },
+  UPLOAD: {
+    FILE: 'upload:file'
   }
 } as const
 

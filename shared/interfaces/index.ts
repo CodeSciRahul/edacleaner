@@ -427,3 +427,21 @@ export interface SmartScanProgressEvent {
   percent: number
   currentItem?: string
 }
+
+/** Options for uploading a local file to S3 via a server-issued presigned URL. */
+export interface UploadFileOptions {
+  filePath: string
+  contentType?: string
+  /** Optional object-key prefix segment (e.g. user id). */
+  prefix?: string
+  /** Optional bearer token for the API when auth is enabled. */
+  authToken?: string
+}
+
+export interface UploadFileResult {
+  key: string
+  bucket: string
+  contentType: string
+  bytesUploaded: number
+  etag?: string
+}

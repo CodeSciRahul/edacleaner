@@ -43,5 +43,6 @@ export type {
   FileApi,
   DialogApi,
   SettingsApi,
-  UpdaterApi
+  UpdaterApi,
+  UploadApi
 } from './electron-api'

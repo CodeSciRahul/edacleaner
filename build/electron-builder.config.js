@@ -5,7 +5,7 @@ module.exports = {
   appId: 'com.edacleaner.app',
   productName: 'EDA Cleaner',
   directories: {
-    output: 'release-fix',
+    output: 'release',
     buildResources: 'resources'
   },
   files: ['out/**/*', 'package.json'],

@@ -17,10 +17,12 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,css,md}\"",
-    "build:win": "npm run build && electron-builder --win --config build/electron-builder.config.js",
-    "build:mac": "npm run build && electron-builder --mac --config build/electron-builder.config.js",
-    "build:linux": "npm run build && electron-builder --linux --config build/electron-builder.config.js",
-    "build:all": "npm run build && electron-builder -mwl --config build/electron-builder.config.js"
+    "build:win": "npm run build && electron-builder --win --config build/electron-builder.config.js && npm run publish:release",
+    "build:mac": "npm run build && electron-builder --mac --config build/electron-builder.config.js && npm run publish:release",
+    "build:linux": "npm run build && electron-builder --linux --config build/electron-builder.config.js && npm run publish:release",
+    "build:all": "npm run build && electron-builder -mwl --config build/electron-builder.config.js && npm run publish:release",
+    "publish:release": "node scripts/publish-release.mjs",
+    "publish:release:yes": "node scripts/publish-release.mjs --yes"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^3.0.0",

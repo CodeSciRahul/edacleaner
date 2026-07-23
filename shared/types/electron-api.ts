@@ -29,7 +29,9 @@ import type {
   CleanupResult,
   CleanupProgressEvent,
   SmartScanResult,
-  SmartScanProgressEvent
+  SmartScanProgressEvent,
+  UploadFileOptions,
+  UploadFileResult
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -118,6 +120,10 @@ export interface SmartScanApi {
   onProgress: (callback: (event: SmartScanProgressEvent) => void) => () => void
 }
 
+export interface UploadApi {
+  file: (options: UploadFileOptions) => Promise<UploadFileResult>
+}
+
 export interface ElectronApi {
   app: AppApi
   system: SystemApi
@@ -130,6 +136,7 @@ export interface ElectronApi {
   startup: StartupApi
   cleanup: CleanupApi
   smartScan: SmartScanApi
+  upload: UploadApi
 }
 
 declare global {

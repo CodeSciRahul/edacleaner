@@ -12,7 +12,8 @@ import {
   startupService,
   storageService,
   systemService,
-  updaterService
+  updaterService,
+  uploadService
 } from '@main/services'
 import type {
   BoostOptions,
@@ -466,6 +467,16 @@ export function registerSmartScanIpc(): void {
   })
 }
 
+export function registerUploadIpc(): void {
+  ipcMain.handle(IPC_CHANNELS.UPLOAD.FILE, async (_event, rawOptions?: unknown) => {
+    try {
+      return success(await uploadService.uploadFile(rawOptions))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Upload failed')
+    }
+  })
+}
+
 export function registerAllIpc(): void {
   registerAppIpc()
   registerSystemIpc()
@@ -478,4 +489,5 @@ export function registerAllIpc(): void {
   registerStartupIpc()
   registerCleanupIpc()
   registerSmartScanIpc()
+  registerUploadIpc()
 }
