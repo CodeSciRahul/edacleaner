@@ -12,13 +12,22 @@ module.exports = {
   asar: true,
   compression: 'maximum',
 
+  // Runtime window / taskbar icons (resolved via process.resourcesPath)
+  extraResources: [
+    {
+      from: 'resources/icons',
+      to: 'icons',
+      filter: ['icon.png', 'icon.ico', 'icon.icns', 'icon-256.png']
+    }
+  ],
+
   // Code signing placeholders — configure when certificates are available
   // win: { sign: './build/sign-win.js' },
   // mac: { identity: 'Developer ID Application: Your Name (TEAM_ID)' },
   // afterSign: 'build/notarize.js',
 
   win: {
-    icon: 'resources/icons/icon.png',
+    icon: 'resources/icons/icon.ico',
     // Avoid winCodeSign symlink extract (needs Windows Developer Mode / admin).
     // Re-enable for production signing + exe icon embedding.
     signAndEditExecutable: false,
@@ -36,10 +45,14 @@ module.exports = {
     allowToChangeInstallationDirectory: true,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    shortcutName: 'EDA Cleaner'
+    shortcutName: 'EDA Cleaner',
+    installerIcon: 'resources/icons/icon.ico',
+    uninstallerIcon: 'resources/icons/icon.ico',
+    installerHeaderIcon: 'resources/icons/icon.ico'
   },
 
   mac: {
+    icon: 'resources/icons/icon.icns',
     target: [
       {
         target: 'dmg',
@@ -60,6 +73,7 @@ module.exports = {
   },
 
   linux: {
+    icon: 'resources/icons/icon.png',
     target: [
       {
         target: 'AppImage',

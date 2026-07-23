@@ -1,6 +1,7 @@
 import type { BrowserWindowConstructorOptions } from 'electron'
 import { join } from 'path'
 import { WINDOW_DEFAULTS } from '@shared/constants'
+import { getAppIconPath } from '@main/utils/app-icon'
 
 export function getMainWindowOptions(preloadPath: string): BrowserWindowConstructorOptions {
   return {
@@ -10,6 +11,7 @@ export function getMainWindowOptions(preloadPath: string): BrowserWindowConstruc
     minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
     show: false,
     autoHideMenuBar: true,
+    icon: getAppIconPath(),
     webPreferences: {
       preload: preloadPath,
       sandbox: true,

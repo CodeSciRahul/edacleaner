@@ -1,8 +1,9 @@
-import { BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, nativeImage, shell } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { configManager } from '@main/config'
 import { getMainWindowOptions, getRendererPath } from '@main/windows'
+import { getAppIconPath } from '@main/utils/app-icon'
 
 export class WindowManager {
   private static instance: WindowManager
@@ -30,6 +31,15 @@ export class WindowManager {
       ...getMainWindowOptions(preloadPath),
       title: config.name
     })
+
+    // Ensure dock / task switcher picks up the brand icon (esp. in development)
+    const icon = nativeImage.createFromPath(getAppIconPath())
+    if (!icon.isEmpty()) {
+      window.setIcon(icon)
+      if (process.platform === 'darwin' && app.dock) {
+        app.dock.setIcon(icon)
+      }
+    }
 
     window.on('ready-to-show', () => {
       window.show()

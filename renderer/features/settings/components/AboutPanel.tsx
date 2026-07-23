@@ -1,4 +1,4 @@
-import { Info, MonitorSmartphone, RefreshCw, Sparkles } from 'lucide-react'
+import { Info, MonitorSmartphone, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Separator } from '@/components/ui/Separator'
@@ -6,11 +6,11 @@ import { SettingsSection } from '@/features/settings/components/SettingsSection'
 import { SettingsInfoRow } from '@/features/settings/components/SettingsRow'
 import { platformLabel } from '@/features/settings/lib/settings-meta'
 import { useAppInfo, useSystemInfo } from '@/features/home/hooks/useHomeData'
-import { APP_NAME } from '@shared/constants'
 import { formatBytes } from '@shared/utils'
 import { electronService } from '@/services/electron-service'
 import { useState } from 'react'
 import { useTranslation } from '@/i18n/useTranslation'
+import { BrandLogo } from '@/components/brand'
 
 export function AboutPanel(): React.ReactElement {
   const { t } = useTranslation()
@@ -57,13 +57,7 @@ export function AboutPanel(): React.ReactElement {
     >
       <div className="space-y-1">
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/[0.04] px-4 py-3.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <Sparkles className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">{APP_NAME}</p>
-            <p className="text-xs text-muted-foreground">{t('settings.about.tagline')}</p>
-          </div>
+          <BrandLogo size="lg" tagline={t('settings.about.tagline')} />
         </div>
 
         <SettingsInfoRow label={t('settings.about.version')} value={version} />

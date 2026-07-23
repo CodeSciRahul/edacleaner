@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { BarChart3, ScanSearch, Sparkles, Trash2 } from 'lucide-react'
+import { ScanSearch, Sparkles, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { AppIcon } from '@/components/brand'
 import { useTranslation } from '@/i18n/useTranslation'
 
 export function ReportsEmptyState(): React.ReactElement {
@@ -18,8 +19,8 @@ export function ReportsEmptyState(): React.ReactElement {
         aria-hidden="true"
       />
 
-      <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
-        <BarChart3 className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
+      <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center">
+        <AppIcon size="xl" className="h-16 w-16 shadow-sm" />
       </div>
       <div className="relative mb-3 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
         <Sparkles className="h-3 w-3" aria-hidden="true" />

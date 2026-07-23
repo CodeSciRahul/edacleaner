@@ -3,9 +3,60 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="./favicon.ico" sizes="any" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
     <title>EDA Cleaner</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background: #0b1220;
+          color: #f8fafc;
+        }
+      }
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: inherit;
+        transition: opacity 180ms ease;
+      }
+      #boot-splash[data-hide='true'] {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #boot-splash img {
+        width: 72px;
+        height: 72px;
+        border-radius: 22%;
+        box-shadow: 0 10px 30px rgb(37 99 235 / 0.28);
+      }
+      #boot-splash p {
+        margin: 0;
+        font: 600 13px/1.2 ui-sans-serif, system-ui, sans-serif;
+        letter-spacing: -0.01em;
+        opacity: 0.72;
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-splash" role="status" aria-live="polite" aria-label="Loading EDA Cleaner">
+      <img src="./splash-icon.png" width="72" height="72" alt="" />
+      <p>EDA Cleaner</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/main.tsx"></script>
   </body>

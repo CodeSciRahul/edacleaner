@@ -1,10 +1,10 @@
 import { PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react'
-import { APP_NAME } from '@shared/constants'
 import { cn } from '@/utils/cn'
 import { useUiStore } from '@/store/ui-store'
 import { sidebarNavItems } from '@/components/layout/sidebar-nav'
 import { SidebarNavItem } from '@/components/layout/SidebarNavItem'
 import { SidebarUpgradeCard } from '@/components/layout/SidebarUpgradeCard'
+import { BrandLogo } from '@/components/brand'
 import { useTranslation } from '@/i18n/useTranslation'
 
 export function Sidebar(): React.ReactElement {
@@ -27,16 +27,10 @@ export function Sidebar(): React.ReactElement {
           collapsed ? 'justify-center px-2' : 'gap-3 px-4'
         )}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-          <ShieldCheck className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-        </div>
-        {!collapsed && (
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold tracking-tight text-foreground">
-              {APP_NAME}
-            </p>
-            <p className="truncate text-[11px] text-muted-foreground">{t('sidebar.tagline')}</p>
-          </div>
+        {collapsed ? (
+          <BrandLogo size="md" showWordmark={false} />
+        ) : (
+          <BrandLogo size="md" className="min-w-0 flex-1" tagline={t('sidebar.tagline')} />
         )}
         {!collapsed && (
           <button
@@ -44,7 +38,7 @@ export function Sidebar(): React.ReactElement {
             onClick={toggleSidebar}
             aria-label={t('sidebar.collapse')}
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground',
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground',
               'transition-colors duration-150 hover:bg-sidebar-hover hover:text-foreground',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
             )}

@@ -1,9 +1,12 @@
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { Button } from '@/components/ui/Button'
+import { AppIcon } from '@/components/brand'
 
 interface EmptyStateProps {
-  icon: LucideIcon
+  icon?: LucideIcon
+  /** When true (or when no icon is provided), show the product mark. */
+  branded?: boolean
   title: string
   description: string
   actionLabel?: string
@@ -13,12 +16,15 @@ interface EmptyStateProps {
 
 export function EmptyState({
   icon: Icon,
+  branded,
   title,
   description,
   actionLabel,
   onAction,
   className
 }: EmptyStateProps): React.ReactElement {
+  const showBrand = branded || !Icon
+
   return (
     <div
       className={cn(
@@ -28,7 +34,11 @@ export function EmptyState({
       )}
     >
       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-        <Icon className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
+        {showBrand ? (
+          <AppIcon size="md" className="h-10 w-10" />
+        ) : Icon ? (
+          <Icon className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
+        ) : null}
       </div>
       <h3 className="text-section-title text-foreground">{title}</h3>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">{description}</p>
