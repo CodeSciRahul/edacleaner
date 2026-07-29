@@ -46,6 +46,13 @@ export const fr: Record<TranslationKey, string> = {
   'sidebar.premiumDesc': 'Analyses avancées et assistance prioritaire.',
   'sidebar.upgrade': 'Mettre à niveau',
 
+  'titlebar.subtitle': 'Optimiseur PC',
+  'titlebar.windowControls': 'Contrôles de fenêtre',
+  'titlebar.minimize': 'Réduire',
+  'titlebar.maximize': 'Agrandir',
+  'titlebar.restore': 'Restaurer',
+  'titlebar.close': 'Fermer',
+
   'processes.title': 'Processus principaux',
   'processes.subtitle': 'Plus forte consommation mémoire actuellement',
   'processes.empty': 'Aucune donnée de processus disponible.',

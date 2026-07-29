@@ -17,6 +17,7 @@ export const spacing = {
 export const layout = {
   sidebarWidth: '260px',
   sidebarCollapsedWidth: '68px',
+  titlebarHeight: '40px',
   toolbarHeight: '64px',
   contentPadding: '24px',
   gridGap: '20px',

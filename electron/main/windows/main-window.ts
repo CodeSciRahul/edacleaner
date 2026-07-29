@@ -1,6 +1,9 @@
 import type { BrowserWindowConstructorOptions } from 'electron'
 import { join } from 'path'
 import { WINDOW_DEFAULTS } from '@shared/constants'
+import { getAppIconPath } from '@main/utils/app-icon'
+
+const isMac = process.platform === 'darwin'
 
 export function getMainWindowOptions(preloadPath: string): BrowserWindowConstructorOptions {
   return {
@@ -10,6 +13,21 @@ export function getMainWindowOptions(preloadPath: string): BrowserWindowConstruc
     minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
     show: false,
     autoHideMenuBar: true,
+    icon: getAppIconPath(),
+    backgroundColor: '#0F172A',
+    // macOS: hide native title text, keep system traffic lights inset into chrome
+    // Windows / Linux: frameless — custom window controls in the renderer
+    ...(isMac
+      ? {
+          titleBarStyle: 'hiddenInset' as const,
+          trafficLightPosition: {
+            x: 14,
+            y: Math.round((WINDOW_DEFAULTS.TITLEBAR_HEIGHT - 12) / 2)
+          }
+        }
+      : {
+          frame: false
+        }),
     webPreferences: {
       preload: preloadPath,
       sandbox: true,

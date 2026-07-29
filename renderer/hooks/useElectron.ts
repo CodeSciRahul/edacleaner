@@ -3,6 +3,7 @@ import { electronService } from '@/services/electron-service'
 
 export function useElectron() {
   const app = useCallback(() => electronService.app(), [])
+  const windowApi = useCallback(() => electronService.window(), [])
   const system = useCallback(() => electronService.system(), [])
   const file = useCallback(() => electronService.file(), [])
   const dialog = useCallback(() => electronService.dialog(), [])
@@ -12,5 +13,5 @@ export function useElectron() {
   const boost = useCallback(() => electronService.boost(), [])
   const startup = useCallback(() => electronService.startup(), [])
 
-  return { app, system, file, dialog, settings, updater, storage, boost, startup }
+  return { app, window: windowApi, system, file, dialog, settings, updater, storage, boost, startup }
 }

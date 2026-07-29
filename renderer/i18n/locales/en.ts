@@ -44,6 +44,13 @@ export const en = {
   'sidebar.premiumDesc': 'Advanced scans and priority support.',
   'sidebar.upgrade': 'Upgrade Now',
 
+  'titlebar.subtitle': 'PC Optimizer',
+  'titlebar.windowControls': 'Window controls',
+  'titlebar.minimize': 'Minimize',
+  'titlebar.maximize': 'Maximize',
+  'titlebar.restore': 'Restore',
+  'titlebar.close': 'Close',
+
   'processes.title': 'Top Processes',
   'processes.subtitle': 'Highest memory usage right now',
   'processes.empty': 'No process data available.',

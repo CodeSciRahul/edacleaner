@@ -52,6 +52,22 @@ const appApi = {
   getPath: (name: AppPath) => invoke<string>(IPC_CHANNELS.APP.GET_PATH, name)
 }
 
+const windowApi = {
+  minimize: () => invoke<void>(IPC_CHANNELS.WINDOW.MINIMIZE),
+  maximize: () => invoke<boolean>(IPC_CHANNELS.WINDOW.MAXIMIZE),
+  close: () => invoke<void>(IPC_CHANNELS.WINDOW.CLOSE),
+  isMaximized: () => invoke<boolean>(IPC_CHANNELS.WINDOW.IS_MAXIMIZED),
+  onMaximizedChange: (callback: (maximized: boolean) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, maximized: boolean): void => {
+      callback(maximized)
+    }
+    ipcRenderer.on(IPC_CHANNELS.WINDOW.MAXIMIZED_CHANGED, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.WINDOW.MAXIMIZED_CHANGED, listener)
+    }
+  }
+}
+
 const systemApi = {
   getInfo: () => invoke(IPC_CHANNELS.SYSTEM.GET_INFO),
   getMemory: () => invoke(IPC_CHANNELS.SYSTEM.GET_MEMORY),
@@ -205,6 +221,7 @@ const uploadApi = {
 
 const electronApi = {
   app: appApi,
+  window: windowApi,
   system: systemApi,
   file: fileApi,
   dialog: dialogApi,

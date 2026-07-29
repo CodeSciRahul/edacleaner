@@ -46,6 +46,13 @@ export const de: Record<TranslationKey, string> = {
   'sidebar.premiumDesc': 'Erweiterte Scans und Prioritäts-Support.',
   'sidebar.upgrade': 'Jetzt upgraden',
 
+  'titlebar.subtitle': 'PC-Optimizer',
+  'titlebar.windowControls': 'Fenstersteuerung',
+  'titlebar.minimize': 'Minimieren',
+  'titlebar.maximize': 'Maximieren',
+  'titlebar.restore': 'Wiederherstellen',
+  'titlebar.close': 'Schließen',
+
   'processes.title': 'Top-Prozesse',
   'processes.subtitle': 'Höchster Speicherverbrauch gerade',
   'processes.empty': 'Keine Prozessdaten verfügbar.',

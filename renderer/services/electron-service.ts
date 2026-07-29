@@ -7,6 +7,7 @@ function getElectron() {
 
 export const electronService = {
   app: () => getElectron().app,
+  window: () => getElectron().window,
   system: () => getElectron().system,
   file: () => getElectron().file,
   dialog: () => getElectron().dialog,

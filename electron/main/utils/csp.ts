@@ -8,6 +8,7 @@ export function getContentSecurityPolicy(): string {
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
+      "font-src 'self' data:",
       "img-src 'self' data:",
       "connect-src 'self' ws://localhost:* http://localhost:*"
     ].join('; ')
@@ -17,6 +18,7 @@ export function getContentSecurityPolicy(): string {
     "default-src 'self'",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
     "img-src 'self' data:"
   ].join('; ')
 }

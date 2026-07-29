@@ -79,7 +79,8 @@ module.exports = {
         'sidebar-collapsed': '68px'
       },
       height: {
-        toolbar: '64px'
+        toolbar: '64px',
+        titlebar: '40px'
       },
       boxShadow: {
         card: '0 1px 3px 0 rgb(0 0 0 / 0.05)',

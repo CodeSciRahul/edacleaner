@@ -1,4 +1,10 @@
-import { ipcMain, dialog, type OpenDialogOptions, type SaveDialogOptions } from 'electron'
+import {
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  type OpenDialogOptions,
+  type SaveDialogOptions
+} from 'electron'
 import { readFile, writeFile, access } from 'fs/promises'
 import { constants } from 'fs'
 import { IPC_CHANNELS } from '@shared/constants'
@@ -43,6 +49,57 @@ export function registerAppIpc(): void {
   ipcMain.handle(IPC_CHANNELS.APP.GET_PATH, (_event, name: string) =>
     success(appService.getPath(name as Parameters<typeof appService.getPath>[0]))
   )
+}
+
+function getWindowFromEvent(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
+  return BrowserWindow.fromWebContents(event.sender)
+}
+
+function bindMaximizedEvents(window: BrowserWindow): void {
+  const send = (): void => {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) return
+    window.webContents.send(IPC_CHANNELS.WINDOW.MAXIMIZED_CHANGED, window.isMaximized())
+  }
+  window.on('maximize', send)
+  window.on('unmaximize', send)
+  window.on('enter-full-screen', send)
+  window.on('leave-full-screen', send)
+}
+
+const maximizedBoundWindows = new WeakSet<BrowserWindow>()
+
+export function registerWindowIpc(): void {
+  ipcMain.handle(IPC_CHANNELS.WINDOW.MINIMIZE, (event) => {
+    const window = getWindowFromEvent(event)
+    window?.minimize()
+    return success(null)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW.MAXIMIZE, (event) => {
+    const window = getWindowFromEvent(event)
+    if (!window) return success(null)
+    if (window.isMaximized()) {
+      window.unmaximize()
+    } else {
+      window.maximize()
+    }
+    return success(window.isMaximized())
+  })
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW.CLOSE, (event) => {
+    const window = getWindowFromEvent(event)
+    window?.close()
+    return success(null)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW.IS_MAXIMIZED, (event) => {
+    const window = getWindowFromEvent(event)
+    if (window && !maximizedBoundWindows.has(window)) {
+      bindMaximizedEvents(window)
+      maximizedBoundWindows.add(window)
+    }
+    return success(window?.isMaximized() ?? false)
+  })
 }
 
 export function registerSystemIpc(): void {
@@ -479,6 +536,7 @@ export function registerUploadIpc(): void {
 
 export function registerAllIpc(): void {
   registerAppIpc()
+  registerWindowIpc()
   registerSystemIpc()
   registerSettingsIpc()
   registerUpdaterIpc()

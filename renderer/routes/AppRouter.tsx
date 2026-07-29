@@ -5,7 +5,12 @@ import { routes } from '@/routes/index'
 /** HashRouter is required for packaged Electron (file://); BrowserRouter blanks the window. */
 export function AppRouter(): React.ReactElement {
   return (
-    <HashRouter>
+    <HashRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <Routes>
         <Route element={<MainLayout />}>
           {routes.map((route) => (

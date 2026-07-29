@@ -43,6 +43,14 @@ export interface AppApi {
   getPath: (name: AppPath) => Promise<string>
 }
 
+export interface WindowApi {
+  minimize: () => Promise<void>
+  maximize: () => Promise<boolean>
+  close: () => Promise<void>
+  isMaximized: () => Promise<boolean>
+  onMaximizedChange: (callback: (maximized: boolean) => void) => () => void
+}
+
 export interface SystemApi {
   getInfo: () => Promise<SystemInfo>
   getMemory: () => Promise<MemoryInfo>
@@ -126,6 +134,7 @@ export interface UploadApi {
 
 export interface ElectronApi {
   app: AppApi
+  window: WindowApi
   system: SystemApi
   file: FileApi
   dialog: DialogApi

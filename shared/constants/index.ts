@@ -9,6 +9,13 @@ export const IPC_CHANNELS = {
     RELAUNCH: 'app:relaunch',
     GET_PATH: 'app:get-path'
   },
+  WINDOW: {
+    MINIMIZE: 'window:minimize',
+    MAXIMIZE: 'window:maximize',
+    CLOSE: 'window:close',
+    IS_MAXIMIZED: 'window:is-maximized',
+    MAXIMIZED_CHANGED: 'window:maximized-changed'
+  },
   SYSTEM: {
     GET_INFO: 'system:get-info',
     GET_MEMORY: 'system:get-memory',
@@ -87,5 +94,6 @@ export const WINDOW_DEFAULTS = {
   WIDTH: 1200,
   HEIGHT: 800,
   MIN_WIDTH: 900,
-  MIN_HEIGHT: 600
+  MIN_HEIGHT: 600,
+  TITLEBAR_HEIGHT: 40
 } as const
