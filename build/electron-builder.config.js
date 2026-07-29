@@ -43,6 +43,7 @@ module.exports = {
   },
 
   mac: {
+    icon: 'resources/icons/icon.png',
     target: [
       {
         target: 'dmg',
@@ -63,6 +64,7 @@ module.exports = {
   },
 
   linux: {
+    icon: 'resources/icons/icon.png',
     target: [
       {
         target: 'AppImage',
