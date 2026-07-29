@@ -74,7 +74,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends rpm
 
       - name: Build ${{ matrix.platform }} installer
-        run: npm run ${{ matrix.dist_script }}
+        # --publish never: do not publish to GitHub Releases (we use our version API)
+        run: npm run ${{ matrix.dist_script }} -- --publish never
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

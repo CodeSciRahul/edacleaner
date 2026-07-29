@@ -4,6 +4,9 @@
 module.exports = {
   appId: 'com.edacleaner.app',
   productName: 'EDA Cleaner',
+  // Installers are uploaded via scripts/publish-release.mjs (API + S3), not GitHub Releases.
+  // Without this, CI sets CI=true and electron-builder fails looking for GH_TOKEN.
+  publish: null,
   directories: {
     output: 'release',
     buildResources: 'resources'
