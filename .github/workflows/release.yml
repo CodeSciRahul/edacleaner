@@ -1,0 +1,116 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type (stable | beta | alpha)'
+        required: false
+        default: 'stable'
+        type: choice
+        options:
+          - stable
+          - beta
+          - alpha
+      publish:
+        description: 'Upload installers to API / cloud'
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    name: Build (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            dist_script: dist:win
+          - os: macos-latest
+            platform: macos
+            dist_script: dist:mac
+          - os: ubuntu-latest
+            platform: linux
+            dist_script: dist:linux
+
+    env:
+      RELEASE_API_BASE_URL: ${{ secrets.RELEASE_API_BASE_URL }}
+      RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'stable' }}
+      # Skip electron-builder code signing until certificates are configured
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Linux packaging deps
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rpm
+
+      - name: Build ${{ matrix.platform }} installer
+        run: npm run ${{ matrix.dist_script }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: eda-cleaner-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            release/*
+            !release/**/*.blockmap
+            !release/**/*.yml
+            !release/**/*.yaml
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Decide whether to publish
+        id: publish
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.publish }}" = "false" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Require API URL
+        if: steps.publish.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          if [ -z "$RELEASE_API_BASE_URL" ]; then
+            echo "::error::Missing repository secret RELEASE_API_BASE_URL (e.g. https://api.example.com/api/v1)"
+            exit 1
+          fi
+
+      - name: Publish to version API
+        if: steps.publish.outputs.enabled == 'true'
+        run: npm run publish:release:yes
+        env:
+          PUBLISH_RELEASE: '1'
+          RELEASE_API_BASE_URL: ${{ secrets.RELEASE_API_BASE_URL }}
+          RELEASE_TYPE: ${{ env.RELEASE_TYPE }}

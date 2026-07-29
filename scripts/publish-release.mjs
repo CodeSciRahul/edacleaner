@@ -11,6 +11,10 @@
  * Env:
  *   RELEASE_API_BASE_URL | MAIN_VITE_API_BASE_URL | VITE_API_BASE_URL
  *   PUBLISH_RELEASE=1   (same as --yes when non-interactive)
+ *   RELEASE_VERSION     (optional override of package.json version)
+ *   RELEASE_TYPE        (stable | beta | alpha; default stable)
+ *   RELEASE_NOTES       (comma-separated notes)
+ *   RELEASE_PUBLISH     (true|false; mark isPublished; default true)
  */
 
 import { createHash } from 'node:crypto'
@@ -416,29 +420,38 @@ async function main() {
       process.exit(0)
     }
 
+    const envVersion = process.env.RELEASE_VERSION?.trim()
     const version = await askValue(
       autoYes,
       canPrompt,
       prompt,
       'Version',
-      packageVersion
+      envVersion || packageVersion
     )
 
     const suggestedBuild = await fetchNextBuildNumber(apiBase)
+    const envBuild = process.env.RELEASE_BUILD_NUMBER?.trim()
     const buildNumberRaw = await askValue(
       autoYes,
       canPrompt,
       prompt,
       'Build number',
-      String(suggestedBuild)
+      envBuild || String(suggestedBuild)
     )
     const buildNumber = Number(buildNumberRaw)
     if (!Number.isInteger(buildNumber) || buildNumber < 1) {
       throw new Error('Invalid build number')
     }
 
+    const envReleaseType = process.env.RELEASE_TYPE?.trim().toLowerCase()
     const releaseType = (
-      await askValue(autoYes, canPrompt, prompt, 'Release type (stable|beta|alpha)', 'stable')
+      await askValue(
+        autoYes,
+        canPrompt,
+        prompt,
+        'Release type (stable|beta|alpha)',
+        envReleaseType || 'stable'
+      )
     ).toLowerCase()
     if (!['stable', 'beta', 'alpha'].includes(releaseType)) {
       throw new Error('Invalid release type')
@@ -449,7 +462,7 @@ async function main() {
       canPrompt,
       prompt,
       'Release notes (comma-separated, optional)',
-      ''
+      process.env.RELEASE_NOTES?.trim() || ''
     )
     const releaseNotes = notesRaw
       ? notesRaw
@@ -458,12 +471,17 @@ async function main() {
           .filter(Boolean)
       : []
 
+    const envPublish = process.env.RELEASE_PUBLISH
+    const defaultPublish =
+      envPublish === undefined || envPublish === ''
+        ? true
+        : envPublish === '1' || envPublish === 'true'
     const publishYes = await confirm(
       autoYes,
       canPrompt,
       prompt,
       'Mark as published (isPublished=true)?',
-      true
+      defaultPublish
     )
 
     console.log('')
@@ -479,6 +497,7 @@ async function main() {
       })
     }
 
+    // Parallel CI jobs (win/mac/linux) may race on first create — retry as append on conflict.
     const exists = await versionExists(apiBase, version)
 
     if (exists) {
@@ -496,24 +515,44 @@ async function main() {
       console.log(`  files : ${res.data?.data?.files?.length ?? files.length}`)
     } else {
       console.log(`Creating version ${version}...`)
-      const res = await axios.post(
-        `${apiBase}/versions`,
-        {
-          version,
-          buildNumber,
-          releaseType,
-          isPublished: publishYes,
-          releaseNotes,
-          files
-        },
-        { timeout: 30_000 }
-      )
-      console.log('')
-      console.log(`Created version ${res.data?.data?.version ?? version}`)
-      console.log(`  build  : ${buildNumber}`)
-      console.log(`  type   : ${releaseType}`)
-      console.log(`  files  : ${files.length}`)
-      console.log(`  published: ${publishYes}`)
+      try {
+        const res = await axios.post(
+          `${apiBase}/versions`,
+          {
+            version,
+            buildNumber,
+            releaseType,
+            isPublished: publishYes,
+            releaseNotes,
+            files
+          },
+          { timeout: 30_000 }
+        )
+        console.log('')
+        console.log(`Created version ${res.data?.data?.version ?? version}`)
+        console.log(`  build  : ${buildNumber}`)
+        console.log(`  type   : ${releaseType}`)
+        console.log(`  files  : ${files.length}`)
+        console.log(`  published: ${publishYes}`)
+      } catch (err) {
+        const status = axios.isAxiosError(err) ? err.response?.status : undefined
+        if (status !== 409 && status !== 400) throw err
+
+        console.log(
+          `Version ${version} was created by another job — appending files instead...`
+        )
+        const res = await axios.post(
+          `${apiBase}/versions/${encodeURIComponent(version)}/files`,
+          {
+            files,
+            markLatest: publishYes
+          },
+          { timeout: 30_000 }
+        )
+        console.log('')
+        console.log(`Updated version ${version}`)
+        console.log(`  files : ${res.data?.data?.files?.length ?? files.length}`)
+      }
     }
 
     console.log('')
