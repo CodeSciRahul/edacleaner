@@ -1,9 +1,13 @@
 {
   "name": "eda-cleaner",
   "version": "1.0.0",
-  "description": "Production-ready Electron desktop application template",
+  "description": "EdaCleaner — PC cleanup and performance optimization for Windows, macOS, and Linux",
+  "homepage": "https://edacleaner.com",
   "main": "./out/main/index.js",
-  "author": "EDA Cleaner",
+  "author": {
+    "name": "EDA Cleaner",
+    "email": "support@edacleaner.com"
+  },
   "license": "MIT",
   "private": true,
   "scripts": {

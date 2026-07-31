@@ -4,6 +4,7 @@
 module.exports = {
   appId: 'com.edacleaner.app',
   productName: 'EDA Cleaner',
+  copyright: 'Copyright © EDA Cleaner',
   // Installers are uploaded via scripts/publish-release.mjs (API + S3), not GitHub Releases.
   // Without this, CI sets CI=true and electron-builder fails looking for GH_TOKEN.
   publish: null,
@@ -65,13 +66,31 @@ module.exports = {
 
   linux: {
     icon: 'resources/icons/icon.png',
+    // Native packages first (Windows-like install), AppImage as portable fallback.
     target: [
-      {
-        target: 'AppImage',
-        arch: ['x64']
-      }
+      { target: 'deb', arch: ['x64'] },
+      { target: 'rpm', arch: ['x64'] },
+      { target: 'AppImage', arch: ['x64'] }
     ],
+    // Binary / .desktop Exec= name (no spaces)
+    executableName: 'eda-cleaner',
     category: 'Utility',
+    maintainer: 'EDA Cleaner <support@edacleaner.com>',
+    vendor: 'EDA Cleaner',
+    synopsis: 'PC cleanup and performance optimization tool',
+    description:
+      'EdaCleaner is a desktop utility that helps free disk space, clean junk files, and improve system performance — similar to Microsoft PC Manager.',
+    desktop: {
+      Name: 'EDA Cleaner',
+      Comment: 'Clean junk files and boost PC performance',
+      Categories: 'Utility;System;',
+      StartupWMClass: 'eda-cleaner',
+      Terminal: false
+    },
     artifactName: '${productName}-${version}-linux-${arch}.${ext}'
+  },
+
+  deb: {
+    priority: 'optional'
   }
 }
