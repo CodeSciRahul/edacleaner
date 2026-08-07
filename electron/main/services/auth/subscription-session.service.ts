@@ -40,6 +40,10 @@ export class SubscriptionSessionService {
     const cached: CachedSubscription = {
       currentPlan: input.currentPlan,
       status,
+      billingInterval:
+        input.billingInterval === 'year' || input.billingInterval === 'month'
+          ? input.billingInterval
+          : null,
       cancelAtPeriodEnd: Boolean(input.cancelAtPeriodEnd),
       pendingPlan:
         typeof input.pendingPlan === 'string' ? input.pendingPlan : null,

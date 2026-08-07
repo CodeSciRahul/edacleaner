@@ -628,6 +628,7 @@ export type CachedSubscriptionStatus =
 export interface CachedSubscription {
   currentPlan: SubscriptionPlanSlug | string
   status: CachedSubscriptionStatus | string
+  billingInterval?: 'month' | 'year' | null
   cancelAtPeriodEnd: boolean
   pendingPlan: string | null
   trialStart: string | null
