@@ -44,5 +44,8 @@ export type {
   DialogApi,
   SettingsApi,
   UpdaterApi,
-  UploadApi
+  UploadApi,
+  OfflineApi,
+  ApiBridge,
+  SyncApi
 } from './electron-api'

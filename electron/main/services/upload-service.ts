@@ -4,11 +4,10 @@ import { access, stat } from 'fs/promises'
 import { basename, extname } from 'path'
 import { constants } from 'fs'
 import { createLogger } from '@main/utils/logger'
+import { apiClient } from '@main/services/api'
 import type { UploadFileOptions, UploadFileResult } from '@shared/interfaces'
 
 const log = createLogger('UploadService')
-
-const DEFAULT_API_BASE_URL = 'http://localhost:5000/api/v1'
 
 const EXT_CONTENT_TYPES: Record<string, string> = {
   '.apk': 'application/vnd.android.package-archive',
@@ -38,14 +37,6 @@ interface PresignResponseBody {
     contentType: string
     expiresIn: number
   }
-}
-
-function resolveApiBaseUrl(): string {
-  const fromEnv =
-    typeof import.meta.env.MAIN_VITE_API_BASE_URL === 'string'
-      ? import.meta.env.MAIN_VITE_API_BASE_URL
-      : undefined
-  return (fromEnv?.trim() || DEFAULT_API_BASE_URL).replace(/\/$/, '')
 }
 
 function guessContentType(filePath: string): string {
@@ -101,21 +92,12 @@ export class UploadService {
 
     const fileName = basename(filePath)
     const contentType = options.contentType ?? guessContentType(filePath)
-    const apiBase = resolveApiBaseUrl()
 
     log.info('Requesting presigned upload URL', {
       fileName,
       contentType,
       size: fileStat.size
     })
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Accept: 'application/json'
-    }
-    if (options.authToken) {
-      headers.Authorization = `Bearer ${options.authToken}`
-    }
 
     const body: Record<string, string> = {
       fileName,
@@ -127,20 +109,21 @@ export class UploadService {
 
     let presignJson: PresignResponseBody
     try {
-      const presignRes = await axios.post<PresignResponseBody>(
-        `${apiBase}/uploads/presign`,
+      const presignRes = await apiClient.post<PresignResponseBody>(
+        '/uploads/presign',
         body,
-        { headers, timeout: 30_000 }
+        {
+          ...(options.authToken ? { authToken: options.authToken } : {}),
+          timeout: 30_000,
+          skipOfflineCache: true,
+          skipOfflineQueue: true,
+          unwrapEnvelope: false
+        }
       )
       presignJson = presignRes.data
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const apiMessage =
-          (err.response?.data as PresignResponseBody | undefined)?.message ??
-          err.message
-        throw new Error(`Failed to get upload URL: ${apiMessage}`)
-      }
-      throw err
+      const message = err instanceof Error ? err.message : 'Failed to get upload URL'
+      throw new Error(`Failed to get upload URL: ${message}`)
     }
 
     if (!presignJson.success || !presignJson.data) {

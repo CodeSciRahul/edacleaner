@@ -5,6 +5,10 @@ import { windowManager } from '@main/managers'
 import { registerAllIpc } from '@main/ipc'
 import { registerAppEvents, registerLifecycleEvents } from '@main/events'
 import { getContentSecurityPolicy } from '@main/utils'
+import { initializeOfflineFoundation } from '@main/services/offline'
+import { createLogger } from '@main/utils/logger'
+
+const log = createLogger('Bootstrap')
 
 export async function bootstrap(): Promise<void> {
   const config = configManager.get()
@@ -25,6 +29,13 @@ export async function bootstrap(): Promise<void> {
       }
     })
   })
+
+  try {
+    await initializeOfflineFoundation()
+  } catch (error) {
+    log.error('Offline foundation failed to initialize', error)
+    // App can still run local PC tools; durable storage may be unavailable.
+  }
 
   windowManager.createMainWindow()
 }

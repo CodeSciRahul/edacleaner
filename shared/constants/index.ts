@@ -80,6 +80,51 @@ export const IPC_CHANNELS = {
   },
   UPLOAD: {
     FILE: 'upload:file'
+  },
+  OFFLINE: {
+    DB_HEALTH: 'offline:db-health',
+    GET_NETWORK_STATUS: 'offline:get-network-status',
+    CHECK_NETWORK: 'offline:check-network',
+    WATCH_NETWORK: 'offline:watch-network',
+    UNWATCH_NETWORK: 'offline:unwatch-network',
+    NETWORK_STATUS_CHANGED: 'offline:network-status-changed',
+    STORAGE_GET: 'offline:storage-get',
+    STORAGE_SET: 'offline:storage-set',
+    STORAGE_DELETE: 'offline:storage-delete',
+    STORAGE_KEYS: 'offline:storage-keys',
+    STORAGE_CLEAR: 'offline:storage-clear',
+    SECURE_GET: 'offline:secure-get',
+    SECURE_SET: 'offline:secure-set',
+    SECURE_DELETE: 'offline:secure-delete',
+    SECURE_HAS: 'offline:secure-has',
+    SECURE_INFO: 'offline:secure-info',
+    CACHE_GET: 'offline:cache-get',
+    CACHE_SET: 'offline:cache-set',
+    CACHE_DELETE: 'offline:cache-delete',
+    CACHE_HAS: 'offline:cache-has',
+    CACHE_CLEAR: 'offline:cache-clear'
+  },
+  API: {
+    REQUEST: 'api:request'
+  },
+  SYNC: {
+    START: 'sync:start',
+    CANCEL: 'sync:cancel',
+    STATUS: 'sync:status',
+    PROGRESS: 'sync:progress',
+    QUEUE_STATS: 'sync:queue-stats',
+    QUEUE_LIST: 'sync:queue-list'
+  },
+  AUTH: {
+    LOGIN: 'auth:login',
+    REGISTER: 'auth:register',
+    LOGOUT: 'auth:logout',
+    GET_SESSION: 'auth:get-session',
+    SYNC: 'auth:sync',
+    REFRESH: 'auth:refresh',
+    HAS_PERMISSION: 'auth:has-permission',
+    GET_SUBSCRIPTION: 'auth:get-subscription',
+    SESSION_CHANGED: 'auth:session-changed'
   }
 } as const
 

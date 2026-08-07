@@ -14,6 +14,8 @@ module.exports = {
   },
   files: ['out/**/*', 'package.json'],
   asar: true,
+  // sql.js WASM must be unpackable for require.resolve at runtime.
+  asarUnpack: ['**/node_modules/sql.js/**'],
   compression: 'maximum',
 
   // Code signing placeholders — configure when certificates are available

@@ -31,7 +31,20 @@ import type {
   SmartScanResult,
   SmartScanProgressEvent,
   UploadFileOptions,
-  UploadFileResult
+  UploadFileResult,
+  NetworkStatusSnapshot,
+  OfflineDbHealth,
+  SecureStorageInfo,
+  ApiRequestConfig,
+  ApiClientResponse,
+  SyncProgressEvent,
+  SyncRunResult,
+  OfflineQueueStats,
+  OfflineQueueItem,
+  AuthCredentials,
+  AuthSessionSnapshot,
+  AuthSessionChangedEvent,
+  CachedSubscription
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -124,6 +137,96 @@ export interface UploadApi {
   file: (options: UploadFileOptions) => Promise<UploadFileResult>
 }
 
+export interface OfflineApi {
+  getDbHealth: () => Promise<OfflineDbHealth>
+  getNetworkStatus: () => Promise<NetworkStatusSnapshot>
+  checkNetwork: () => Promise<NetworkStatusSnapshot>
+  watchNetwork: () => Promise<{ watching: boolean }>
+  unwatchNetwork: () => Promise<{ watching: boolean }>
+  onNetworkStatusChanged: (
+    callback: (snapshot: NetworkStatusSnapshot) => void
+  ) => () => void
+  storage: {
+    get: <T>(key: string, defaultValue?: T, namespace?: string) => Promise<T | undefined>
+    set: (key: string, value: unknown, namespace?: string) => Promise<void>
+    delete: (key: string, namespace?: string) => Promise<boolean>
+    keys: (namespace?: string) => Promise<string[]>
+    clear: (namespace?: string) => Promise<number>
+  }
+  secure: {
+    info: () => Promise<SecureStorageInfo>
+  }
+  cache: {
+    get: <T>(key: string, namespace?: string) => Promise<T | null>
+    set: (
+      key: string,
+      value: unknown,
+      options?: { ttlMs?: number; namespace?: string }
+    ) => Promise<void>
+    delete: (key: string, namespace?: string) => Promise<boolean>
+    has: (key: string, namespace?: string) => Promise<boolean>
+    clear: (namespace?: string) => Promise<number>
+  }
+}
+
+export interface ApiBridge {
+  request: <T = unknown>(config: ApiRequestConfig) => Promise<ApiClientResponse<T>>
+  get: <T = unknown>(
+    url: string,
+    config?: Omit<ApiRequestConfig, 'method' | 'url'>
+  ) => Promise<ApiClientResponse<T>>
+  post: <T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: Omit<ApiRequestConfig, 'method' | 'url' | 'data'>
+  ) => Promise<ApiClientResponse<T>>
+  put: <T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: Omit<ApiRequestConfig, 'method' | 'url' | 'data'>
+  ) => Promise<ApiClientResponse<T>>
+  patch: <T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: Omit<ApiRequestConfig, 'method' | 'url' | 'data'>
+  ) => Promise<ApiClientResponse<T>>
+  delete: <T = unknown>(
+    url: string,
+    config?: Omit<ApiRequestConfig, 'method' | 'url'>
+  ) => Promise<ApiClientResponse<T>>
+}
+
+export interface SyncApi {
+  start: (reason?: string) => Promise<SyncRunResult>
+  cancel: () => Promise<{ cancelled: boolean }>
+  getStatus: () => Promise<{
+    running: boolean
+    lastProgress: SyncProgressEvent | null
+    queue: OfflineQueueStats
+  }>
+  getQueueStats: () => Promise<OfflineQueueStats>
+  listQueue: (limit?: number) => Promise<OfflineQueueItem[]>
+  onProgress: (callback: (event: SyncProgressEvent) => void) => () => void
+}
+
+export interface AuthApi {
+  login: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
+  register: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
+  logout: () => Promise<AuthSessionSnapshot>
+  getSession: () => Promise<AuthSessionSnapshot>
+  sync: (reason?: string) => Promise<AuthSessionSnapshot>
+  refresh: () => Promise<{ refreshed: boolean; session: AuthSessionSnapshot }>
+  hasPermission: (permission: string) => Promise<boolean>
+  getSubscription: () => Promise<{
+    subscription: CachedSubscription | null
+    plan: string
+    expiry: string | null
+    features: string[]
+    trial: { isTrialing: boolean; trialEnd: string | null }
+  }>
+  onSessionChanged: (callback: (event: AuthSessionChangedEvent) => void) => () => void
+}
+
 export interface ElectronApi {
   app: AppApi
   system: SystemApi
@@ -137,6 +240,10 @@ export interface ElectronApi {
   cleanup: CleanupApi
   smartScan: SmartScanApi
   upload: UploadApi
+  offline: OfflineApi
+  api: ApiBridge
+  sync: SyncApi
+  auth: AuthApi
 }
 
 declare global {

@@ -4,6 +4,7 @@ import { Platform } from '@shared/enums'
 import { IPC_CHANNELS } from '@shared/constants'
 import type { SystemInfo, MemoryInfo, SystemMetricsSample } from '@shared/interfaces'
 import { createLogger } from '@main/utils/logger'
+import { databaseManager, localStorageService } from '@main/services/offline'
 
 const log = createLogger('SystemService')
 
@@ -194,25 +195,44 @@ export class AppService {
 }
 
 export class SettingsService {
-  private store: Map<string, unknown> = new Map()
+  private readonly namespace = 'settings'
+  /** In-memory fallback until the offline DB is ready. */
+  private readonly memory = new Map<string, unknown>()
 
   get<T>(key: string, defaultValue?: T): T | undefined {
-    if (this.store.has(key)) {
-      return this.store.get(key) as T
+    if (this.canUseDb()) {
+      return localStorageService.get<T>(key, defaultValue, this.namespace)
+    }
+    if (this.memory.has(key)) {
+      return this.memory.get(key) as T
     }
     return defaultValue
   }
 
   set(key: string, value: unknown): void {
-    this.store.set(key, value)
+    if (this.canUseDb()) {
+      localStorageService.set(key, value, this.namespace)
+      return
+    }
+    this.memory.set(key, value)
   }
 
   getAll(): Record<string, unknown> {
-    return Object.fromEntries(this.store)
+    if (this.canUseDb()) {
+      return localStorageService.getAll(this.namespace)
+    }
+    return Object.fromEntries(this.memory)
   }
 
   reset(): void {
-    this.store.clear()
+    if (this.canUseDb()) {
+      localStorageService.clear(this.namespace)
+    }
+    this.memory.clear()
+  }
+
+  private canUseDb(): boolean {
+    return databaseManager.isReady
   }
 }
 
@@ -242,3 +262,25 @@ export { startupService, StartupService } from './startup'
 export { cleanupService, CleanupService } from './cleanup'
 export { smartScanService, SmartScanService } from './smart-scan'
 export { uploadService, UploadService } from './upload-service'
+export {
+  databaseManager,
+  localStorageService,
+  secureStorageService,
+  cacheManager,
+  connectivityService,
+  networkStatusObserver,
+  queueService,
+  queueProcessor,
+  queueCleanup,
+  syncEngine,
+  syncProgressReporter,
+  initializeOfflineFoundation,
+  shutdownOfflineFoundation
+} from './offline'
+export { apiClient, ApiClient, ApiError, toPublicApiError, resolveApiBaseUrl } from './api'
+export {
+  authSessionService,
+  AuthSessionService,
+  subscriptionSessionService,
+  SubscriptionSessionService
+} from './auth'

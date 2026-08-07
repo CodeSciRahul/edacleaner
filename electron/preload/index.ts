@@ -32,7 +32,20 @@ import type {
   SmartScanResult,
   SmartScanProgressEvent,
   UploadFileOptions,
-  UploadFileResult
+  UploadFileResult,
+  NetworkStatusSnapshot,
+  OfflineDbHealth,
+  SecureStorageInfo,
+  ApiRequestConfig,
+  ApiClientResponse,
+  SyncProgressEvent,
+  SyncRunResult,
+  OfflineQueueStats,
+  OfflineQueueItem,
+  AuthCredentials,
+  AuthSessionSnapshot,
+  AuthSessionChangedEvent,
+  CachedSubscription
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -203,6 +216,181 @@ const uploadApi = {
     invoke<UploadFileResult>(IPC_CHANNELS.UPLOAD.FILE, options)
 }
 
+const offlineApi = {
+  getDbHealth: () => invoke<OfflineDbHealth>(IPC_CHANNELS.OFFLINE.DB_HEALTH),
+  getNetworkStatus: () =>
+    invoke<NetworkStatusSnapshot>(IPC_CHANNELS.OFFLINE.GET_NETWORK_STATUS),
+  checkNetwork: () =>
+    invoke<NetworkStatusSnapshot>(IPC_CHANNELS.OFFLINE.CHECK_NETWORK),
+  watchNetwork: () =>
+    invoke<{ watching: boolean }>(IPC_CHANNELS.OFFLINE.WATCH_NETWORK),
+  unwatchNetwork: () =>
+    invoke<{ watching: boolean }>(IPC_CHANNELS.OFFLINE.UNWATCH_NETWORK),
+  onNetworkStatusChanged: (callback: (snapshot: NetworkStatusSnapshot) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: NetworkStatusSnapshot
+    ): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.OFFLINE.NETWORK_STATUS_CHANGED, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.OFFLINE.NETWORK_STATUS_CHANGED, listener)
+    }
+  },
+  storage: {
+    get: <T>(key: string, defaultValue?: T, namespace?: string) =>
+      invoke<T | undefined>(
+        IPC_CHANNELS.OFFLINE.STORAGE_GET,
+        key,
+        defaultValue,
+        namespace
+      ),
+    set: (key: string, value: unknown, namespace?: string) =>
+      invoke<void>(IPC_CHANNELS.OFFLINE.STORAGE_SET, key, value, namespace),
+    delete: (key: string, namespace?: string) =>
+      invoke<boolean>(IPC_CHANNELS.OFFLINE.STORAGE_DELETE, key, namespace),
+    keys: (namespace?: string) =>
+      invoke<string[]>(IPC_CHANNELS.OFFLINE.STORAGE_KEYS, namespace),
+    clear: (namespace?: string) =>
+      invoke<number>(IPC_CHANNELS.OFFLINE.STORAGE_CLEAR, namespace)
+  },
+  secure: {
+    info: () => invoke<SecureStorageInfo>(IPC_CHANNELS.OFFLINE.SECURE_INFO)
+  },
+  cache: {
+    get: <T>(key: string, namespace?: string) =>
+      invoke<T | null>(IPC_CHANNELS.OFFLINE.CACHE_GET, key, namespace),
+    set: (
+      key: string,
+      value: unknown,
+      options?: { ttlMs?: number; namespace?: string }
+    ) => invoke<void>(IPC_CHANNELS.OFFLINE.CACHE_SET, key, value, options),
+    delete: (key: string, namespace?: string) =>
+      invoke<boolean>(IPC_CHANNELS.OFFLINE.CACHE_DELETE, key, namespace),
+    has: (key: string, namespace?: string) =>
+      invoke<boolean>(IPC_CHANNELS.OFFLINE.CACHE_HAS, key, namespace),
+    clear: (namespace?: string) =>
+      invoke<number>(IPC_CHANNELS.OFFLINE.CACHE_CLEAR, namespace)
+  }
+}
+
+const apiBridge = {
+  request: <T>(config: ApiRequestConfig) =>
+    invoke<ApiClientResponse<T>>(IPC_CHANNELS.API.REQUEST, config),
+  get: <T>(url: string, config?: Omit<ApiRequestConfig, 'method' | 'url'>) =>
+    invoke<ApiClientResponse<T>>(IPC_CHANNELS.API.REQUEST, {
+      method: 'GET',
+      url,
+      ...config
+    }),
+  post: <T>(
+    url: string,
+    data?: unknown,
+    config?: Omit<ApiRequestConfig, 'method' | 'url' | 'data'>
+  ) =>
+    invoke<ApiClientResponse<T>>(IPC_CHANNELS.API.REQUEST, {
+      method: 'POST',
+      url,
+      data,
+      ...config
+    }),
+  put: <T>(
+    url: string,
+    data?: unknown,
+    config?: Omit<ApiRequestConfig, 'method' | 'url' | 'data'>
+  ) =>
+    invoke<ApiClientResponse<T>>(IPC_CHANNELS.API.REQUEST, {
+      method: 'PUT',
+      url,
+      data,
+      ...config
+    }),
+  patch: <T>(
+    url: string,
+    data?: unknown,
+    config?: Omit<ApiRequestConfig, 'method' | 'url' | 'data'>
+  ) =>
+    invoke<ApiClientResponse<T>>(IPC_CHANNELS.API.REQUEST, {
+      method: 'PATCH',
+      url,
+      data,
+      ...config
+    }),
+  delete: <T>(url: string, config?: Omit<ApiRequestConfig, 'method' | 'url'>) =>
+    invoke<ApiClientResponse<T>>(IPC_CHANNELS.API.REQUEST, {
+      method: 'DELETE',
+      url,
+      ...config
+    })
+}
+
+const syncApi = {
+  start: (reason?: string) =>
+    invoke<SyncRunResult>(IPC_CHANNELS.SYNC.START, reason),
+  cancel: () => invoke<{ cancelled: boolean }>(IPC_CHANNELS.SYNC.CANCEL),
+  getStatus: () =>
+    invoke<{
+      running: boolean
+      lastProgress: SyncProgressEvent | null
+      queue: OfflineQueueStats
+    }>(IPC_CHANNELS.SYNC.STATUS),
+  getQueueStats: () =>
+    invoke<OfflineQueueStats>(IPC_CHANNELS.SYNC.QUEUE_STATS),
+  listQueue: (limit?: number) =>
+    invoke<OfflineQueueItem[]>(IPC_CHANNELS.SYNC.QUEUE_LIST, limit),
+  onProgress: (callback: (event: SyncProgressEvent) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: SyncProgressEvent
+    ): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.SYNC.PROGRESS, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.SYNC.PROGRESS, listener)
+    }
+  }
+}
+
+const authApi = {
+  login: (credentials: AuthCredentials) =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.LOGIN, credentials),
+  register: (credentials: AuthCredentials) =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.REGISTER, credentials),
+  logout: () => invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.LOGOUT),
+  getSession: () =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.GET_SESSION),
+  sync: (reason?: string) =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.SYNC, reason),
+  refresh: () =>
+    invoke<{ refreshed: boolean; session: AuthSessionSnapshot }>(
+      IPC_CHANNELS.AUTH.REFRESH
+    ),
+  hasPermission: (permission: string) =>
+    invoke<boolean>(IPC_CHANNELS.AUTH.HAS_PERMISSION, permission),
+  getSubscription: () =>
+    invoke<{
+      subscription: CachedSubscription | null
+      plan: string
+      expiry: string | null
+      features: string[]
+      trial: { isTrialing: boolean; trialEnd: string | null }
+    }>(IPC_CHANNELS.AUTH.GET_SUBSCRIPTION),
+  onSessionChanged: (callback: (event: AuthSessionChangedEvent) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: AuthSessionChangedEvent
+    ): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.AUTH.SESSION_CHANGED, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.AUTH.SESSION_CHANGED, listener)
+    }
+  }
+}
+
 const electronApi = {
   app: appApi,
   system: systemApi,
@@ -215,7 +403,11 @@ const electronApi = {
   startup: startupApi,
   cleanup: cleanupApi,
   smartScan: smartScanApi,
-  upload: uploadApi
+  upload: uploadApi,
+  offline: offlineApi,
+  api: apiBridge,
+  sync: syncApi,
+  auth: authApi
 }
 
 contextBridge.exposeInMainWorld('electron', electronApi)
