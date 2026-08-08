@@ -97,6 +97,37 @@ export const de: Record<TranslationKey, string> = {
   'sidebar.premiumDesc': 'Erweiterte Scans und Prioritäts-Support.',
   'sidebar.upgrade': 'Jetzt upgraden',
 
+  'plans.title': 'Tarif wählen',
+  'plans.description':
+    'Vergleichen Sie Free, Pro und Premium. Zahlungen öffnen sicher in Ihrem Browser.',
+  'plans.loading': 'Tarife werden geladen…',
+  'plans.recommended': 'Empfohlen',
+  'plans.currentBadge': 'Aktuell',
+  'plans.price.free': 'Kostenlos',
+  'plans.interval.month': 'Monat',
+  'plans.interval.year': 'Jahr',
+  'plans.trial': '{{days}}-tägige kostenlose Testphase verfügbar',
+  'plans.pendingHint': 'Wechsel zum Periodenende geplant',
+  'plans.action.current': 'Aktueller Tarif',
+  'plans.action.upgrade': 'Upgrade',
+  'plans.action.downgrade': 'Downgrade',
+  'plans.action.working': 'Wird verarbeitet…',
+  'plans.offlineNotice':
+    'Für Kauf oder Tarifwechsel ist eine Internetverbindung erforderlich. Ihr zwischengespeicherter Tarif bleibt offline aktiv.',
+  'plans.feedback.checkoutOpened':
+    'Checkout im Browser geöffnet. Kehren Sie nach der Zahlung zurück — Ihr Tarif wird automatisch aktualisiert.',
+  'plans.feedback.updated': 'Ihr Abonnement ist aktuell.',
+  'plans.feedback.downgradeScheduled':
+    'Downgrade geplant. Ihr aktueller Tarif bleibt bis Periodenende aktiv.',
+  'plans.error.load': 'Tarife konnten nicht geladen werden. Erneut versuchen.',
+  'plans.error.empty': 'Derzeit sind keine Tarife verfügbar.',
+  'plans.error.offlineLoad': 'Stellen Sie eine Internetverbindung her, um Tarife zu laden.',
+  'plans.error.offlineAction':
+    'Stellen Sie eine Internetverbindung her, um zu upgraden oder zu downgraden.',
+  'plans.error.change': 'Tarif konnte nicht geändert werden. Bitte erneut versuchen.',
+  'plans.error.missingCheckoutUrl': 'Checkout-URL fehlt in der Serverantwort.',
+  'plans.error.unauthorized': 'Sitzung abgelaufen. Bitte erneut anmelden.',
+
   'processes.title': 'Top-Prozesse',
   'processes.subtitle': 'Höchster Speicherverbrauch gerade',
   'processes.empty': 'Keine Prozessdaten verfügbar.',
@@ -117,6 +148,8 @@ export const de: Record<TranslationKey, string> = {
   'settings.cat.notificationsDesc': 'Abschluss-Rückmeldungen',
   'settings.cat.plan': 'Tarif',
   'settings.cat.planDesc': 'Abonnement und Berechtigungen',
+  'settings.cat.account': 'Konto',
+  'settings.cat.accountDesc': 'Angemeldetes Profil und Abmeldung',
   'settings.cat.about': 'Info',
   'settings.cat.aboutDesc': 'App- und Systeminformationen',
 
@@ -212,6 +245,25 @@ export const de: Record<TranslationKey, string> = {
   'settings.plan.status.incompleteExpired': 'Unvollständig (abgelaufen)',
   'settings.plan.status.unpaid': 'Unbezahlt',
   'settings.plan.status.unknown': 'Unbekannt',
+
+  'settings.account.title': 'Konto',
+  'settings.account.description':
+    'Sehen Sie, wer auf diesem Gerät angemeldet ist, und melden Sie sich ab, wenn Sie fertig sind.',
+  'settings.account.signedIn': 'Angemeldet',
+  'settings.account.offline': 'Offline-Sitzung',
+  'settings.account.name': 'Name',
+  'settings.account.email': 'E-Mail',
+  'settings.account.nameEmpty': 'Kein Name gesetzt',
+  'settings.account.logout': 'Abmelden',
+  'settings.account.loggingOut': 'Wird abgemeldet…',
+  'settings.account.logoutHint':
+    'Abmelden löscht Ihre sichere Sitzung auf diesem Gerät. Zum Weiterverwenden der App müssen Sie sich erneut anmelden.',
+  'settings.account.logoutConfirmTitle': 'Von EDA Cleaner abmelden?',
+  'settings.account.logoutConfirmMessage': 'Auf diesem Gerät abmelden?',
+  'settings.account.logoutConfirmDetail':
+    'Ihre lokalen Sitzungstoken werden gelöscht. Der Bereinigungsverlauf auf diesem PC bleibt erhalten.',
+  'settings.account.logoutError':
+    'Abmelden ist gerade nicht möglich. Bitte erneut versuchen.',
 
   'settings.about.title': 'Info',
   'settings.about.description':

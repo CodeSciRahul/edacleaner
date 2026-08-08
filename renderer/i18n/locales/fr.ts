@@ -97,6 +97,36 @@ export const fr: Record<TranslationKey, string> = {
   'sidebar.premiumDesc': 'Analyses avancées et assistance prioritaire.',
   'sidebar.upgrade': 'Mettre à niveau',
 
+  'plans.title': 'Choisissez votre offre',
+  'plans.description':
+    'Comparez Free, Pro et Premium. Les paiements s’ouvrent en toute sécurité dans votre navigateur.',
+  'plans.loading': 'Chargement des offres…',
+  'plans.recommended': 'Recommandé',
+  'plans.currentBadge': 'Actuelle',
+  'plans.price.free': 'Gratuit',
+  'plans.interval.month': 'mois',
+  'plans.interval.year': 'an',
+  'plans.trial': 'Essai gratuit de {{days}} jours disponible',
+  'plans.pendingHint': 'Changement prévu en fin de période',
+  'plans.action.current': 'Offre actuelle',
+  'plans.action.upgrade': 'Mettre à niveau',
+  'plans.action.downgrade': 'Rétrograder',
+  'plans.action.working': 'Traitement…',
+  'plans.offlineNotice':
+    'Une connexion Internet est requise pour acheter ou modifier un abonnement. Votre offre en cache reste active hors ligne.',
+  'plans.feedback.checkoutOpened':
+    'Le paiement s’est ouvert dans votre navigateur. Revenez ici après le paiement — votre offre se mettra à jour automatiquement.',
+  'plans.feedback.updated': 'Votre abonnement est à jour.',
+  'plans.feedback.downgradeScheduled':
+    'Rétrogradation planifiée. Votre offre actuelle reste active jusqu’à la fin de la période.',
+  'plans.error.load': 'Impossible de charger les offres. Réessayez.',
+  'plans.error.empty': 'Aucune offre n’est disponible pour le moment.',
+  'plans.error.offlineLoad': 'Connectez-vous à Internet pour charger les offres.',
+  'plans.error.offlineAction': 'Connectez-vous à Internet pour mettre à niveau ou rétrograder.',
+  'plans.error.change': 'Impossible de changer d’offre. Réessayez.',
+  'plans.error.missingCheckoutUrl': 'L’URL de paiement est absente de la réponse du serveur.',
+  'plans.error.unauthorized': 'Session expirée. Veuillez vous reconnecter.',
+
   'processes.title': 'Processus principaux',
   'processes.subtitle': 'Plus forte consommation mémoire actuellement',
   'processes.empty': 'Aucune donnée de processus disponible.',
@@ -117,6 +147,8 @@ export const fr: Record<TranslationKey, string> = {
   'settings.cat.notificationsDesc': 'Retours de fin d’opération',
   'settings.cat.plan': 'Offre',
   'settings.cat.planDesc': 'Abonnement et droits',
+  'settings.cat.account': 'Compte',
+  'settings.cat.accountDesc': 'Profil connecté et déconnexion',
   'settings.cat.about': 'À propos',
   'settings.cat.aboutDesc': 'Infos application et système',
 
@@ -212,6 +244,25 @@ export const fr: Record<TranslationKey, string> = {
   'settings.plan.status.incompleteExpired': 'Incomplet (expiré)',
   'settings.plan.status.unpaid': 'Impayé',
   'settings.plan.status.unknown': 'Inconnu',
+
+  'settings.account.title': 'Compte',
+  'settings.account.description':
+    'Voyez qui est connecté sur cet appareil et déconnectez-vous quand vous avez terminé.',
+  'settings.account.signedIn': 'Connecté',
+  'settings.account.offline': 'Session hors ligne',
+  'settings.account.name': 'Nom',
+  'settings.account.email': 'E-mail',
+  'settings.account.nameEmpty': 'Aucun nom défini',
+  'settings.account.logout': 'Se déconnecter',
+  'settings.account.loggingOut': 'Déconnexion…',
+  'settings.account.logoutHint':
+    'La déconnexion efface votre session sécurisée sur cet appareil. Vous devrez vous reconnecter pour utiliser l’application.',
+  'settings.account.logoutConfirmTitle': 'Se déconnecter d’EDA Cleaner ?',
+  'settings.account.logoutConfirmMessage': 'Se déconnecter sur cet appareil ?',
+  'settings.account.logoutConfirmDetail':
+    'Vos jetons de session locaux seront effacés. L’historique de nettoyage sur ce PC est conservé.',
+  'settings.account.logoutError':
+    'Impossible de se déconnecter pour le moment. Veuillez réessayer.',
 
   'settings.about.title': 'À propos',
   'settings.about.description':

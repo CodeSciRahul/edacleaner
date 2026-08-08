@@ -45,7 +45,8 @@ import type {
   AuthCredentials,
   AuthSessionSnapshot,
   AuthSessionChangedEvent,
-  CachedSubscription
+  CachedSubscription,
+  DeepLinkEvent
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -62,7 +63,18 @@ const appApi = {
   getPlatform: () => invoke<string>(IPC_CHANNELS.APP.GET_PLATFORM),
   quit: () => invoke<void>(IPC_CHANNELS.APP.QUIT),
   relaunch: () => invoke<void>(IPC_CHANNELS.APP.RELAUNCH),
-  getPath: (name: AppPath) => invoke<string>(IPC_CHANNELS.APP.GET_PATH, name)
+  getPath: (name: AppPath) => invoke<string>(IPC_CHANNELS.APP.GET_PATH, name),
+  openExternal: (url: string) =>
+    invoke<{ opened: true }>(IPC_CHANNELS.APP.OPEN_EXTERNAL, url),
+  onDeepLink: (callback: (event: DeepLinkEvent) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, data: DeepLinkEvent): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.APP.DEEP_LINK, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.APP.DEEP_LINK, listener)
+    }
+  }
 }
 
 const systemApi = {

@@ -90,6 +90,36 @@ export const en = {
   'sidebar.premiumDesc': 'Advanced scans and priority support.',
   'sidebar.upgrade': 'Upgrade Now',
 
+  'plans.title': 'Choose your plan',
+  'plans.description':
+    'Compare Free, Pro, and Premium. Payments open securely in your browser.',
+  'plans.loading': 'Loading plans…',
+  'plans.recommended': 'Recommended',
+  'plans.currentBadge': 'Current',
+  'plans.price.free': 'Free',
+  'plans.interval.month': 'month',
+  'plans.interval.year': 'year',
+  'plans.trial': '{{days}}-day free trial available',
+  'plans.pendingHint': 'Scheduled to switch at period end',
+  'plans.action.current': 'Current plan',
+  'plans.action.upgrade': 'Upgrade',
+  'plans.action.downgrade': 'Downgrade',
+  'plans.action.working': 'Working…',
+  'plans.offlineNotice':
+    'An internet connection is required to purchase or change subscriptions. Your cached plan stays active offline.',
+  'plans.feedback.checkoutOpened':
+    'Checkout opened in your browser. Return here after payment — your plan will refresh automatically.',
+  'plans.feedback.updated': 'Your subscription is up to date.',
+  'plans.feedback.downgradeScheduled':
+    'Downgrade scheduled. Your current plan stays active until the billing period ends.',
+  'plans.error.load': 'Could not load subscription plans. Try again.',
+  'plans.error.empty': 'No plans are available right now.',
+  'plans.error.offlineLoad': 'Connect to the internet to load subscription plans.',
+  'plans.error.offlineAction': 'Connect to the internet to upgrade or downgrade.',
+  'plans.error.change': 'Could not change plan. Please try again.',
+  'plans.error.missingCheckoutUrl': 'Checkout URL was missing from the server response.',
+  'plans.error.unauthorized': 'Your session expired. Please sign in again.',
+
   'processes.title': 'Top Processes',
   'processes.subtitle': 'Highest memory usage right now',
   'processes.empty': 'No process data available.',
@@ -109,6 +139,8 @@ export const en = {
   'settings.cat.notificationsDesc': 'Completion feedback',
   'settings.cat.plan': 'Plan',
   'settings.cat.planDesc': 'Subscription and entitlements',
+  'settings.cat.account': 'Account',
+  'settings.cat.accountDesc': 'Signed-in profile and logout',
   'settings.cat.about': 'About',
   'settings.cat.aboutDesc': 'App and system info',
 
@@ -198,6 +230,24 @@ export const en = {
   'settings.plan.status.incompleteExpired': 'Incomplete (expired)',
   'settings.plan.status.unpaid': 'Unpaid',
   'settings.plan.status.unknown': 'Unknown',
+
+  'settings.account.title': 'Account',
+  'settings.account.description':
+    'See who is signed in on this device and sign out when you are done.',
+  'settings.account.signedIn': 'Signed in',
+  'settings.account.offline': 'Offline session',
+  'settings.account.name': 'Name',
+  'settings.account.email': 'Email',
+  'settings.account.nameEmpty': 'No name set',
+  'settings.account.logout': 'Log out',
+  'settings.account.loggingOut': 'Signing out…',
+  'settings.account.logoutHint':
+    'Logging out clears your secure session on this device. You will need to sign in again to use the app.',
+  'settings.account.logoutConfirmTitle': 'Log out of EDA Cleaner?',
+  'settings.account.logoutConfirmMessage': 'Sign out on this device?',
+  'settings.account.logoutConfirmDetail':
+    'Your local session tokens will be cleared. Cached cleanup history on this PC is kept.',
+  'settings.account.logoutError': 'Could not log out right now. Please try again.',
 
   'settings.about.title': 'About',
   'settings.about.description':

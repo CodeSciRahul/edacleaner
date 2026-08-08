@@ -19,6 +19,7 @@ import { SettingsToggleRow } from '@/features/settings/components/SettingsRow'
 import { ThemePicker } from '@/features/settings/components/ThemePicker'
 import { LanguagePicker } from '@/features/settings/components/LanguagePicker'
 import { AboutPanel } from '@/features/settings/components/AboutPanel'
+import { AccountPanel } from '@/features/settings/components/AccountPanel'
 import { PlanPanel } from '@/features/settings/components/PlanPanel'
 import {
   settingsCategories,
@@ -189,6 +190,8 @@ export function SettingsPage(): React.ReactElement {
             ) : null}
 
             {activeCategory === 'plan' ? <PlanPanel /> : null}
+
+            {activeCategory === 'account' ? <AccountPanel /> : null}
 
             {activeCategory === 'about' ? <AboutPanel /> : null}
           </div>

@@ -1,5 +1,7 @@
 export const APP_NAME = 'EDA Cleaner'
 export const APP_ID = 'com.edacleaner.app'
+/** Custom URL scheme used for Stripe return → desktop handoff. */
+export const DEEP_LINK_PROTOCOL = 'edacleaner'
 
 export const IPC_CHANNELS = {
   APP: {
@@ -7,7 +9,9 @@ export const IPC_CHANNELS = {
     GET_PLATFORM: 'app:get-platform',
     QUIT: 'app:quit',
     RELAUNCH: 'app:relaunch',
-    GET_PATH: 'app:get-path'
+    GET_PATH: 'app:get-path',
+    OPEN_EXTERNAL: 'app:open-external',
+    DEEP_LINK: 'app:deep-link'
   },
   SYSTEM: {
     GET_INFO: 'system:get-info',

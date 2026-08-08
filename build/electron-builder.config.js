@@ -87,10 +87,18 @@ module.exports = {
       Comment: 'Clean junk files and boost PC performance',
       Categories: 'Utility;System;',
       StartupWMClass: 'eda-cleaner',
-      Terminal: false
+      Terminal: false,
+      MimeType: 'x-scheme-handler/edacleaner;'
     },
     artifactName: '${productName}-${version}-linux-${arch}.${ext}'
   },
+
+  protocols: [
+    {
+      name: 'EDA Cleaner',
+      schemes: ['edacleaner']
+    }
+  ],
 
   deb: {
     priority: 'optional'

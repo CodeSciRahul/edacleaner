@@ -44,7 +44,8 @@ import type {
   AuthCredentials,
   AuthSessionSnapshot,
   AuthSessionChangedEvent,
-  CachedSubscription
+  CachedSubscription,
+  DeepLinkEvent
 } from '@shared/interfaces'
 import type { AppPath } from '@shared/types'
 
@@ -54,6 +55,8 @@ export interface AppApi {
   quit: () => Promise<void>
   relaunch: () => Promise<void>
   getPath: (name: AppPath) => Promise<string>
+  openExternal: (url: string) => Promise<{ opened: true }>
+  onDeepLink: (callback: (event: DeepLinkEvent) => void) => () => void
 }
 
 export interface SystemApi {

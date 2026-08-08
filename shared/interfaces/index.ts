@@ -665,3 +665,12 @@ export interface AuthSessionChangedEvent {
   session: AuthSessionSnapshot
   reason: string
 }
+
+/** Payload pushed from main → renderer when a custom-protocol URL is opened. */
+export interface DeepLinkEvent {
+  url: string
+  path: string
+  action: 'checkout-success' | 'checkout-cancel' | 'unknown'
+  sessionId: string | null
+  receivedAt: number
+}

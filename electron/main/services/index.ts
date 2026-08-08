@@ -1,4 +1,4 @@
-import { app, BrowserWindow, type WebContents } from 'electron'
+import { app, BrowserWindow, shell, type WebContents } from 'electron'
 import os from 'os'
 import { Platform } from '@shared/enums'
 import { IPC_CHANNELS } from '@shared/constants'
@@ -191,6 +191,22 @@ export class AppService {
 
   getPath(name: Parameters<typeof app.getPath>[0]): string {
     return app.getPath(name)
+  }
+
+  /** Open https/http URLs in the OS default browser (Stripe Checkout, etc.). */
+  async openExternal(rawUrl: string): Promise<{ opened: true }> {
+    const trimmed = rawUrl.trim()
+    let parsed: URL
+    try {
+      parsed = new URL(trimmed)
+    } catch {
+      throw new Error('Invalid URL')
+    }
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      throw new Error('Only http(s) URLs can be opened externally')
+    }
+    await shell.openExternal(parsed.toString())
+    return { opened: true }
   }
 }
 

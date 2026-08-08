@@ -58,6 +58,16 @@ export function registerAppIpc(): void {
   ipcMain.handle(IPC_CHANNELS.APP.GET_PATH, (_event, name: string) =>
     success(appService.getPath(name as Parameters<typeof appService.getPath>[0]))
   )
+  ipcMain.handle(IPC_CHANNELS.APP.OPEN_EXTERNAL, async (_event, rawUrl?: unknown) => {
+    try {
+      if (typeof rawUrl !== 'string' || !rawUrl.trim()) {
+        throw new Error('url must be a non-empty string')
+      }
+      return success(await appService.openExternal(rawUrl))
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to open URL')
+    }
+  })
 }
 
 export function registerSystemIpc(): void {
