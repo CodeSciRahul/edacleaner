@@ -3,7 +3,7 @@ import { Loader2, RefreshCw, WifiOff, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PlanCard } from '@/features/subscription/components/PlanCard'
 import { usePlansModal } from '@/features/subscription/hooks/usePlansModal'
-import { normalizePlanSlug } from '@/features/subscription/lib/plans'
+import { normalizePlanSlug, type BillingInterval } from '@/features/subscription/lib/plans'
 import { useTranslation } from '@/i18n/useTranslation'
 import { cn } from '@/utils/cn'
 
@@ -12,11 +12,69 @@ interface PlansModalProps {
   onClose: () => void
 }
 
+function BillingToggle({
+  value,
+  onChange,
+  label,
+  monthlyLabel,
+  yearlyLabel,
+  saveBadge
+}: {
+  value: BillingInterval
+  onChange: (next: BillingInterval) => void
+  label: string
+  monthlyLabel: string
+  yearlyLabel: string
+  saveBadge: string
+}): React.ReactElement {
+  return (
+    <div
+      role="tablist"
+      aria-label={label}
+      className="inline-flex rounded-xl border border-border/80 bg-muted/50 p-1"
+    >
+      {(['month', 'year'] as const).map((interval) => {
+        const active = value === interval
+        return (
+          <button
+            key={interval}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(interval)}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors',
+              active
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {interval === 'month' ? monthlyLabel : yearlyLabel}
+            {interval === 'year' ? (
+              <span
+                className={cn(
+                  'rounded-md px-1.5 py-0.5 text-[10px] font-semibold',
+                  active ? 'bg-primary/15 text-primary' : 'bg-primary/10 text-primary/90'
+                )}
+              >
+                {saveBadge}
+              </span>
+            ) : null}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export function PlansModal({ open, onClose }: PlansModalProps): React.ReactElement | null {
   const { t } = useTranslation()
   const {
     plans,
     currentPlan,
+    currentInterval,
+    billingInterval,
+    setBillingInterval,
     pendingPlan,
     loadingPlans,
     actionPlanId,
@@ -55,7 +113,7 @@ export function PlansModal({ open, onClose }: PlansModalProps): React.ReactEleme
     >
       <button
         type="button"
-        className="absolute inset-0 bg-background/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-background/75 backdrop-blur-sm"
         aria-label={t('common.close')}
         onClick={() => {
           if (!actionPlanId) onClose()
@@ -64,33 +122,41 @@ export function PlansModal({ open, onClose }: PlansModalProps): React.ReactEleme
 
       <div
         className={cn(
-          'relative z-10 flex max-h-[min(90vh,880px)] w-full max-w-4xl flex-col',
+          'relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col',
           'overflow-hidden rounded-2xl border border-border bg-card shadow-card',
           'animate-in fade-in-0 zoom-in-95 duration-200'
         )}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-border/70 bg-muted/20 px-5 py-4 sm:px-6">
-          <div className="min-w-0">
-            <h2
-              id="plans-modal-title"
-              className="text-section-title text-foreground"
-            >
+        <div className="flex flex-col gap-4 border-b border-border/70 bg-gradient-to-br from-muted/30 via-card to-primary/[0.04] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="min-w-0 pr-8 sm:pr-0">
+            <h2 id="plans-modal-title" className="text-lg font-semibold tracking-tight text-foreground">
               {t('plans.title')}
             </h2>
-            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
               {t('plans.description')}
             </p>
           </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 shrink-0"
-            onClick={onClose}
-            disabled={Boolean(actionPlanId)}
-            aria-label={t('common.close')}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <BillingToggle
+              value={billingInterval}
+              onChange={setBillingInterval}
+              label={t('plans.billing.label')}
+              monthlyLabel={t('plans.billing.monthly')}
+              yearlyLabel={t('plans.billing.yearly')}
+              saveBadge={t('plans.billing.saveBadge')}
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-9 w-9 shrink-0 rounded-xl"
+              onClick={onClose}
+              disabled={Boolean(actionPlanId)}
+              aria-label={t('common.close')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
@@ -156,12 +222,13 @@ export function PlansModal({ open, onClose }: PlansModalProps): React.ReactEleme
               {t('plans.loading')}
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid items-stretch gap-4 md:grid-cols-3">
               {plans.map((plan) => (
                 <PlanCard
                   key={plan.id}
                   plan={plan}
                   currentPlan={currentPlan}
+                  currentInterval={currentInterval}
                   pendingPlan={pendingPlan}
                   online={online}
                   busy={actionPlanId === plan.id}

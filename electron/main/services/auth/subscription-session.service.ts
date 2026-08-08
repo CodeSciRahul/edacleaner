@@ -58,6 +58,8 @@ export class SubscriptionSessionService {
             status === 'past_due',
       isTrialing,
       expiresAt: trialEnd ?? currentPeriodEnd,
+      billingInterval:
+        typeof input.billingInterval === 'string' ? input.billingInterval : null,
       syncedAt: Date.now()
     }
 

@@ -36,7 +36,15 @@ function asPlanArray(data: unknown): PublicPlan[] {
         features: plan.features.filter((f): f is string => typeof f === 'string'),
         isTrialAvailable: Boolean(plan.isTrialAvailable),
         trialDays: typeof plan.trialDays === 'number' ? plan.trialDays : 0,
-        priceDisplay
+        priceDisplay,
+        compareAtPriceDisplay:
+          typeof plan.compareAtPriceDisplay === 'number'
+            ? plan.compareAtPriceDisplay
+            : null,
+        discountPercent:
+          typeof plan.discountPercent === 'number' ? plan.discountPercent : 0,
+        savingsDisplay:
+          typeof plan.savingsDisplay === 'number' ? plan.savingsDisplay : null
       }
     })
     .filter((plan): plan is PublicPlan => plan != null)

@@ -641,6 +641,8 @@ export interface CachedSubscription {
   isTrialing: boolean
   /** Plan / period expiry ISO (trialEnd or currentPeriodEnd). */
   expiresAt: string | null
+  /** Active Stripe billing interval when known. */
+  billingInterval?: 'month' | 'year' | string | null
   syncedAt: number
 }
 

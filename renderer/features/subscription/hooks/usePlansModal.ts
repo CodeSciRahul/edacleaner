@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOfflineStore } from '@/store/offline-store'
 import { authService } from '@/services/auth-service'
 import { electronService } from '@/services/electron-service'
 import {
+  filterPlansByInterval,
+  normalizeBillingInterval,
   normalizePlanSlug,
   resolvePlanAction,
+  type BillingInterval,
   type PlanSlug,
   type PublicPlan
 } from '@/features/subscription/lib/plans'
@@ -28,6 +31,8 @@ export function usePlansModal({ open, onSubscriptionUpdated }: UsePlansModalOpti
 
   const [plans, setPlans] = useState<PublicPlan[]>([])
   const [currentPlan, setCurrentPlan] = useState<PlanSlug>('free')
+  const [currentInterval, setCurrentInterval] = useState<BillingInterval>('month')
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>('year')
   const [pendingPlan, setPendingPlan] = useState<string | null>(null)
   const [loadingPlans, setLoadingPlans] = useState(false)
   const [actionPlanId, setActionPlanId] = useState<string | null>(null)
@@ -38,10 +43,19 @@ export function usePlansModal({ open, onSubscriptionUpdated }: UsePlansModalOpti
   const onUpdatedRef = useRef(onSubscriptionUpdated)
   onUpdatedRef.current = onSubscriptionUpdated
 
+  const visiblePlans = useMemo(
+    () => filterPlansByInterval(plans, billingInterval),
+    [plans, billingInterval]
+  )
+
   const refreshLocalSubscription = useCallback(async () => {
     const snapshot = await authService.getSubscription()
     setCurrentPlan(normalizePlanSlug(snapshot.plan))
     setPendingPlan(snapshot.subscription?.pendingPlan ?? null)
+    const interval = normalizeBillingInterval(
+      snapshot.subscription?.billingInterval ?? 'month'
+    )
+    setCurrentInterval(interval)
     return snapshot
   }, [])
 
@@ -129,7 +143,11 @@ export function usePlansModal({ open, onSubscriptionUpdated }: UsePlansModalOpti
   const selectPlan = useCallback(
     async (plan: PublicPlan) => {
       const target = normalizePlanSlug(plan.slug)
-      const action = resolvePlanAction(currentPlan, target)
+      const targetInterval = normalizeBillingInterval(plan.billingInterval)
+      const action = resolvePlanAction(currentPlan, target, {
+        currentInterval,
+        targetInterval
+      })
       if (action === 'current' || actionPlanId) return
 
       if (!online) {
@@ -171,12 +189,16 @@ export function usePlansModal({ open, onSubscriptionUpdated }: UsePlansModalOpti
         setActionPlanId(null)
       }
     },
-    [actionPlanId, currentPlan, online, refreshLocalSubscription, t]
+    [actionPlanId, currentInterval, currentPlan, online, refreshLocalSubscription, t]
   )
 
   return {
-    plans,
+    plans: visiblePlans,
+    allPlans: plans,
     currentPlan,
+    currentInterval,
+    billingInterval,
+    setBillingInterval,
     pendingPlan,
     loadingPlans,
     actionPlanId,

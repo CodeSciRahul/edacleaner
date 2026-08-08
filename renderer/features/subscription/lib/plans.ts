@@ -1,6 +1,7 @@
 import type { SubscriptionPlanSlug } from '@shared/interfaces'
 
 export type PlanSlug = Extract<SubscriptionPlanSlug, 'free' | 'pro' | 'premium'>
+export type BillingInterval = 'month' | 'year'
 
 export const PLAN_RANK: Record<PlanSlug, number> = {
   free: 0,
@@ -19,6 +20,9 @@ export interface PublicPlan {
   isTrialAvailable: boolean
   trialDays: number
   priceDisplay: number
+  compareAtPriceDisplay?: number | null
+  discountPercent?: number
+  savingsDisplay?: number | null
 }
 
 export interface CheckoutSessionPayload {
@@ -41,6 +45,7 @@ export interface PlanChangeStatusPayload {
   features?: string[]
   isPaid?: boolean
   hasActiveAccess?: boolean
+  billingInterval?: string
 }
 
 export type ChangePlanResult = CheckoutSessionPayload | PlanChangeStatusPayload
@@ -56,42 +61,70 @@ export function normalizePlanSlug(value: string | null | undefined): PlanSlug {
   return isPlanSlug(slug) ? slug : 'free'
 }
 
+export function normalizeBillingInterval(
+  value: string | null | undefined
+): BillingInterval {
+  return value === 'year' ? 'year' : 'month'
+}
+
 export function resolvePlanAction(
   current: PlanSlug,
-  target: PlanSlug
+  target: PlanSlug,
+  options?: {
+    currentInterval?: BillingInterval | null
+    targetInterval?: BillingInterval | null
+  }
 ): PlanActionKind {
-  if (current === target) return 'current'
+  if (current === target) {
+    const currentInterval = options?.currentInterval ?? 'month'
+    const targetInterval = options?.targetInterval ?? 'month'
+    if (currentInterval === targetInterval) return 'current'
+    // Same tier, switching interval — treat yearly as upgrade from monthly.
+    if (targetInterval === 'year' && currentInterval === 'month') return 'upgrade'
+    return 'downgrade'
+  }
   return PLAN_RANK[target] > PLAN_RANK[current] ? 'upgrade' : 'downgrade'
 }
 
 export function formatPlanPrice(
   plan: PublicPlan,
   language: string
-): { amount: string; interval: string | null } {
+): { amount: string; interval: string | null; compareAt: string | null } {
   if (plan.monthlyPrice <= 0 || plan.priceDisplay <= 0) {
-    return { amount: '0', interval: null }
+    return { amount: '0', interval: null, compareAt: null }
   }
 
   const currency = (plan.currency || 'usd').toUpperCase()
-  try {
-    const amount = new Intl.NumberFormat(language, {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: plan.priceDisplay % 1 === 0 ? 0 : 2,
-      maximumFractionDigits: 2
-    }).format(plan.priceDisplay)
-    const interval =
-      plan.billingInterval === 'year'
-        ? 'year'
-        : plan.billingInterval === 'month'
-          ? 'month'
-          : plan.billingInterval || 'month'
-    return { amount, interval }
-  } catch {
-    return {
-      amount: `${plan.priceDisplay} ${currency}`,
-      interval: plan.billingInterval || 'month'
+  const formatMoney = (value: number): string => {
+    try {
+      return new Intl.NumberFormat(language, {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2
+      }).format(value)
+    } catch {
+      return `${value} ${currency}`
     }
+  }
+
+  const interval =
+    plan.billingInterval === 'year'
+      ? 'year'
+      : plan.billingInterval === 'month'
+        ? 'month'
+        : plan.billingInterval || 'month'
+
+  const compareAt =
+    typeof plan.compareAtPriceDisplay === 'number' &&
+    plan.compareAtPriceDisplay > plan.priceDisplay
+      ? formatMoney(plan.compareAtPriceDisplay)
+      : null
+
+  return {
+    amount: formatMoney(plan.priceDisplay),
+    interval,
+    compareAt
   }
 }
 
@@ -99,4 +132,15 @@ export function isCheckoutResult(
   result: ChangePlanResult
 ): result is CheckoutSessionPayload {
   return result.mode === 'checkout'
+}
+
+export function filterPlansByInterval(
+  plans: PublicPlan[],
+  interval: BillingInterval
+): PublicPlan[] {
+  return plans.filter((plan) => {
+    const slug = normalizePlanSlug(plan.slug)
+    if (slug === 'free') return plan.billingInterval === 'month' || !plan.billingInterval
+    return normalizeBillingInterval(plan.billingInterval) === interval
+  })
 }

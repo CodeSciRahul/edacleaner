@@ -339,7 +339,11 @@ export class AuthSessionService {
       currentPeriodEnd: data.currentPeriodEnd ?? null,
       features: Array.isArray(data.features) ? data.features : [],
       isPaid: Boolean(data.isPaid),
-      hasActiveAccess: Boolean(data.hasActiveAccess)
+      hasActiveAccess: Boolean(data.hasActiveAccess),
+      billingInterval:
+        typeof (data as { billingInterval?: unknown }).billingInterval === 'string'
+          ? String((data as { billingInterval: string }).billingInterval)
+          : null
     })
 
     if (Array.isArray(data.features)) {
@@ -468,7 +472,11 @@ export class AuthSessionService {
           ? payload.subscription.features
           : [],
         isPaid: Boolean(payload.subscription.isPaid),
-        hasActiveAccess: Boolean(payload.subscription.hasActiveAccess)
+        hasActiveAccess: Boolean(payload.subscription.hasActiveAccess),
+        billingInterval:
+          typeof payload.subscription.billingInterval === 'string'
+            ? payload.subscription.billingInterval
+            : null
       })
 
       if (
@@ -494,7 +502,8 @@ export class AuthSessionService {
         currentPeriodEnd: null,
         features: [],
         isPaid: false,
-        hasActiveAccess: true
+        hasActiveAccess: true,
+        billingInterval: 'month'
       })
     }
 
@@ -530,7 +539,11 @@ export class AuthSessionService {
           ? data.subscription.features
           : [],
         isPaid: Boolean(data.subscription.isPaid),
-        hasActiveAccess: Boolean(data.subscription.hasActiveAccess)
+        hasActiveAccess: Boolean(data.subscription.hasActiveAccess),
+        billingInterval:
+          typeof data.subscription.billingInterval === 'string'
+            ? data.subscription.billingInterval
+            : null
       })
     }
   }
