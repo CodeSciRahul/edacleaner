@@ -6,3 +6,7 @@ export {
   SubscriptionSessionService,
   subscriptionSessionService
 } from './subscription-session.service'
+export {
+  EntitlementService,
+  entitlementService
+} from './entitlement.service'

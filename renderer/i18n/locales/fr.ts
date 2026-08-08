@@ -211,7 +211,7 @@ export const fr: Record<TranslationKey, string> = {
 
   'settings.plan.title': 'Votre offre',
   'settings.plan.description':
-    'Consultez votre abonnement, votre accès et les fonctionnalités incluses.',
+    'Abonnement, dates de renouvellement, factures et historique de facturation.',
   'settings.plan.current': 'Offre {{plan}}',
   'settings.plan.loading': 'Chargement des détails de l’offre…',
   'settings.plan.trialHint': 'Vous êtes actuellement en période d’essai.',
@@ -223,12 +223,13 @@ export const fr: Record<TranslationKey, string> = {
   'settings.plan.access': 'Accès actif',
   'settings.plan.paid': 'Offre payante',
   'settings.plan.trialEnds': 'Fin de l’essai',
+  'settings.plan.periodStarts': 'Début de la période',
   'settings.plan.periodEnds': 'Fin de la période en cours',
   'settings.plan.expires': 'Expiration',
   'settings.plan.pending': 'Offre en attente',
   'settings.plan.cancelScheduled': 'Annulation en fin de période',
   'settings.plan.features': 'Fonctionnalités incluses',
-  'settings.plan.featuresDesc': 'Fonctionnalités liées à votre abonnement actuel.',
+  'settings.plan.featuresDesc': 'Points clés de votre abonnement actuel.',
   'settings.plan.noFeatures':
     'Aucune liste de fonctionnalités en cache. Actualisez pour synchroniser votre compte.',
   'settings.plan.refresh': 'Actualiser l’offre',
@@ -251,6 +252,56 @@ export const fr: Record<TranslationKey, string> = {
   'settings.plan.status.incompleteExpired': 'Incomplet (expiré)',
   'settings.plan.status.unpaid': 'Impayé',
   'settings.plan.status.unknown': 'Inconnu',
+  'settings.plan.upgrade': 'Mettre à niveau',
+  'settings.plan.manageBilling': 'Gérer la facturation',
+  'settings.plan.viewPlans': 'Voir les offres',
+  'settings.plan.portalOpening': 'Ouverture…',
+  'settings.plan.portalError':
+    'Impossible d’ouvrir le portail de facturation. Réessayez en ligne.',
+  'settings.plan.billingCycle': 'Cycle de facturation',
+  'settings.plan.cycle.none': 'Sans facturation',
+  'settings.plan.cycle.month': 'Mensuel',
+  'settings.plan.cycle.year': 'Annuel',
+  'settings.plan.nextRenewal': 'Prochain renouvellement',
+  'settings.plan.accessUntil': 'Accès jusqu’au',
+  'settings.plan.daysRemaining': 'Temps restant',
+  'settings.plan.daysLeft': '{{count}} jours',
+  'settings.plan.ended': 'Terminé',
+  'settings.plan.renewal.free': 'Offre Free — pas de date de renouvellement',
+  'settings.plan.renewal.trialEnds': 'Essai jusqu’au {{date}}',
+  'settings.plan.renewal.ends': 'Accès jusqu’au {{date}}',
+  'settings.plan.renewal.renews': 'Renouvellement le {{date}}',
+  'settings.plan.renewal.unknown': 'Date de renouvellement indisponible',
+  'settings.plan.showMore': 'Afficher {{count}} de plus',
+  'settings.plan.showLess': 'Afficher moins',
+  'settings.plan.invoicesTitle': 'Factures',
+  'settings.plan.invoicesDesc':
+    'Factures et reçus Stripe de votre historique de paiement.',
+  'settings.plan.invoicesEmpty': 'Aucune facture pour le moment',
+  'settings.plan.invoicesEmptyHint':
+    'Après un abonnement, les reçus et PDF apparaîtront ici.',
+  'settings.plan.viewInvoice': 'Voir',
+  'settings.plan.invoice.paid': 'Payée',
+  'settings.plan.invoice.open': 'Ouverte',
+  'settings.plan.invoice.draft': 'Brouillon',
+  'settings.plan.invoice.void': 'Annulée',
+  'settings.plan.invoice.uncollectible': 'Irrécouvrable',
+  'settings.plan.invoice.unknown': 'Inconnu',
+  'settings.plan.invoice.trial': 'Essai',
+  'settings.plan.invoice.trialAmount': '0 $ aujourd’hui',
+  'settings.plan.invoice.trialHint':
+    'Facture d’essai — aucun montant n’a été prélevé. Les nouveaux paiements sont facturés immédiatement.',
+  'settings.plan.historyTitle': 'Activité de facturation',
+  'settings.plan.historyDesc':
+    'Changements d’offre et événements d’abonnement pour ce compte.',
+  'settings.plan.historyEmpty': 'Aucune activité',
+  'settings.plan.historyEmptyHint':
+    'Les mises à niveau, renouvellements et annulations apparaîtront ici.',
+  'settings.plan.billingLoading': 'Chargement de la facturation…',
+  'settings.plan.billingOffline':
+    'Les factures et l’historique nécessitent Internet. Votre offre en cache reste visible ci-dessus.',
+  'settings.plan.billingError':
+    'Impossible de charger les factures ou l’historique.',
 
   'settings.account.title': 'Compte',
   'settings.account.description':
@@ -890,5 +941,72 @@ export const fr: Record<TranslationKey, string> = {
     'Libérez la RAM utilisée par les processus inactifs et lourds.',
   'feature.performance.monitor': 'Moniteur de performances',
   'feature.performance.monitorDesc':
-    'Suivez le CPU, la mémoire et la réactivité du système.'
+    'Suivez le CPU, la mémoire et la réactivité du système.',
+
+  'entitlements.badge.pro': 'Pro',
+  'entitlements.badge.premium': 'Premium',
+  'entitlements.prompt.eyebrow': 'Fonctionnalité {{plan}}',
+  'entitlements.prompt.includes': 'Inclus avec {{plan}}',
+  'entitlements.prompt.upgrade': 'Mettre à niveau',
+  'entitlements.prompt.compare': 'Comparer les offres',
+  'entitlements.prompt.later': 'Plus tard',
+  'entitlements.callout.title': '{{plan}} requis',
+  'entitlements.callout.body':
+    'Explorez cet écran librement. Passez à un plan supérieur pour déverrouiller les actions.',
+  'entitlements.feature.smart_scan': 'Analyse intelligente',
+  'entitlements.feature.smart_scanDesc':
+    'Lancez un bilan complet du nettoyage, du stockage et des performances.',
+  'entitlements.feature.cleanup_basic': 'Nettoyage en un clic',
+  'entitlements.feature.cleanup_basicDesc':
+    'Supprimez en toute sécurité les fichiers inutiles et les caches.',
+  'entitlements.feature.cleanup_temp': 'Suppression des fichiers temporaires',
+  'entitlements.feature.cleanup_tempDesc':
+    'Les fichiers temporaires sont visibles en Free, mais leur nettoyage nécessite Pro.',
+  'entitlements.feature.storage_overview': 'Vue d’ensemble du stockage',
+  'entitlements.feature.storage_overviewDesc':
+    'L’analyse disque approfondie fait partie du plan Pro.',
+  'entitlements.feature.large_files': 'Recherche de gros fichiers',
+  'entitlements.feature.large_filesDesc':
+    'Repérez et supprimez les fichiers volumineux qui occupent l’espace disque.',
+  'entitlements.feature.duplicates': 'Nettoyage des doublons',
+  'entitlements.feature.duplicatesDesc':
+    'Trouvez les copies identiques et récupérez de l’espace en un passage.',
+  'entitlements.feature.performance_boost': 'Boost de performances',
+  'entitlements.feature.performance_boostDesc':
+    'Libérez la mémoire, videz les caches et accélerez le quotidien en un clic.',
+  'entitlements.feature.startup_apps': 'Gestionnaire de démarrage',
+  'entitlements.feature.startup_appsDesc':
+    'Contrôlez les apps qui se lancent avec Windows pour un démarrage plus rapide.',
+  'entitlements.feature.background_apps': 'Contrôle des apps en arrière-plan',
+  'entitlements.feature.background_appsDesc':
+    'Arrêtez les processus lourds qui consomment RAM et CPU.',
+  'entitlements.feature.cleanup_reports': 'Rapports de nettoyage',
+  'entitlements.feature.cleanup_reportsDesc':
+    'Suivez l’historique et les gains cumulés de vos nettoyages.',
+  'entitlements.feature.live_monitor': 'Moniteur système en direct',
+  'entitlements.feature.live_monitorDesc':
+    'Suivez CPU, mémoire et disque en temps réel pendant l’optimisation.',
+  'entitlements.benefit.temp1': 'Nettoyez les fichiers temporaires restants',
+  'entitlements.benefit.temp2': 'Récupérez de l’espace sans fouiller les dossiers',
+  'entitlements.benefit.storage1': 'Voyez où va l’espace disque',
+  'entitlements.benefit.storage2': 'Actualisez une analyse complète à la demande',
+  'entitlements.benefit.large1': 'Priorisez les plus gros consommateurs d’espace',
+  'entitlements.benefit.large2': 'Supprimez des fichiers sélectionnés en sécurité',
+  'entitlements.benefit.dup1': 'Détectez les groupes de doublons',
+  'entitlements.benefit.dup2': 'Gardez une copie et retirez le reste',
+  'entitlements.benefit.boost1': 'Libérez la RAM et les caches gênants',
+  'entitlements.benefit.boost2': 'Lancez un Boost guidé avec résultats clairs',
+  'entitlements.benefit.startup1': 'Désactivez les apps de démarrage gourmandes',
+  'entitlements.benefit.startup2': 'Consultez l’impact avant de modifier',
+  'entitlements.benefit.bg1': 'Identifiez les apps gourmandes en mémoire',
+  'entitlements.benefit.bg2': 'Arrêtez les processus sûrs sans le Gestionnaire des tâches',
+  'entitlements.benefit.reports1': 'Suivez l’historique des nettoyages et Boosts',
+  'entitlements.benefit.reports2': 'Visualisez les gains cumulés',
+  'entitlements.benefit.monitor1': 'Graphiques CPU, RAM et disque en direct',
+  'entitlements.benefit.monitor2': 'Mettez en pause et concentrez-vous sur vos métriques',
+  'entitlements.benefit.proSuite': 'Tout Free, plus la boîte à outils stockage Pro',
+  'entitlements.benefit.premiumSuite': 'Tout Pro, plus la suite performances Premium',
+  'entitlements.teaser.title': 'Aperçu uniquement',
+  'entitlements.teaser.body':
+    'Passez à {{plan}} pour déverrouiller la liste complète et agir.'
 }

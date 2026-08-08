@@ -298,5 +298,7 @@ export {
   authSessionService,
   AuthSessionService,
   subscriptionSessionService,
-  SubscriptionSessionService
+  SubscriptionSessionService,
+  entitlementService,
+  EntitlementService
 } from './auth'

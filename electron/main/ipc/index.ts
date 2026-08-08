@@ -26,7 +26,8 @@ import {
   syncProgressReporter,
   queueService,
   authSessionService,
-  subscriptionSessionService
+  subscriptionSessionService,
+  entitlementService
 } from '@main/services'
 import { toPublicQueueItem } from '@main/services/offline/security/sanitize-headers'
 import type { ApiHttpMethod, ApiRequestConfig } from '@shared/interfaces'
@@ -84,6 +85,7 @@ export function registerSystemIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.SYSTEM.START_METRICS_WATCH, (event) => {
     try {
+      entitlementService.assertAccess('live_monitor')
       return success(systemService.startMetricsWatch(event.sender))
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Failed to start metrics watch')
@@ -193,6 +195,7 @@ export function registerStorageIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.STORAGE.ANALYZE_USAGE, async (_event, mountPath?: string) => {
     try {
+      entitlementService.assertAccess('storage_overview')
       return success(await storageService.analyzeUsage(mountPath))
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Failed to analyze disk usage')
@@ -203,6 +206,7 @@ export function registerStorageIpc(): void {
     IPC_CHANNELS.STORAGE.FIND_LARGE_FILES,
     async (_event, options?: Parameters<typeof storageService.findLargeFiles>[0]) => {
       try {
+        entitlementService.assertAccess('large_files')
         return success(await storageService.findLargeFiles(options))
       } catch (err) {
         return failure(err instanceof Error ? err.message : 'Failed to find large files')
@@ -214,6 +218,7 @@ export function registerStorageIpc(): void {
     IPC_CHANNELS.STORAGE.FIND_DUPLICATES,
     async (_event, options?: Parameters<typeof storageService.findDuplicates>[0]) => {
       try {
+        entitlementService.assertAccess('duplicates')
         return success(await storageService.findDuplicates(options))
       } catch (err) {
         return failure(err instanceof Error ? err.message : 'Failed to find duplicates')
@@ -232,6 +237,13 @@ export function registerStorageIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.STORAGE.DELETE_FILES, async (_event, filePaths: string[]) => {
     try {
+      // Deleting from Large Files / Duplicates is a Pro capability.
+      if (
+        !entitlementService.canAccess('large_files') &&
+        !entitlementService.canAccess('duplicates')
+      ) {
+        entitlementService.assertAccess('large_files')
+      }
       return success(await storageService.deleteFiles(filePaths))
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Failed to delete files')
@@ -286,6 +298,7 @@ export function registerBoostIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.BOOST.TERMINATE_PROCESSES, async (_event, rawPids?: unknown) => {
     try {
+      entitlementService.assertAccess('background_apps')
       if (!Array.isArray(rawPids)) {
         return failure('Process IDs must be an array')
       }
@@ -328,6 +341,7 @@ export function registerBoostIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.BOOST.EXECUTE, async (event, rawOptions?: unknown) => {
     try {
+      entitlementService.assertAccess('performance_boost')
       if (boostService.isRunning()) {
         return failure('A Boost operation is already running')
       }
@@ -382,6 +396,7 @@ export function registerStartupIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.STARTUP.SET_ENABLED, async (_event, rawOptions?: unknown) => {
     try {
+      entitlementService.assertAccess('startup_apps')
       const options = validateStartupSetEnabled(rawOptions)
       return success(await startupService.setEnabled(options))
     } catch (err) {
@@ -450,6 +465,9 @@ export function registerCleanupIpc(): void {
         return failure('A cleanup operation is already running')
       }
       const options = validateCleanupOptions(rawOptions)
+      if (options.categories.includes('temp')) {
+        entitlementService.assertAccess('cleanup_temp')
+      }
       const result = await cleanupService.execute(options, (progress) => {
         if (!event.sender.isDestroyed()) {
           event.sender.send(IPC_CHANNELS.CLEANUP.PROGRESS, progress)

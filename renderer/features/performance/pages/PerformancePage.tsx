@@ -25,6 +25,8 @@ import { BoostProgressPanel } from '@/features/performance/components/BoostProgr
 import { PerformanceQuickLinks } from '@/features/performance/components/PerformanceQuickLinks'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendBoostActivity } from '@/features/reports/lib/activity-history'
+import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
+import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
 
 function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
   let score = 100 - Math.round(usedPercent * 0.55)
@@ -35,6 +37,7 @@ function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
 export function PerformancePage(): React.ReactElement {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const boostAccess = useFeatureAccess('performance_boost')
   const { data: analysis, isLoading: analysisLoading, refetch: refetchAnalysis } =
     useBoostAnalysis()
   const { data: snapshot, isLoading: snapshotLoading } = useBoostSnapshot()
@@ -138,6 +141,7 @@ export function PerformancePage(): React.ReactElement {
   ]
 
   const handleBoost = async (): Promise<void> => {
+    if (!boostAccess.guard()) return
     setLastResult(null)
 
     let emptyTrash = false
@@ -212,6 +216,7 @@ export function PerformancePage(): React.ReactElement {
       />
 
       <div className="space-y-6 p-content-pad">
+        <FeatureLockedCallout feature="performance_boost" />
         <PerformanceHero
           score={performanceScore}
           health={status.health}
@@ -221,6 +226,7 @@ export function PerformancePage(): React.ReactElement {
           diskFreeLabel={diskFreeLabel}
           isBoosting={isBoosting}
           isLoading={analysisLoading && !memory}
+          boostLocked={!boostAccess.allowed}
           onBoost={() => void handleBoost()}
           onCancel={() => cancelBoost.mutate()}
         />
@@ -252,6 +258,9 @@ export function PerformancePage(): React.ReactElement {
               memoryBytes: p.memoryBytes,
               cpu: Number(p.cpuPercent.toFixed(1))
             }))}
+            previewCount={4}
+            locked={!boostAccess.allowed}
+            lockFeature="performance_boost"
           />
         </section>
 

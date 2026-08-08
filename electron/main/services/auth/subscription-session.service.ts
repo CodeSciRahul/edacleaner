@@ -1,6 +1,11 @@
 import { createLogger } from '@main/utils/logger'
 import { localStorageService } from '@main/services/offline/local-storage-service'
 import type { CachedSubscription } from '@shared/interfaces'
+import {
+  canAccessFeature,
+  isFeatureId,
+  type FeatureId
+} from '@shared/entitlements'
 
 const log = createLogger('SubscriptionSession')
 
@@ -77,11 +82,21 @@ export class SubscriptionSessionService {
   }
 
   hasFeature(feature: string): boolean {
+    if (isFeatureId(feature)) {
+      return this.canAccessFeature(feature)
+    }
     const sub = this.getCached()
     if (!sub) return false
     return sub.features.some(
       (f) => f.toLowerCase() === feature.toLowerCase()
     )
+  }
+
+  canAccessFeature(feature: FeatureId): boolean {
+    const sub = this.getCached()
+    return canAccessFeature(sub?.currentPlan, feature, {
+      hasActiveAccess: sub?.hasActiveAccess
+    })
   }
 
   getCurrentPlan(): string {

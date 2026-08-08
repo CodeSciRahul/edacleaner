@@ -23,6 +23,11 @@ import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
 import { AppsEmptyState } from '@/features/apps/components/AppsEmptyState'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
+import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
+import { FeatureTeaserBlock } from '@/features/entitlements/components/FeatureTeaserBlock'
+import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 type StatusFilter = 'all' | 'safe' | 'selected'
 type SortKey = 'memory' | 'cpu' | 'name'
@@ -41,6 +46,7 @@ const sortLabelKeys: Record<SortKey, TranslationKey> = {
 
 export function BackgroundAppsPage(): React.ReactElement {
   const { t } = useTranslation()
+  const access = useFeatureAccess('background_apps')
   const {
     processes: apps,
     updatedAt,
@@ -113,6 +119,7 @@ export function BackgroundAppsPage(): React.ReactElement {
   const handleStop = async (
     targets: Array<{ pid: number; name: string }>
   ): Promise<void> => {
+    if (!access.guard()) return
     setNotice(null)
     const result = await stopProcesses.mutateAsync(targets)
     if (result.cancelled) return
@@ -139,6 +146,11 @@ export function BackgroundAppsPage(): React.ReactElement {
       ? t('backgroundApps.waiting')
       : new Date(updatedAt).toLocaleTimeString()
 
+  const PREVIEW_COUNT = 5
+  const showTeaser = !access.allowed && filtered.length > PREVIEW_COUNT
+  const visibleApps = showTeaser ? filtered.slice(0, PREVIEW_COUNT) : filtered
+  const teaserApps = showTeaser ? filtered.slice(PREVIEW_COUNT, PREVIEW_COUNT + 5) : []
+
   return (
     <>
       <Toolbar
@@ -146,6 +158,7 @@ export function BackgroundAppsPage(): React.ReactElement {
         description={t('backgroundApps.description')}
         actions={
           <div className="flex items-center gap-2">
+            {!access.allowed ? <PremiumBadge plan="premium" /> : null}
             <span
               className={cn(
                 'inline-flex h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium',
@@ -171,11 +184,12 @@ export function BackgroundAppsPage(): React.ReactElement {
               <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
               {t('common.refresh')}
             </Button>
-            <Button
+            <FeatureLockButton
+              feature="background_apps"
               size="sm"
               variant="destructive"
               className="h-9 gap-2"
-              disabled={selectedPids.length === 0 || stopProcesses.isPending}
+              forceDisabled={selectedPids.length === 0 || stopProcesses.isPending}
               onClick={() => {
                 const targets = apps
                   .filter((app) => selectedPids.includes(app.pid))
@@ -186,12 +200,13 @@ export function BackgroundAppsPage(): React.ReactElement {
               <Square className="h-3.5 w-3.5" />
               {t('backgroundApps.stopSelected')}
               {selectedPids.length > 0 ? ` (${selectedPids.length})` : ''}
-            </Button>
+            </FeatureLockButton>
           </div>
         }
       />
 
       <div className="space-y-4 p-content-pad">
+        <FeatureLockedCallout feature="background_apps" compact />
         <PageBreadcrumb
           items={[
             { label: t('performance.title'), href: '/performance' },
@@ -318,7 +333,7 @@ export function BackgroundAppsPage(): React.ReactElement {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filtered.map((app) => {
+                  {visibleApps.map((app) => {
                     const selected = selectedPids.includes(app.pid)
                     const stopping =
                       stopProcesses.isPending &&
@@ -338,8 +353,15 @@ export function BackgroundAppsPage(): React.ReactElement {
                             type="checkbox"
                             className="rounded border-border"
                             checked={selected}
-                            disabled={!app.safeToTerminate || stopProcesses.isPending}
-                            onChange={() => togglePid(app.pid)}
+                            disabled={
+                              !access.allowed ||
+                              !app.safeToTerminate ||
+                              stopProcesses.isPending
+                            }
+                            onChange={() => {
+                              if (!access.guard()) return
+                              togglePid(app.pid)
+                            }}
                             aria-label={`Select ${appLabel}`}
                           />
                         </td>
@@ -396,10 +418,15 @@ export function BackgroundAppsPage(): React.ReactElement {
                             size="sm"
                             variant="outline"
                             className="h-8 gap-1.5"
-                            disabled={!app.safeToTerminate || stopProcesses.isPending}
-                            onClick={() =>
-                              void handleStop([{ pid: app.pid, name: app.name }])
+                            disabled={
+                              !access.allowed
+                                ? false
+                                : !app.safeToTerminate || stopProcesses.isPending
                             }
+                            onClick={() => {
+                              if (!access.guard()) return
+                              void handleStop([{ pid: app.pid, name: app.name }])
+                            }}
                           >
                             <Square className="h-3 w-3" />
                             {stopping ? t('backgroundApps.stopping') : t('backgroundApps.stop')}
@@ -410,6 +437,41 @@ export function BackgroundAppsPage(): React.ReactElement {
                   })}
                 </tbody>
               </table>
+              {showTeaser ? (
+                <FeatureTeaserBlock feature="background_apps" maxHeightClassName="max-h-48">
+                  <div className="divide-y divide-border">
+                    {teaserApps.map((app) => {
+                      const appLabel = displayName(app.name)
+                      return (
+                        <div
+                          key={`teaser-${app.pid}`}
+                          className="flex items-center gap-3 px-4 py-3"
+                        >
+                          {app.iconDataUrl ? (
+                            <img
+                              src={app.iconDataUrl}
+                              alt=""
+                              className="h-9 w-9 shrink-0 rounded-lg"
+                            />
+                          ) : (
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold uppercase text-muted-foreground">
+                              {appLabel.slice(0, 2)}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {appLabel}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {formatBytes(app.memoryBytes)} · PID {app.pid}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </FeatureTeaserBlock>
+              ) : null}
             </div>
           )}
 

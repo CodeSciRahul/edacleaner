@@ -23,6 +23,10 @@ import { AppsEmptyState } from '@/features/apps/components/AppsEmptyState'
 import { ToggleSwitch } from '@/features/apps/components/ToggleSwitch'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
+import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { FeatureTeaserBlock } from '@/features/entitlements/components/FeatureTeaserBlock'
+import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 type StatusFilter = 'all' | 'enabled' | 'disabled' | 'toggleable'
 type SortKey = 'name' | 'impact' | 'status' | 'source'
@@ -57,6 +61,7 @@ const sortLabelKeys: Record<SortKey, TranslationKey> = {
 
 export function StartupAppsPage(): React.ReactElement {
   const { t } = useTranslation()
+  const access = useFeatureAccess('startup_apps')
   const { data, isLoading, isError, error, refetch } = useStartupApps()
   const refresh = useRefreshStartupApps()
   const toggle = useToggleStartupApp()
@@ -103,7 +108,13 @@ export function StartupAppsPage(): React.ReactElement {
     return list
   }, [entries, query, statusFilter, sortKey])
 
+  const PREVIEW_COUNT = 5
+  const showTeaser = !access.allowed && filtered.length > PREVIEW_COUNT
+  const visibleEntries = showTeaser ? filtered.slice(0, PREVIEW_COUNT) : filtered
+  const teaserEntries = showTeaser ? filtered.slice(PREVIEW_COUNT, PREVIEW_COUNT + 5) : []
+
   const handleToggle = async (entry: StartupAppEntry): Promise<void> => {
+    if (!access.guard()) return
     setNotice(null)
     const result = await toggle.mutateAsync({
       id: entry.id,
@@ -131,23 +142,27 @@ export function StartupAppsPage(): React.ReactElement {
         title={t('startupApps.title')}
         description={t('startupApps.description')}
         actions={
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2"
-            disabled={refresh.isPending || isLoading}
-            onClick={() => {
-              setNotice(null)
-              void refresh.mutateAsync()
-            }}
-          >
-            <RefreshCw className={cn('h-4 w-4', refresh.isPending && 'animate-spin')} />
-            {t('common.refresh')}
-          </Button>
+          <div className="flex items-center gap-2">
+            {!access.allowed ? <PremiumBadge plan="premium" /> : null}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-2"
+              disabled={refresh.isPending || isLoading}
+              onClick={() => {
+                setNotice(null)
+                void refresh.mutateAsync()
+              }}
+            >
+              <RefreshCw className={cn('h-4 w-4', refresh.isPending && 'animate-spin')} />
+              {t('common.refresh')}
+            </Button>
+          </div>
         }
       />
 
       <div className="space-y-4 p-content-pad">
+        <FeatureLockedCallout feature="startup_apps" compact />
         <PageBreadcrumb
           items={[
             { label: t('performance.title'), href: '/performance' },
@@ -267,7 +282,7 @@ export function StartupAppsPage(): React.ReactElement {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filtered.map((entry) => {
+                  {visibleEntries.map((entry) => {
                     const expanded = expandedId === entry.id
                     const busy = toggle.isPending && toggle.variables?.id === entry.id
 
@@ -341,7 +356,11 @@ export function StartupAppsPage(): React.ReactElement {
                           <div className="flex justify-end">
                             <ToggleSwitch
                               checked={entry.enabled}
-                              disabled={!entry.canToggle || busy}
+                              disabled={
+                                access.allowed
+                                  ? !entry.canToggle || busy
+                                  : false
+                              }
                               aria-label={`${entry.enabled ? t('startupApps.disable') : t('startupApps.enable')} ${entry.name}`}
                               onCheckedChange={() => void handleToggle(entry)}
                             />
@@ -352,6 +371,38 @@ export function StartupAppsPage(): React.ReactElement {
                   })}
                 </tbody>
               </table>
+              {showTeaser ? (
+                <FeatureTeaserBlock feature="startup_apps" maxHeightClassName="max-h-48">
+                  <div className="divide-y divide-border">
+                    {teaserEntries.map((entry) => (
+                      <div
+                        key={`teaser-${entry.id}`}
+                        className="flex items-center gap-3 px-4 py-3"
+                      >
+                        {entry.iconDataUrl ? (
+                          <img
+                            src={entry.iconDataUrl}
+                            alt=""
+                            className="h-9 w-9 shrink-0 rounded-lg"
+                          />
+                        ) : (
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <Power className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {entry.name}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {entry.source} · {entry.impact}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </FeatureTeaserBlock>
+              ) : null}
             </div>
           )}
 
