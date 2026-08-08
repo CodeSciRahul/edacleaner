@@ -198,6 +198,11 @@ export class AuthSessionService {
       }
     )
     await this.persistAuthPayload(response.data)
+    await this.syncSubscriptionStatus().catch((err) => {
+      log.warn('Post-register subscription sync failed — using register payload cache', {
+        error: err instanceof Error ? err.message : String(err)
+      })
+    })
     this.emitChanged('register')
     return this.getSession()
   }
@@ -476,6 +481,21 @@ export class AuthSessionService {
           NS
         )
       }
+    } else if (!subscriptionSessionService.getCached()) {
+      // Safety net: new accounts are Free by default even if status sync is delayed.
+      subscriptionSessionService.save({
+        currentPlan: 'free',
+        status: 'active',
+        cancelAtPeriodEnd: false,
+        pendingPlan: null,
+        trialStart: null,
+        trialEnd: null,
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        features: [],
+        isPaid: false,
+        hasActiveAccess: true
+      })
     }
 
     localStorageService.set(KEY_LAST_SYNCED, Date.now(), NS)

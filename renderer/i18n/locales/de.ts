@@ -35,6 +35,47 @@ export const de: Record<TranslationKey, string> = {
   'common.modulePlaceholder':
     'Dieses Modul lässt sich in die bestehende Oberfläche einbinden, ohne die App umzubauen.',
 
+  'auth.subtitle':
+    'Melden Sie sich an, um Free-Funktionen freizuschalten — keine Zahlung nötig.',
+  'auth.booting': 'Sitzung wird wiederhergestellt…',
+  'auth.tab.login': 'Anmelden',
+  'auth.tab.register': 'Konto erstellen',
+  'auth.login.title': 'Willkommen zurück',
+  'auth.login.description': 'Melden Sie sich mit Ihrem EDA-Cleaner-Konto an.',
+  'auth.register.title': 'Konto erstellen',
+  'auth.register.description':
+    'Starten Sie nach der Registrierung sofort mit dem Free-Tarif.',
+  'auth.register.freePlan':
+    'Neue Konten starten automatisch mit Free. Für Free-Funktionen ist keine Zahlung erforderlich.',
+  'auth.field.name': 'Name (optional)',
+  'auth.field.email': 'E-Mail',
+  'auth.field.password': 'Passwort',
+  'auth.placeholder.name': 'Ihr Name',
+  'auth.placeholder.email': 'sie@beispiel.com',
+  'auth.placeholder.password': 'Passwort eingeben',
+  'auth.passwordHint': 'Mindestens 8 Zeichen verwenden.',
+  'auth.showPassword': 'Passwort anzeigen',
+  'auth.hidePassword': 'Passwort verbergen',
+  'auth.login.submit': 'Anmelden',
+  'auth.register.submit': 'Konto erstellen',
+  'auth.submitting': 'Bitte warten…',
+  'auth.requiredNotice':
+    'Für EDA Cleaner ist ein Konto erforderlich. Nach der ersten Anmeldung funktioniert die App offline mit Ihrer zwischengespeicherten Sitzung.',
+  'auth.offlineBanner':
+    'Sie scheinen offline zu sein. Stellen Sie eine Internetverbindung für die erste Anmeldung oder Kontoerstellung her.',
+  'auth.error.required': 'E-Mail und Passwort sind erforderlich.',
+  'auth.error.passwordLength': 'Das Passwort muss mindestens 8 Zeichen haben.',
+  'auth.error.offlineFirst':
+    'Für die erste Anmeldung oder Kontoerstellung ist eine Internetverbindung erforderlich.',
+  'auth.error.offline':
+    'Server nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
+  'auth.error.network':
+    'Netzwerkfehler. Stellen Sie sicher, dass der Server erreichbar ist.',
+  'auth.error.invalid': 'Ungültige E-Mail oder Passwort.',
+  'auth.error.conflict':
+    'Ein Konto mit dieser E-Mail existiert bereits. Bitte melden Sie sich an.',
+  'auth.error.generic': 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
+
   'sidebar.tagline': 'PC-Optimizer',
   'sidebar.collapse': 'Seitenleiste einklappen',
   'sidebar.expand': 'Seitenleiste ausklappen',
@@ -74,6 +115,8 @@ export const de: Record<TranslationKey, string> = {
   'settings.cat.optimizationDesc': 'Scan- und Bereinigungsverhalten',
   'settings.cat.notifications': 'Benachrichtigungen',
   'settings.cat.notificationsDesc': 'Abschluss-Rückmeldungen',
+  'settings.cat.plan': 'Tarif',
+  'settings.cat.planDesc': 'Abonnement und Berechtigungen',
   'settings.cat.about': 'Info',
   'settings.cat.aboutDesc': 'App- und Systeminformationen',
 
@@ -126,6 +169,49 @@ export const de: Record<TranslationKey, string> = {
   'settings.notifications.completion': 'Abschluss-Feedback anzeigen',
   'settings.notifications.completionDesc':
     'Beruhigende Erfolgszusammenfassungen nach Smart-Scan und Bereinigung anzeigen.',
+
+  'settings.plan.title': 'Ihr Tarif',
+  'settings.plan.description':
+    'Sehen Sie Ihr aktuelles Abonnement, den Zugriffsstatus und enthaltene Funktionen.',
+  'settings.plan.current': '{{plan}}-Tarif',
+  'settings.plan.loading': 'Tarifdetails werden geladen…',
+  'settings.plan.trialHint': 'Sie befinden sich derzeit in einer Testphase.',
+  'settings.plan.accessActive': 'Ihr Tarifzugriff ist auf diesem Gerät aktiv.',
+  'settings.plan.accessInactive':
+    'Tarifzugriff ist inaktiv. Aktualisieren oder anmelden zum Synchronisieren.',
+  'settings.plan.plan': 'Tarif',
+  'settings.plan.statusLabel': 'Status',
+  'settings.plan.access': 'Aktiver Zugriff',
+  'settings.plan.paid': 'Bezahlter Tarif',
+  'settings.plan.trialEnds': 'Test endet',
+  'settings.plan.periodEnds': 'Aktuelle Periode endet',
+  'settings.plan.expires': 'Läuft ab',
+  'settings.plan.pending': 'Ausstehender Tarif',
+  'settings.plan.cancelScheduled': 'Kündigung zum Periodenende',
+  'settings.plan.features': 'Enthaltene Funktionen',
+  'settings.plan.featuresDesc': 'Funktionen, die mit Ihrem aktuellen Anspruch verknüpft sind.',
+  'settings.plan.noFeatures':
+    'Noch keine Funktionsliste zwischengespeichert. Aktualisieren, um vom Konto zu synchronisieren.',
+  'settings.plan.refresh': 'Tarif aktualisieren',
+  'settings.plan.refreshing': 'Wird aktualisiert…',
+  'settings.plan.refreshHint':
+    'Den neuesten Tarifstatus online von Ihrem Konto abrufen.',
+  'settings.plan.loadError':
+    'Tarifinformationen konnten nicht geladen werden. Bitte aktualisieren.',
+  'settings.plan.yes': 'Ja',
+  'settings.plan.no': 'Nein',
+  'settings.plan.name.free': 'Free',
+  'settings.plan.name.pro': 'Pro',
+  'settings.plan.name.premium': 'Premium',
+  'settings.plan.name.unknown': 'Unbekannt',
+  'settings.plan.status.active': 'Aktiv',
+  'settings.plan.status.trialing': 'Testphase',
+  'settings.plan.status.canceled': 'Gekündigt',
+  'settings.plan.status.pastDue': 'Überfällig',
+  'settings.plan.status.incomplete': 'Unvollständig',
+  'settings.plan.status.incompleteExpired': 'Unvollständig (abgelaufen)',
+  'settings.plan.status.unpaid': 'Unbezahlt',
+  'settings.plan.status.unknown': 'Unbekannt',
 
   'settings.about.title': 'Info',
   'settings.about.description':

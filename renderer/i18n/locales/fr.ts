@@ -35,6 +35,47 @@ export const fr: Record<TranslationKey, string> = {
   'common.modulePlaceholder':
     'Ce module s’intégrera à l’interface existante sans restructurer l’application.',
 
+  'auth.subtitle':
+    'Connectez-vous pour accéder aux outils Free — aucun paiement requis.',
+  'auth.booting': 'Restauration de votre session…',
+  'auth.tab.login': 'Connexion',
+  'auth.tab.register': 'Créer un compte',
+  'auth.login.title': 'Bon retour',
+  'auth.login.description': 'Utilisez votre compte EDA Cleaner pour continuer.',
+  'auth.register.title': 'Créer votre compte',
+  'auth.register.description':
+    'Commencez immédiatement avec l’offre Free après l’inscription.',
+  'auth.register.freePlan':
+    'Les nouveaux comptes démarrent automatiquement sur Free. Aucun paiement n’est requis pour les fonctionnalités Free.',
+  'auth.field.name': 'Nom (optionnel)',
+  'auth.field.email': 'E-mail',
+  'auth.field.password': 'Mot de passe',
+  'auth.placeholder.name': 'Votre nom',
+  'auth.placeholder.email': 'vous@exemple.com',
+  'auth.placeholder.password': 'Entrez votre mot de passe',
+  'auth.passwordHint': 'Utilisez au moins 8 caractères.',
+  'auth.showPassword': 'Afficher le mot de passe',
+  'auth.hidePassword': 'Masquer le mot de passe',
+  'auth.login.submit': 'Se connecter',
+  'auth.register.submit': 'Créer le compte',
+  'auth.submitting': 'Veuillez patienter…',
+  'auth.requiredNotice':
+    'Un compte est requis pour utiliser EDA Cleaner. Après la première connexion, l’application fonctionne hors ligne avec votre session en cache.',
+  'auth.offlineBanner':
+    'Vous semblez hors ligne. Connectez-vous à Internet pour la première connexion ou création de compte.',
+  'auth.error.required': 'L’e-mail et le mot de passe sont requis.',
+  'auth.error.passwordLength': 'Le mot de passe doit contenir au moins 8 caractères.',
+  'auth.error.offlineFirst':
+    'Une connexion Internet est requise pour la première connexion ou création de compte.',
+  'auth.error.offline':
+    'Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.',
+  'auth.error.network':
+    'Erreur réseau. Vérifiez que le serveur est accessible et réessayez.',
+  'auth.error.invalid': 'E-mail ou mot de passe invalide.',
+  'auth.error.conflict':
+    'Un compte existe déjà avec cet e-mail. Essayez de vous connecter.',
+  'auth.error.generic': 'Une erreur s’est produite. Veuillez réessayer.',
+
   'sidebar.tagline': 'Optimiseur PC',
   'sidebar.collapse': 'Réduire la barre latérale',
   'sidebar.expand': 'Développer la barre latérale',
@@ -74,6 +115,8 @@ export const fr: Record<TranslationKey, string> = {
   'settings.cat.optimizationDesc': 'Comportement d’analyse et de nettoyage',
   'settings.cat.notifications': 'Notifications',
   'settings.cat.notificationsDesc': 'Retours de fin d’opération',
+  'settings.cat.plan': 'Offre',
+  'settings.cat.planDesc': 'Abonnement et droits',
   'settings.cat.about': 'À propos',
   'settings.cat.aboutDesc': 'Infos application et système',
 
@@ -126,6 +169,49 @@ export const fr: Record<TranslationKey, string> = {
   'settings.notifications.completion': 'Afficher le bilan de fin',
   'settings.notifications.completionDesc':
     'Afficher des résumés rassurants après Analyse intelligente et Nettoyage.',
+
+  'settings.plan.title': 'Votre offre',
+  'settings.plan.description':
+    'Consultez votre abonnement, votre accès et les fonctionnalités incluses.',
+  'settings.plan.current': 'Offre {{plan}}',
+  'settings.plan.loading': 'Chargement des détails de l’offre…',
+  'settings.plan.trialHint': 'Vous êtes actuellement en période d’essai.',
+  'settings.plan.accessActive': 'Votre accès est actif sur cet appareil.',
+  'settings.plan.accessInactive':
+    'L’accès à l’offre est inactif. Actualisez ou connectez-vous pour synchroniser.',
+  'settings.plan.plan': 'Offre',
+  'settings.plan.statusLabel': 'Statut',
+  'settings.plan.access': 'Accès actif',
+  'settings.plan.paid': 'Offre payante',
+  'settings.plan.trialEnds': 'Fin de l’essai',
+  'settings.plan.periodEnds': 'Fin de la période en cours',
+  'settings.plan.expires': 'Expiration',
+  'settings.plan.pending': 'Offre en attente',
+  'settings.plan.cancelScheduled': 'Annulation en fin de période',
+  'settings.plan.features': 'Fonctionnalités incluses',
+  'settings.plan.featuresDesc': 'Fonctionnalités liées à votre abonnement actuel.',
+  'settings.plan.noFeatures':
+    'Aucune liste de fonctionnalités en cache. Actualisez pour synchroniser votre compte.',
+  'settings.plan.refresh': 'Actualiser l’offre',
+  'settings.plan.refreshing': 'Actualisation…',
+  'settings.plan.refreshHint':
+    'Récupérez le dernier statut d’offre depuis votre compte lorsque vous êtes en ligne.',
+  'settings.plan.loadError':
+    'Impossible de charger les informations d’offre. Essayez d’actualiser.',
+  'settings.plan.yes': 'Oui',
+  'settings.plan.no': 'Non',
+  'settings.plan.name.free': 'Free',
+  'settings.plan.name.pro': 'Pro',
+  'settings.plan.name.premium': 'Premium',
+  'settings.plan.name.unknown': 'Inconnu',
+  'settings.plan.status.active': 'Actif',
+  'settings.plan.status.trialing': 'Essai',
+  'settings.plan.status.canceled': 'Annulé',
+  'settings.plan.status.pastDue': 'En retard',
+  'settings.plan.status.incomplete': 'Incomplet',
+  'settings.plan.status.incompleteExpired': 'Incomplet (expiré)',
+  'settings.plan.status.unpaid': 'Impayé',
+  'settings.plan.status.unknown': 'Inconnu',
 
   'settings.about.title': 'À propos',
   'settings.about.description':
