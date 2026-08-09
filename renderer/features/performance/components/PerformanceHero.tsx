@@ -1,4 +1,4 @@
-import { Zap, Sparkles } from 'lucide-react'
+import { Zap, Sparkles, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { colors } from '@/theme/colors'
@@ -6,6 +6,7 @@ import { formatBytes } from '@shared/utils'
 import type { MemoryInfo } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 export type PerformanceHealth = 'good' | 'warning' | 'critical'
 
@@ -20,6 +21,7 @@ interface PerformanceHeroProps {
   isLoading: boolean
   onBoost: () => void
   onCancel: () => void
+  boostLocked?: boolean
 }
 
 const healthStroke: Record<PerformanceHealth, string> = {
@@ -50,7 +52,8 @@ export function PerformanceHero({
   isBoosting,
   isLoading,
   onBoost,
-  onCancel
+  onCancel,
+  boostLocked = false
 }: PerformanceHeroProps): React.ReactElement {
   const { t } = useTranslation()
   const size = 148
@@ -160,8 +163,11 @@ export function PerformanceHero({
             ) : null}
             <Button
               size="sm"
-              className="h-10 gap-2 px-5 text-[13px] shadow-sm"
-              disabled={isBoosting || isLoading}
+              className={cn(
+                'h-10 gap-2 px-5 text-[13px] shadow-sm',
+                boostLocked && 'ring-1 ring-primary/20'
+              )}
+              disabled={isBoosting || (isLoading && !boostLocked)}
               onClick={onBoost}
             >
               {isBoosting ? (
@@ -171,8 +177,13 @@ export function PerformanceHero({
                 </>
               ) : (
                 <>
-                  <Zap className="h-4 w-4" />
+                  {boostLocked ? (
+                    <Lock className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Zap className="h-4 w-4" />
+                  )}
                   {t('performance.hero.boost')}
+                  {boostLocked ? <PremiumBadge plan="premium" /> : null}
                 </>
               )}
             </Button>

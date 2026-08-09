@@ -27,6 +27,10 @@ import { cn } from '@/utils/cn'
 import type { DuplicateGroup } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
+import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
+import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
+import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 type SortKey = 'size' | 'copies' | 'name'
 type SizeFilter = 'all' | '10mb' | '50mb' | '100mb' | '500mb'
@@ -41,7 +45,11 @@ const SIZE_FILTER_BYTES: Array<{ id: SizeFilter; minBytes: number; fallbackLabel
 
 export function DuplicatesPage(): React.ReactElement {
   const { t } = useTranslation()
-  const { data: groups = [], isLoading, isError, error, refetch, isFetching } = useDuplicates()
+  const access = useFeatureAccess('duplicates')
+  const { data: groups = [], isLoading, isError, error, refetch, isFetching } = useDuplicates(
+    undefined,
+    access.allowed
+  )
   const reveal = useRevealInFolder()
   const deleteFiles = useDeleteFiles()
 
@@ -121,6 +129,7 @@ export function DuplicatesPage(): React.ReactElement {
   }
 
   const handleDeleteSelected = async (): Promise<void> => {
+    if (!access.guard()) return
     if (selected.length === 0) return
     setNotice(null)
     const estimatedBytes = selected.reduce((sum, path) => {
@@ -156,11 +165,13 @@ export function DuplicatesPage(): React.ReactElement {
         description={t('duplicates.description')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button
+            {!access.allowed ? <PremiumBadge plan="pro" /> : null}
+            <FeatureLockButton
+              feature="duplicates"
               size="sm"
               variant="outline"
               className="h-9 gap-2"
-              disabled={isFetching}
+              forceDisabled={isFetching}
               onClick={() => {
                 setNotice(null)
                 void refetch()
@@ -168,12 +179,12 @@ export function DuplicatesPage(): React.ReactElement {
             >
               <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
               {t('common.refresh')}
-            </Button>
+            </FeatureLockButton>
             <Button
               size="sm"
               variant="outline"
               className="h-9 gap-2"
-              disabled={filtered.length === 0}
+              disabled={!access.allowed || filtered.length === 0}
               onClick={selectAllExceptKeep}
             >
               <Check className="h-4 w-4" />
@@ -189,21 +200,23 @@ export function DuplicatesPage(): React.ReactElement {
               <X className="h-4 w-4" />
               {t('common.clear')}
             </Button>
-            <Button
+            <FeatureLockButton
+              feature="duplicates"
               size="sm"
               variant="destructive"
               className="h-9 gap-2"
-              disabled={selected.length === 0 || deleteFiles.isPending}
+              forceDisabled={selected.length === 0 || deleteFiles.isPending}
               onClick={() => void handleDeleteSelected()}
             >
               <Trash2 className="h-4 w-4" />
               {t('duplicates.delete', { count: selected.length })}
-            </Button>
+            </FeatureLockButton>
           </div>
         }
       />
 
       <div className="space-y-4 p-content-pad">
+        <FeatureLockedCallout feature="duplicates" compact />
         <PageBreadcrumb
           items={[
             { label: t('storage.title'), href: '/storage' },

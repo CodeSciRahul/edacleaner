@@ -8,11 +8,14 @@ import {
   cleanupCategoryLabelKey
 } from '@/features/cleanup/lib/category-i18n'
 import { useTranslation } from '@/i18n/useTranslation'
+import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 interface CleanupCategoryCardProps {
   category: CleanupCategorySummary
   selected: boolean
   disabled?: boolean
+  /** Visual lock for plan-gated categories — stay clickable to open upgrade. */
+  locked?: boolean
   onToggle: () => void
 }
 
@@ -20,6 +23,7 @@ export function CleanupCategoryCard({
   category,
   selected,
   disabled = false,
+  locked = false,
   onToggle
 }: CleanupCategoryCardProps): React.ReactElement {
   const { t } = useTranslation()
@@ -55,6 +59,7 @@ export function CleanupCategoryCard({
         'outline-none transition-all duration-200 ease-out',
         'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         'disabled:cursor-not-allowed disabled:opacity-55',
+        locked && 'ring-1 ring-primary/20',
         selected
           ? 'border-primary/35 bg-primary/[0.06] shadow-md shadow-primary/5'
           : 'border-border bg-card hover:border-border hover:bg-accent/40 hover:shadow-sm'
@@ -100,6 +105,7 @@ export function CleanupCategoryCard({
           <p className="text-sm font-semibold text-foreground">
             {t(cleanupCategoryLabelKey(category.id))}
           </p>
+          {locked ? <PremiumBadge plan="pro" /> : null}
           <Badge variant={category.risk === 'safe' ? 'secondary' : 'outline'}>
             {category.risk === 'safe' ? t('cleanup.risk.safe') : t('cleanup.risk.review')}
           </Badge>

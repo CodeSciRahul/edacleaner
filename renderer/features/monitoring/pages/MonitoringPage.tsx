@@ -11,10 +11,14 @@ import { SystemOverviewCard } from '../components/SystemOverviewCard'
 import type { MetricId } from '../types'
 import { getTimeRangeOption } from '../lib/metric-config'
 import { useTranslation } from '@/i18n/useTranslation'
+import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
+import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 export function MonitoringPage(): React.ReactElement {
   const { t } = useTranslation()
-  const session = useMonitoringSession()
+  const monitorAccess = useFeatureAccess('live_monitor')
+  const session = useMonitoringSession({ enabled: monitorAccess.allowed })
   const [expandedId, setExpandedId] = useState<MetricId | null>(null)
 
   const summaryMetrics = useMemo(
@@ -48,24 +52,29 @@ export function MonitoringPage(): React.ReactElement {
         title={t('monitoring.title')}
         description={t('monitoring.description')}
         actions={
-          <MonitoringToolbar
-            paused={session.paused}
-            isLive={session.isLive}
-            isRefreshing={session.isRefreshing}
-            timeRange={session.timeRange}
-            timeRangeOptions={session.timeRangeOptions}
-            visibleMetrics={session.visibleMetrics}
-            metricDefinitions={session.metricDefinitions}
-            onPause={() => void session.pause()}
-            onResume={() => void session.resume()}
-            onRefresh={() => void session.refresh()}
-            onTimeRangeChange={session.setTimeRange}
-            onToggleMetric={session.toggleMetricVisibility}
-          />
+          monitorAccess.allowed ? (
+            <MonitoringToolbar
+              paused={session.paused}
+              isLive={session.isLive}
+              isRefreshing={session.isRefreshing}
+              timeRange={session.timeRange}
+              timeRangeOptions={session.timeRangeOptions}
+              visibleMetrics={session.visibleMetrics}
+              metricDefinitions={session.metricDefinitions}
+              onPause={() => void session.pause()}
+              onResume={() => void session.resume()}
+              onRefresh={() => void session.refresh()}
+              onTimeRangeChange={session.setTimeRange}
+              onToggleMetric={session.toggleMetricVisibility}
+            />
+          ) : (
+            <PremiumBadge plan="premium" size="md" />
+          )
         }
       />
 
       <div className="space-y-6 p-content-pad">
+        <FeatureLockedCallout feature="live_monitor" />
         {session.error ? (
           <div
             role="alert"

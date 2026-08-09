@@ -25,6 +25,10 @@ import { cn } from '@/utils/cn'
 import type { LargeFile } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
+import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
+import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
+import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 type SortKey = 'size' | 'name' | 'path'
 type SizeFilter = 'all' | '100mb' | '500mb' | '1gb' | '5gb'
@@ -39,7 +43,11 @@ const SIZE_FILTER_BYTES: Array<{ id: SizeFilter; minBytes: number; fallbackLabel
 
 export function LargeFilesPage(): React.ReactElement {
   const { t } = useTranslation()
-  const { data: files = [], isLoading, isError, error, refetch, isFetching } = useLargeFiles()
+  const access = useFeatureAccess('large_files')
+  const { data: files = [], isLoading, isError, error, refetch, isFetching } = useLargeFiles(
+    undefined,
+    access.allowed
+  )
   const reveal = useRevealInFolder()
   const deleteFiles = useDeleteFiles()
 
@@ -132,6 +140,7 @@ export function LargeFilesPage(): React.ReactElement {
   }
 
   const handleDeleteSelected = async (): Promise<void> => {
+    if (!access.guard()) return
     if (selected.length === 0) return
     setNotice(null)
     const estimatedBytes = selected.reduce((sum, path) => {
@@ -161,6 +170,7 @@ export function LargeFilesPage(): React.ReactElement {
   }
 
   const handleDeleteOne = async (file: LargeFile): Promise<void> => {
+    if (!access.guard()) return
     setNotice(null)
     const startedAt = Date.now()
     const result = await deleteFiles.mutateAsync([file.path])
@@ -187,11 +197,13 @@ export function LargeFilesPage(): React.ReactElement {
         description={t('largeFiles.description')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button
+            {!access.allowed ? <PremiumBadge plan="pro" /> : null}
+            <FeatureLockButton
+              feature="large_files"
               size="sm"
               variant="outline"
               className="h-9 gap-2"
-              disabled={isFetching}
+              forceDisabled={isFetching}
               onClick={() => {
                 setNotice(null)
                 void refetch()
@@ -199,32 +211,34 @@ export function LargeFilesPage(): React.ReactElement {
             >
               <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
               {t('common.refresh')}
-            </Button>
+            </FeatureLockButton>
             <Button
               size="sm"
               variant="outline"
               className="h-9 gap-2"
-              disabled={filtered.length === 0}
+              disabled={!access.allowed || filtered.length === 0}
               onClick={exportCsv}
             >
               <Download className="h-4 w-4" />
               {t('largeFiles.export')}
             </Button>
-            <Button
+            <FeatureLockButton
+              feature="large_files"
               size="sm"
               variant="destructive"
               className="h-9 gap-2"
-              disabled={selected.length === 0 || deleteFiles.isPending}
+              forceDisabled={selected.length === 0 || deleteFiles.isPending}
               onClick={() => void handleDeleteSelected()}
             >
               <Trash2 className="h-4 w-4" />
               {t('largeFiles.delete', { count: selected.length })}
-            </Button>
+            </FeatureLockButton>
           </div>
         }
       />
 
       <div className="space-y-4 p-content-pad">
+        <FeatureLockedCallout feature="large_files" compact />
         <PageBreadcrumb
           items={[
             { label: t('storage.title'), href: '/storage' },

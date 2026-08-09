@@ -29,9 +29,11 @@ import type { CleanupWorkflowPhase } from '@/features/cleanup/lib/category-meta'
 import { useSettingsStore } from '@/store/settings-store'
 import { appendCleanupActivity } from '@/features/reports/lib/activity-history'
 import { useTranslation } from '@/i18n/useTranslation'
+import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
 
 export function CleanupPage(): React.ReactElement {
   const { t } = useTranslation()
+  const tempAccess = useFeatureAccess('cleanup_temp')
   const [scan, setScan] = useState<CleanupScanResult | null>(null)
   const [selected, setSelected] = useState<Set<CleanupCategoryId>>(new Set())
   const [lastResult, setLastResult] = useState<CleanupResult | null>(null)
@@ -66,12 +68,13 @@ export function CleanupPage(): React.ReactElement {
     const initial = new Set<CleanupCategoryId>()
     for (const category of scan.categories) {
       if (category.available && category.risk === 'safe') {
+        if (category.id === 'temp' && !tempAccess.allowed) continue
         initial.add(category.id)
       }
     }
     setSelected(initial)
     setSelectionInitialized(true)
-  }, [scan, selectionInitialized, autoSelectSafeCategories])
+  }, [scan, selectionInitialized, autoSelectSafeCategories, tempAccess.allowed])
 
   const summary = summarizeSelected(scan ?? undefined, selected)
   const availableCategories = scan?.categories.filter((c) => c.available) ?? []
@@ -79,6 +82,7 @@ export function CleanupPage(): React.ReactElement {
 
   function toggleCategory(id: CleanupCategoryId): void {
     if (busy) return
+    if (id === 'temp' && !tempAccess.guard()) return
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -89,13 +93,11 @@ export function CleanupPage(): React.ReactElement {
 
   function selectAllSafe(): void {
     if (!scan || busy) return
-    setSelected(
-      new Set(
-        scan.categories
-          .filter((c) => c.available && c.risk === 'safe')
-          .map((c) => c.id)
-      )
-    )
+    const ids = scan.categories
+      .filter((c) => c.available && c.risk === 'safe')
+      .filter((c) => c.id !== 'temp' || tempAccess.allowed)
+      .map((c) => c.id)
+    setSelected(new Set(ids))
   }
 
   function clearSelection(): void {
@@ -116,6 +118,7 @@ export function CleanupPage(): React.ReactElement {
 
   async function handleClean(): Promise<void> {
     if (selected.size === 0 || busy) return
+    if (selected.has('temp') && !tempAccess.guard()) return
     setLastResult(null)
     const payload = await runCleanup.mutateAsync({
       categories: [...selected]
@@ -403,6 +406,7 @@ export function CleanupPage(): React.ReactElement {
                   category={category}
                   selected={selected.has(category.id)}
                   disabled={busy}
+                  locked={category.id === 'temp' && !tempAccess.allowed}
                   onToggle={() => toggleCategory(category.id)}
                 />
               ))}

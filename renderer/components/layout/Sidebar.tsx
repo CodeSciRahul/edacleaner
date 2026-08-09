@@ -5,6 +5,7 @@ import { useUiStore } from '@/store/ui-store'
 import { sidebarNavItems } from '@/components/layout/sidebar-nav'
 import { SidebarNavItem } from '@/components/layout/SidebarNavItem'
 import { SidebarUpgradeCard } from '@/components/layout/SidebarUpgradeCard'
+import { SidebarOfflineStatus } from '@/components/layout/SidebarOfflineStatus'
 import { useTranslation } from '@/i18n/useTranslation'
 
 export function Sidebar(): React.ReactElement {
@@ -63,17 +64,7 @@ export function Sidebar(): React.ReactElement {
       <div className={cn('shrink-0 space-y-2 border-t border-sidebar-border p-2', collapsed && 'px-1.5')}>
         <SidebarUpgradeCard collapsed={collapsed} />
 
-        {!collapsed && (
-          <div className="flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-muted px-3 py-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success">
-              <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground">{t('sidebar.status')}</p>
-              <p className="text-[11px] text-muted-foreground">{t('sidebar.statusGood')}</p>
-            </div>
-          </div>
-        )}
+        <SidebarOfflineStatus collapsed={collapsed} />
 
         {collapsed && (
           <button

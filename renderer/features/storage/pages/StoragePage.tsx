@@ -21,10 +21,17 @@ import {
 } from '@/features/storage/components/FolderBreakdownPanel'
 import { StorageInsightsSection } from '@/features/storage/components/StorageInsightsSection'
 import { useTranslation } from '@/i18n/useTranslation'
+import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
+import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
+import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 export function StoragePage(): React.ReactElement {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const storageAccess = useFeatureAccess('storage_overview')
+  const largeAccess = useFeatureAccess('large_files')
+  const dupAccess = useFeatureAccess('duplicates')
   const {
     data: drives = [],
     isLoading: drivesLoading,
@@ -47,9 +54,15 @@ export function StoragePage(): React.ReactElement {
     data: usage,
     isLoading: usageLoading,
     isFetching: usageFetching
-  } = useStorageUsage(mountPath, Boolean(mountPath))
-  const { data: largeFiles = [], isLoading: largeLoading } = useLargeFiles()
-  const { data: duplicates = [], isLoading: duplicatesLoading } = useDuplicates()
+  } = useStorageUsage(mountPath, Boolean(mountPath) && storageAccess.allowed)
+  const { data: largeFiles = [], isLoading: largeLoading } = useLargeFiles(
+    undefined,
+    largeAccess.allowed
+  )
+  const { data: duplicates = [], isLoading: duplicatesLoading } = useDuplicates(
+    undefined,
+    dupAccess.allowed
+  )
   const analyze = useAnalyzeStorage()
   const reveal = useRevealInFolder()
 
@@ -62,9 +75,11 @@ export function StoragePage(): React.ReactElement {
   const segments = buildSegmentColors(usage?.segments ?? [], formatBytes)
 
   const isAnalyzing =
-    analyze.isPending || drivesLoading || usageLoading || largeLoading || duplicatesLoading
+    analyze.isPending ||
+    (storageAccess.allowed && (drivesLoading || usageLoading || largeLoading || duplicatesLoading))
 
   const handleAnalyzeDrive = (driveMount: string): void => {
+    if (!storageAccess.guard()) return
     setSelectedMount(driveMount)
     void analyze.mutateAsync(driveMount)
   }
@@ -75,19 +90,24 @@ export function StoragePage(): React.ReactElement {
         title={t('storage.title')}
         description={t('storage.description')}
         actions={
-          <Button
-            size="sm"
-            className="h-9 gap-2 rounded-lg px-4 text-[13px]"
-            onClick={() => void analyze.mutateAsync(mountPath)}
-            disabled={isAnalyzing || !mountPath}
-          >
-            <HardDrive className="h-4 w-4" aria-hidden="true" />
-            {analyze.isPending ? t('storage.analyzing') : t('storage.analyze')}
-          </Button>
+          <div className="flex items-center gap-2">
+            {!storageAccess.allowed ? <PremiumBadge plan="pro" /> : null}
+            <FeatureLockButton
+              feature="storage_overview"
+              size="sm"
+              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+              forceDisabled={isAnalyzing || !mountPath}
+              onClick={() => void analyze.mutateAsync(mountPath)}
+            >
+              <HardDrive className="h-4 w-4" aria-hidden="true" />
+              {analyze.isPending ? t('storage.analyzing') : t('storage.analyze')}
+            </FeatureLockButton>
+          </div>
         }
       />
 
       <div className="space-y-6 p-content-pad">
+        <FeatureLockedCallout feature="storage_overview" />
         <StorageSubnav />
 
         {drivesError ? (

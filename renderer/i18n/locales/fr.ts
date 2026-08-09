@@ -35,6 +35,47 @@ export const fr: Record<TranslationKey, string> = {
   'common.modulePlaceholder':
     'Ce module s’intégrera à l’interface existante sans restructurer l’application.',
 
+  'auth.subtitle':
+    'Connectez-vous pour accéder aux outils Free — aucun paiement requis.',
+  'auth.booting': 'Restauration de votre session…',
+  'auth.tab.login': 'Connexion',
+  'auth.tab.register': 'Créer un compte',
+  'auth.login.title': 'Bon retour',
+  'auth.login.description': 'Utilisez votre compte EDA Cleaner pour continuer.',
+  'auth.register.title': 'Créer votre compte',
+  'auth.register.description':
+    'Commencez immédiatement avec l’offre Free après l’inscription.',
+  'auth.register.freePlan':
+    'Les nouveaux comptes démarrent automatiquement sur Free. Aucun paiement n’est requis pour les fonctionnalités Free.',
+  'auth.field.name': 'Nom (optionnel)',
+  'auth.field.email': 'E-mail',
+  'auth.field.password': 'Mot de passe',
+  'auth.placeholder.name': 'Votre nom',
+  'auth.placeholder.email': 'vous@exemple.com',
+  'auth.placeholder.password': 'Entrez votre mot de passe',
+  'auth.passwordHint': 'Utilisez au moins 8 caractères.',
+  'auth.showPassword': 'Afficher le mot de passe',
+  'auth.hidePassword': 'Masquer le mot de passe',
+  'auth.login.submit': 'Se connecter',
+  'auth.register.submit': 'Créer le compte',
+  'auth.submitting': 'Veuillez patienter…',
+  'auth.requiredNotice':
+    'Un compte est requis pour utiliser EDA Cleaner. Après la première connexion, l’application fonctionne hors ligne avec votre session en cache.',
+  'auth.offlineBanner':
+    'Vous semblez hors ligne. Connectez-vous à Internet pour la première connexion ou création de compte.',
+  'auth.error.required': 'L’e-mail et le mot de passe sont requis.',
+  'auth.error.passwordLength': 'Le mot de passe doit contenir au moins 8 caractères.',
+  'auth.error.offlineFirst':
+    'Une connexion Internet est requise pour la première connexion ou création de compte.',
+  'auth.error.offline':
+    'Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.',
+  'auth.error.network':
+    'Erreur réseau. Vérifiez que le serveur est accessible et réessayez.',
+  'auth.error.invalid': 'E-mail ou mot de passe invalide.',
+  'auth.error.conflict':
+    'Un compte existe déjà avec cet e-mail. Essayez de vous connecter.',
+  'auth.error.generic': 'Une erreur s’est produite. Veuillez réessayer.',
+
   'sidebar.tagline': 'Optimiseur PC',
   'sidebar.collapse': 'Réduire la barre latérale',
   'sidebar.expand': 'Développer la barre latérale',
@@ -42,9 +83,56 @@ export const fr: Record<TranslationKey, string> = {
   'sidebar.navPrimary': 'Principal',
   'sidebar.status': 'État du système',
   'sidebar.statusGood': 'Bon · Dernière analyse aujourd’hui',
+  'sidebar.sync.online': 'En ligne',
+  'sidebar.sync.offline': 'Hors ligne',
+  'sidebar.sync.synchronizing': 'Synchronisation',
+  'sidebar.sync.syncInProgress': 'Sync en cours',
+  'sidebar.sync.pendingChanges': '{{count}} en attente',
+  'sidebar.sync.queuedRequests': '{{count}} en file',
+  'sidebar.sync.lastSync': 'Sync {{when}}',
+  'sidebar.sync.neverSynced': 'Pas encore synchronisé',
+  'sidebar.sync.allClear': 'Tout est à jour',
+  'sidebar.sync.waitingNetwork': 'En attente du réseau',
   'sidebar.premium': 'Passer en Premium',
   'sidebar.premiumDesc': 'Analyses avancées et assistance prioritaire.',
   'sidebar.upgrade': 'Mettre à niveau',
+
+  'plans.title': 'Choisissez votre offre',
+  'plans.description':
+    'Comparez Free, Pro et Premium. Les paiements s’ouvrent en toute sécurité dans votre navigateur.',
+  'plans.loading': 'Chargement des offres…',
+  'plans.recommended': 'Recommandé',
+  'plans.currentBadge': 'Actuelle',
+  'plans.price.free': 'Gratuit',
+  'plans.price.forever': 'Gratuit pour toujours',
+  'plans.interval.month': 'mois',
+  'plans.interval.year': 'an',
+  'plans.billing.label': 'Période de facturation',
+  'plans.billing.monthly': 'Mensuel',
+  'plans.billing.yearly': 'Annuel',
+  'plans.billing.saveBadge': 'Économisez',
+  'plans.savePercent': 'Économisez {{percent}} %',
+  'plans.saveAmount': 'Économisez {{amount}}',
+  'plans.trial': 'Essai gratuit de {{days}} jours disponible',
+  'plans.pendingHint': 'Changement prévu en fin de période',
+  'plans.action.current': 'Offre actuelle',
+  'plans.action.upgrade': 'Mettre à niveau',
+  'plans.action.downgrade': 'Rétrograder',
+  'plans.action.working': 'Traitement…',
+  'plans.offlineNotice':
+    'Une connexion Internet est requise pour acheter ou modifier un abonnement. Votre offre en cache reste active hors ligne.',
+  'plans.feedback.checkoutOpened':
+    'Le paiement s’est ouvert dans votre navigateur. Revenez ici après le paiement — votre offre se mettra à jour automatiquement.',
+  'plans.feedback.updated': 'Votre abonnement est à jour.',
+  'plans.feedback.downgradeScheduled':
+    'Rétrogradation planifiée. Votre offre actuelle reste active jusqu’à la fin de la période.',
+  'plans.error.load': 'Impossible de charger les offres. Réessayez.',
+  'plans.error.empty': 'Aucune offre n’est disponible pour le moment.',
+  'plans.error.offlineLoad': 'Connectez-vous à Internet pour charger les offres.',
+  'plans.error.offlineAction': 'Connectez-vous à Internet pour mettre à niveau ou rétrograder.',
+  'plans.error.change': 'Impossible de changer d’offre. Réessayez.',
+  'plans.error.missingCheckoutUrl': 'L’URL de paiement est absente de la réponse du serveur.',
+  'plans.error.unauthorized': 'Session expirée. Veuillez vous reconnecter.',
 
   'processes.title': 'Processus principaux',
   'processes.subtitle': 'Plus forte consommation mémoire actuellement',
@@ -64,6 +152,10 @@ export const fr: Record<TranslationKey, string> = {
   'settings.cat.optimizationDesc': 'Comportement d’analyse et de nettoyage',
   'settings.cat.notifications': 'Notifications',
   'settings.cat.notificationsDesc': 'Retours de fin d’opération',
+  'settings.cat.plan': 'Offre',
+  'settings.cat.planDesc': 'Abonnement et droits',
+  'settings.cat.account': 'Compte',
+  'settings.cat.accountDesc': 'Profil connecté et déconnexion',
   'settings.cat.about': 'À propos',
   'settings.cat.aboutDesc': 'Infos application et système',
 
@@ -116,6 +208,119 @@ export const fr: Record<TranslationKey, string> = {
   'settings.notifications.completion': 'Afficher le bilan de fin',
   'settings.notifications.completionDesc':
     'Afficher des résumés rassurants après Analyse intelligente et Nettoyage.',
+
+  'settings.plan.title': 'Votre offre',
+  'settings.plan.description':
+    'Abonnement, dates de renouvellement, factures et historique de facturation.',
+  'settings.plan.current': 'Offre {{plan}}',
+  'settings.plan.loading': 'Chargement des détails de l’offre…',
+  'settings.plan.trialHint': 'Vous êtes actuellement en période d’essai.',
+  'settings.plan.accessActive': 'Votre accès est actif sur cet appareil.',
+  'settings.plan.accessInactive':
+    'L’accès à l’offre est inactif. Actualisez ou connectez-vous pour synchroniser.',
+  'settings.plan.plan': 'Offre',
+  'settings.plan.statusLabel': 'Statut',
+  'settings.plan.access': 'Accès actif',
+  'settings.plan.paid': 'Offre payante',
+  'settings.plan.trialEnds': 'Fin de l’essai',
+  'settings.plan.periodStarts': 'Début de la période',
+  'settings.plan.periodEnds': 'Fin de la période en cours',
+  'settings.plan.expires': 'Expiration',
+  'settings.plan.pending': 'Offre en attente',
+  'settings.plan.cancelScheduled': 'Annulation en fin de période',
+  'settings.plan.features': 'Fonctionnalités incluses',
+  'settings.plan.featuresDesc': 'Points clés de votre abonnement actuel.',
+  'settings.plan.noFeatures':
+    'Aucune liste de fonctionnalités en cache. Actualisez pour synchroniser votre compte.',
+  'settings.plan.refresh': 'Actualiser l’offre',
+  'settings.plan.refreshing': 'Actualisation…',
+  'settings.plan.refreshHint':
+    'Récupérez le dernier statut d’offre depuis votre compte lorsque vous êtes en ligne.',
+  'settings.plan.loadError':
+    'Impossible de charger les informations d’offre. Essayez d’actualiser.',
+  'settings.plan.yes': 'Oui',
+  'settings.plan.no': 'Non',
+  'settings.plan.name.free': 'Free',
+  'settings.plan.name.pro': 'Pro',
+  'settings.plan.name.premium': 'Premium',
+  'settings.plan.name.unknown': 'Inconnu',
+  'settings.plan.status.active': 'Actif',
+  'settings.plan.status.trialing': 'Essai',
+  'settings.plan.status.canceled': 'Annulé',
+  'settings.plan.status.pastDue': 'En retard',
+  'settings.plan.status.incomplete': 'Incomplet',
+  'settings.plan.status.incompleteExpired': 'Incomplet (expiré)',
+  'settings.plan.status.unpaid': 'Impayé',
+  'settings.plan.status.unknown': 'Inconnu',
+  'settings.plan.upgrade': 'Mettre à niveau',
+  'settings.plan.manageBilling': 'Gérer la facturation',
+  'settings.plan.viewPlans': 'Voir les offres',
+  'settings.plan.portalOpening': 'Ouverture…',
+  'settings.plan.portalError':
+    'Impossible d’ouvrir le portail de facturation. Réessayez en ligne.',
+  'settings.plan.billingCycle': 'Cycle de facturation',
+  'settings.plan.cycle.none': 'Sans facturation',
+  'settings.plan.cycle.month': 'Mensuel',
+  'settings.plan.cycle.year': 'Annuel',
+  'settings.plan.nextRenewal': 'Prochain renouvellement',
+  'settings.plan.accessUntil': 'Accès jusqu’au',
+  'settings.plan.daysRemaining': 'Temps restant',
+  'settings.plan.daysLeft': '{{count}} jours',
+  'settings.plan.ended': 'Terminé',
+  'settings.plan.renewal.free': 'Offre Free — pas de date de renouvellement',
+  'settings.plan.renewal.trialEnds': 'Essai jusqu’au {{date}}',
+  'settings.plan.renewal.ends': 'Accès jusqu’au {{date}}',
+  'settings.plan.renewal.renews': 'Renouvellement le {{date}}',
+  'settings.plan.renewal.unknown': 'Date de renouvellement indisponible',
+  'settings.plan.showMore': 'Afficher {{count}} de plus',
+  'settings.plan.showLess': 'Afficher moins',
+  'settings.plan.invoicesTitle': 'Factures',
+  'settings.plan.invoicesDesc':
+    'Factures et reçus Stripe de votre historique de paiement.',
+  'settings.plan.invoicesEmpty': 'Aucune facture pour le moment',
+  'settings.plan.invoicesEmptyHint':
+    'Après un abonnement, les reçus et PDF apparaîtront ici.',
+  'settings.plan.viewInvoice': 'Voir',
+  'settings.plan.invoice.paid': 'Payée',
+  'settings.plan.invoice.open': 'Ouverte',
+  'settings.plan.invoice.draft': 'Brouillon',
+  'settings.plan.invoice.void': 'Annulée',
+  'settings.plan.invoice.uncollectible': 'Irrécouvrable',
+  'settings.plan.invoice.unknown': 'Inconnu',
+  'settings.plan.invoice.trial': 'Essai',
+  'settings.plan.invoice.trialAmount': '0 $ aujourd’hui',
+  'settings.plan.invoice.trialHint':
+    'Facture d’essai — aucun montant n’a été prélevé. Les nouveaux paiements sont facturés immédiatement.',
+  'settings.plan.historyTitle': 'Activité de facturation',
+  'settings.plan.historyDesc':
+    'Changements d’offre et événements d’abonnement pour ce compte.',
+  'settings.plan.historyEmpty': 'Aucune activité',
+  'settings.plan.historyEmptyHint':
+    'Les mises à niveau, renouvellements et annulations apparaîtront ici.',
+  'settings.plan.billingLoading': 'Chargement de la facturation…',
+  'settings.plan.billingOffline':
+    'Les factures et l’historique nécessitent Internet. Votre offre en cache reste visible ci-dessus.',
+  'settings.plan.billingError':
+    'Impossible de charger les factures ou l’historique.',
+
+  'settings.account.title': 'Compte',
+  'settings.account.description':
+    'Voyez qui est connecté sur cet appareil et déconnectez-vous quand vous avez terminé.',
+  'settings.account.signedIn': 'Connecté',
+  'settings.account.offline': 'Session hors ligne',
+  'settings.account.name': 'Nom',
+  'settings.account.email': 'E-mail',
+  'settings.account.nameEmpty': 'Aucun nom défini',
+  'settings.account.logout': 'Se déconnecter',
+  'settings.account.loggingOut': 'Déconnexion…',
+  'settings.account.logoutHint':
+    'La déconnexion efface votre session sécurisée sur cet appareil. Vous devrez vous reconnecter pour utiliser l’application.',
+  'settings.account.logoutConfirmTitle': 'Se déconnecter d’EDA Cleaner ?',
+  'settings.account.logoutConfirmMessage': 'Se déconnecter sur cet appareil ?',
+  'settings.account.logoutConfirmDetail':
+    'Vos jetons de session locaux seront effacés. L’historique de nettoyage sur ce PC est conservé.',
+  'settings.account.logoutError':
+    'Impossible de se déconnecter pour le moment. Veuillez réessayer.',
 
   'settings.about.title': 'À propos',
   'settings.about.description':
@@ -736,5 +941,72 @@ export const fr: Record<TranslationKey, string> = {
     'Libérez la RAM utilisée par les processus inactifs et lourds.',
   'feature.performance.monitor': 'Moniteur de performances',
   'feature.performance.monitorDesc':
-    'Suivez le CPU, la mémoire et la réactivité du système.'
+    'Suivez le CPU, la mémoire et la réactivité du système.',
+
+  'entitlements.badge.pro': 'Pro',
+  'entitlements.badge.premium': 'Premium',
+  'entitlements.prompt.eyebrow': 'Fonctionnalité {{plan}}',
+  'entitlements.prompt.includes': 'Inclus avec {{plan}}',
+  'entitlements.prompt.upgrade': 'Mettre à niveau',
+  'entitlements.prompt.compare': 'Comparer les offres',
+  'entitlements.prompt.later': 'Plus tard',
+  'entitlements.callout.title': '{{plan}} requis',
+  'entitlements.callout.body':
+    'Explorez cet écran librement. Passez à un plan supérieur pour déverrouiller les actions.',
+  'entitlements.feature.smart_scan': 'Analyse intelligente',
+  'entitlements.feature.smart_scanDesc':
+    'Lancez un bilan complet du nettoyage, du stockage et des performances.',
+  'entitlements.feature.cleanup_basic': 'Nettoyage en un clic',
+  'entitlements.feature.cleanup_basicDesc':
+    'Supprimez en toute sécurité les fichiers inutiles et les caches.',
+  'entitlements.feature.cleanup_temp': 'Suppression des fichiers temporaires',
+  'entitlements.feature.cleanup_tempDesc':
+    'Les fichiers temporaires sont visibles en Free, mais leur nettoyage nécessite Pro.',
+  'entitlements.feature.storage_overview': 'Vue d’ensemble du stockage',
+  'entitlements.feature.storage_overviewDesc':
+    'L’analyse disque approfondie fait partie du plan Pro.',
+  'entitlements.feature.large_files': 'Recherche de gros fichiers',
+  'entitlements.feature.large_filesDesc':
+    'Repérez et supprimez les fichiers volumineux qui occupent l’espace disque.',
+  'entitlements.feature.duplicates': 'Nettoyage des doublons',
+  'entitlements.feature.duplicatesDesc':
+    'Trouvez les copies identiques et récupérez de l’espace en un passage.',
+  'entitlements.feature.performance_boost': 'Boost de performances',
+  'entitlements.feature.performance_boostDesc':
+    'Libérez la mémoire, videz les caches et accélerez le quotidien en un clic.',
+  'entitlements.feature.startup_apps': 'Gestionnaire de démarrage',
+  'entitlements.feature.startup_appsDesc':
+    'Contrôlez les apps qui se lancent avec Windows pour un démarrage plus rapide.',
+  'entitlements.feature.background_apps': 'Contrôle des apps en arrière-plan',
+  'entitlements.feature.background_appsDesc':
+    'Arrêtez les processus lourds qui consomment RAM et CPU.',
+  'entitlements.feature.cleanup_reports': 'Rapports de nettoyage',
+  'entitlements.feature.cleanup_reportsDesc':
+    'Suivez l’historique et les gains cumulés de vos nettoyages.',
+  'entitlements.feature.live_monitor': 'Moniteur système en direct',
+  'entitlements.feature.live_monitorDesc':
+    'Suivez CPU, mémoire et disque en temps réel pendant l’optimisation.',
+  'entitlements.benefit.temp1': 'Nettoyez les fichiers temporaires restants',
+  'entitlements.benefit.temp2': 'Récupérez de l’espace sans fouiller les dossiers',
+  'entitlements.benefit.storage1': 'Voyez où va l’espace disque',
+  'entitlements.benefit.storage2': 'Actualisez une analyse complète à la demande',
+  'entitlements.benefit.large1': 'Priorisez les plus gros consommateurs d’espace',
+  'entitlements.benefit.large2': 'Supprimez des fichiers sélectionnés en sécurité',
+  'entitlements.benefit.dup1': 'Détectez les groupes de doublons',
+  'entitlements.benefit.dup2': 'Gardez une copie et retirez le reste',
+  'entitlements.benefit.boost1': 'Libérez la RAM et les caches gênants',
+  'entitlements.benefit.boost2': 'Lancez un Boost guidé avec résultats clairs',
+  'entitlements.benefit.startup1': 'Désactivez les apps de démarrage gourmandes',
+  'entitlements.benefit.startup2': 'Consultez l’impact avant de modifier',
+  'entitlements.benefit.bg1': 'Identifiez les apps gourmandes en mémoire',
+  'entitlements.benefit.bg2': 'Arrêtez les processus sûrs sans le Gestionnaire des tâches',
+  'entitlements.benefit.reports1': 'Suivez l’historique des nettoyages et Boosts',
+  'entitlements.benefit.reports2': 'Visualisez les gains cumulés',
+  'entitlements.benefit.monitor1': 'Graphiques CPU, RAM et disque en direct',
+  'entitlements.benefit.monitor2': 'Mettez en pause et concentrez-vous sur vos métriques',
+  'entitlements.benefit.proSuite': 'Tout Free, plus la boîte à outils stockage Pro',
+  'entitlements.benefit.premiumSuite': 'Tout Pro, plus la suite performances Premium',
+  'entitlements.teaser.title': 'Aperçu uniquement',
+  'entitlements.teaser.body':
+    'Passez à {{plan}} pour déverrouiller la liste complète et agir.'
 }

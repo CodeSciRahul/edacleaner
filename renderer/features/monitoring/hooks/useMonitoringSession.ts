@@ -39,7 +39,8 @@ function persistVisibleMetrics(ids: MetricId[]): void {
   }
 }
 
-export function useMonitoringSession() {
+export function useMonitoringSession(options?: { enabled?: boolean }) {
+  const liveEnabled = options?.enabled !== false
   const [samples, setSamples] = useState<SystemMetricsSample[]>([])
   const [timeRange, setTimeRangeState] = useState<TimeRangeId>('1m')
   const [paused, setPaused] = useState(false)
@@ -77,11 +78,11 @@ export function useMonitoringSession() {
   }, [])
 
   const startWatch = useCallback(async () => {
-    if (watchingRef.current) return
+    if (!liveEnabled || watchingRef.current) return
     await electronService.system().startMetricsWatch()
     watchingRef.current = true
     setIsLive(true)
-  }, [])
+  }, [liveEnabled])
 
   const stopWatch = useCallback(async () => {
     if (!watchingRef.current) return
@@ -91,6 +92,15 @@ export function useMonitoringSession() {
   }, [])
 
   useEffect(() => {
+    if (!liveEnabled) {
+      setIsLoading(false)
+      setIsLive(false)
+      setError(null)
+      setSamples([])
+      void stopWatch().catch(() => undefined)
+      return
+    }
+
     let cancelled = false
     let unsubscribe: (() => void) | undefined
 
@@ -121,7 +131,7 @@ export function useMonitoringSession() {
       unsubscribe?.()
       void stopWatch().catch(() => undefined)
     }
-  }, [pushSample, startWatch, stopWatch])
+  }, [liveEnabled, pushSample, startWatch, stopWatch])
 
   const pause = useCallback(async () => {
     setPaused(true)

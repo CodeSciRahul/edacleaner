@@ -4,6 +4,8 @@ import {
   SlidersHorizontal,
   Sparkles,
   Bell,
+  Crown,
+  UserRound,
   Info
 } from 'lucide-react'
 import type { TranslationKey } from '@/i18n/locales/en'
@@ -13,6 +15,8 @@ export type SettingsCategoryId =
   | 'general'
   | 'optimization'
   | 'notifications'
+  | 'plan'
+  | 'account'
   | 'about'
 
 export interface SettingsCategory {
@@ -46,6 +50,18 @@ export const settingsCategories: SettingsCategory[] = [
     labelKey: 'settings.cat.notifications',
     descriptionKey: 'settings.cat.notificationsDesc',
     icon: Bell
+  },
+  {
+    id: 'plan',
+    labelKey: 'settings.cat.plan',
+    descriptionKey: 'settings.cat.planDesc',
+    icon: Crown
+  },
+  {
+    id: 'account',
+    labelKey: 'settings.cat.account',
+    descriptionKey: 'settings.cat.accountDesc',
+    icon: UserRound
   },
   {
     id: 'about',

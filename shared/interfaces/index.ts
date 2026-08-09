@@ -445,3 +445,234 @@ export interface UploadFileResult {
   bytesUploaded: number
   etag?: string
 }
+
+/** Connectivity status for offline-aware UI and future sync. */
+export type NetworkStatus = 'online' | 'offline' | 'unknown'
+
+export interface NetworkStatusSnapshot {
+  status: NetworkStatus
+  online: boolean
+  lastCheckedAt: number
+  lastError: string | null
+}
+
+export interface OfflineDbHealth {
+  ready: boolean
+  path: string
+  dirty: boolean
+}
+
+export interface SecureStorageInfo {
+  encryptionAvailable: boolean
+  mode: 'safeStorage' | 'aes-gcm'
+}
+
+export type ApiHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD'
+
+export interface ApiRequestConfig {
+  method: ApiHttpMethod
+  url: string
+  params?: Record<string, string | number | boolean | undefined | null>
+  data?: unknown
+  headers?: Record<string, string>
+  timeout?: number
+  authToken?: string
+  /** Skip attaching the persisted session access token. */
+  skipAuth?: boolean
+  /** Skip automatic token refresh + retry on HTTP 401. */
+  skipAuthRefresh?: boolean
+  /** Enable response caching for offline reads (GET/HEAD default). */
+  cache?: boolean | { ttlMs?: number; namespace?: string; key?: string }
+  retry?: boolean | { maxRetries?: number; delayMs?: number }
+  skipOfflineCache?: boolean
+  /** When true, never enqueue this mutating request while offline. */
+  skipOfflineQueue?: boolean
+  /** When true (default), unwrap `{ success, data }` server envelopes. */
+  unwrapEnvelope?: boolean
+}
+
+export interface ApiClientResponse<T = unknown> {
+  data: T
+  status: number
+  headers: Record<string, string>
+  fromCache: boolean
+  offline: boolean
+  /** True when a mutating request was stored in the offline queue. */
+  queued?: boolean
+  queueRequestId?: string
+}
+
+export interface ApiResponseEnvelope<T = unknown> {
+  success: boolean
+  message?: string
+  data?: T
+  errors?: unknown
+}
+
+export interface ApiPublicError {
+  code: string
+  message: string
+  status?: number
+  retryable: boolean
+}
+
+export type OfflineQueueStatus =
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'abandoned'
+
+export type OfflineQueueMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+
+export interface OfflineQueueItem {
+  id: string
+  url: string
+  method: OfflineQueueMethod
+  headers: Record<string, string>
+  body: unknown | null
+  retryCount: number
+  status: OfflineQueueStatus
+  createdAt: string
+  updatedAt: string
+  lastError: string | null
+  /** Hash of method+url+body for duplicate detection. */
+  fingerprint: string | null
+  /** Earliest time a failed item may be retried (ISO). */
+  nextRetryAt: string | null
+}
+
+export interface OfflineQueueEnqueueInput {
+  url: string
+  method: OfflineQueueMethod
+  headers?: Record<string, string>
+  body?: unknown
+  fingerprint?: string
+}
+
+export interface OfflineQueueStats {
+  pending: number
+  processing: number
+  completed: number
+  failed: number
+  cancelled: number
+  abandoned: number
+  total: number
+}
+
+export type SyncPhase =
+  | 'idle'
+  | 'started'
+  | 'item'
+  | 'batch'
+  | 'completed'
+  | 'error'
+  | 'cancelled'
+
+export interface SyncProgressEvent {
+  phase: SyncPhase
+  total: number
+  processed: number
+  succeeded: number
+  failed: number
+  skipped: number
+  conflicts: number
+  currentRequestId?: string
+  currentMethod?: string
+  currentUrl?: string
+  message: string
+  percent: number
+  running: boolean
+}
+
+export interface SyncRunResult {
+  total: number
+  succeeded: number
+  failed: number
+  skipped: number
+  conflicts: number
+  remaining: number
+  cancelled: boolean
+  durationMs: number
+}
+
+export type SyncConflictStrategy =
+  | 'client_wins'
+  | 'server_wins'
+  | 'already_applied'
+  | 'retry'
+  | 'fail'
+
+/** Cached user profile for offline auth. */
+export interface AuthUserProfile {
+  id: string
+  email: string
+  name: string
+  trialUsed: boolean
+}
+
+export type SubscriptionPlanSlug = 'free' | 'pro' | 'premium'
+
+export type CachedSubscriptionStatus =
+  | 'active'
+  | 'trialing'
+  | 'canceled'
+  | 'incomplete'
+  | 'incomplete_expired'
+  | 'unpaid'
+  | 'past_due'
+  | 'unknown'
+
+/** Local subscription entitlement cache. */
+export interface CachedSubscription {
+  currentPlan: SubscriptionPlanSlug | string
+  status: CachedSubscriptionStatus | string
+  cancelAtPeriodEnd: boolean
+  pendingPlan: string | null
+  trialStart: string | null
+  trialEnd: string | null
+  currentPeriodStart: string | null
+  currentPeriodEnd: string | null
+  features: string[]
+  isPaid: boolean
+  hasActiveAccess: boolean
+  /** Derived: currently in trial window. */
+  isTrialing: boolean
+  /** Plan / period expiry ISO (trialEnd or currentPeriodEnd). */
+  expiresAt: string | null
+  /** Active Stripe billing interval when known. */
+  billingInterval?: 'month' | 'year' | string | null
+  syncedAt: number
+}
+
+export interface AuthSessionSnapshot {
+  authenticated: boolean
+  offline: boolean
+  user: AuthUserProfile | null
+  subscription: CachedSubscription | null
+  permissions: string[]
+  accessExpiresAt: string | null
+  refreshExpiresAt: string | null
+  lastSyncedAt: number | null
+}
+
+export interface AuthCredentials {
+  email: string
+  password: string
+  name?: string
+}
+
+export interface AuthSessionChangedEvent {
+  session: AuthSessionSnapshot
+  reason: string
+}
+
+/** Payload pushed from main → renderer when a custom-protocol URL is opened. */
+export interface DeepLinkEvent {
+  url: string
+  path: string
+  action: 'checkout-success' | 'checkout-cancel' | 'unknown'
+  sessionId: string | null
+  receivedAt: number
+}

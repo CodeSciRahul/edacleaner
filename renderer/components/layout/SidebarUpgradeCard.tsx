@@ -1,14 +1,21 @@
 import { Sparkles } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { Button } from '@/components/ui/Button'
+import { useEntitlementsStore } from '@/store/entitlements-store'
 import { useTranslation } from '@/i18n/useTranslation'
 
 interface SidebarUpgradeCardProps {
   collapsed: boolean
 }
 
-export function SidebarUpgradeCard({ collapsed }: SidebarUpgradeCardProps): React.ReactElement {
+export function SidebarUpgradeCard({
+  collapsed
+}: SidebarUpgradeCardProps): React.ReactElement | null {
   const { t } = useTranslation()
+  const plan = useEntitlementsStore((s) => s.plan)
+  const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
+
+  if (plan === 'premium') return null
 
   if (collapsed) {
     return (
@@ -16,6 +23,7 @@ export function SidebarUpgradeCard({ collapsed }: SidebarUpgradeCardProps): Reac
         type="button"
         title={t('sidebar.premium')}
         aria-label={t('sidebar.premium')}
+        onClick={openPlansModal}
         className={cn(
           'mx-auto flex h-11 w-11 items-center justify-center rounded-lg',
           'bg-primary/10 text-primary outline-none transition-colors duration-150',
@@ -40,7 +48,11 @@ export function SidebarUpgradeCard({ collapsed }: SidebarUpgradeCardProps): Reac
           </p>
         </div>
       </div>
-      <Button size="sm" className="mt-3 h-8 w-full rounded-lg text-[13px]">
+      <Button
+        size="sm"
+        className="mt-3 h-8 w-full rounded-lg text-[13px]"
+        onClick={openPlansModal}
+      >
         {t('sidebar.upgrade')}
       </Button>
     </div>

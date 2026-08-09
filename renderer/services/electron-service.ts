@@ -16,5 +16,9 @@ export const electronService = {
   boost: () => getElectron().boost,
   startup: () => getElectron().startup,
   cleanup: () => getElectron().cleanup,
-  smartScan: () => getElectron().smartScan
+  smartScan: () => getElectron().smartScan,
+  offline: () => getElectron().offline,
+  api: () => getElectron().api,
+  sync: () => getElectron().sync,
+  auth: () => getElectron().auth
 }

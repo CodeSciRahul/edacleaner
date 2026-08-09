@@ -11,6 +11,24 @@ export function useElectron() {
   const storage = useCallback(() => electronService.storage(), [])
   const boost = useCallback(() => electronService.boost(), [])
   const startup = useCallback(() => electronService.startup(), [])
+  const offline = useCallback(() => electronService.offline(), [])
+  const sync = useCallback(() => electronService.sync(), [])
+  const auth = useCallback(() => electronService.auth(), [])
+  const api = useCallback(() => electronService.api(), [])
 
-  return { app, system, file, dialog, settings, updater, storage, boost, startup }
+  return {
+    app,
+    system,
+    file,
+    dialog,
+    settings,
+    updater,
+    storage,
+    boost,
+    startup,
+    offline,
+    sync,
+    auth,
+    api
+  }
 }
