@@ -137,7 +137,7 @@ Server: `/auth/login|register|refresh|logout|me`, `/subscription/status`.
 
 - Log level: `EDA_LOG_LEVEL=debug|info|warn|error`
 - Dev file logs: `EDA_LOG_FILE=1`
-- Packaged builds **must** set `MAIN_VITE_API_BASE_URL` to an `https://` API base
+- Packaged builds **must** set `SERVER_API_BASE_URL` to an `https://` API base
 - DB path: `{userData}/data/eda-cleaner.db`
 - Backup: `{userData}/data/eda-cleaner.db.bak`
 

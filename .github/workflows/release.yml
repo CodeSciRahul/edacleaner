@@ -49,7 +49,7 @@ jobs:
             dist_script: dist:linux
 
     env:
-      RELEASE_API_BASE_URL: ${{ secrets.RELEASE_API_BASE_URL }}
+      SERVER_API_BASE_URL: ${{ secrets.SERVER_API_BASE_URL }}
       RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'stable' }}
       # Skip electron-builder code signing until certificates are configured
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -78,9 +78,24 @@ jobs:
             libarchive-tools \
             xz-utils
 
+      - name: Require API URL for packaged build
+        shell: bash
+        run: |
+          if [ -z "$SERVER_API_BASE_URL" ]; then
+            echo "::error::Missing repository secret SERVER_API_BASE_URL (e.g. https://api.example.com/api/v1)"
+            exit 1
+          fi
+          if [[ ! "$SERVER_API_BASE_URL" =~ ^https:// ]]; then
+            echo "::error::SERVER_API_BASE_URL must use HTTPS for packaged builds (got: $SERVER_API_BASE_URL)"
+            exit 1
+          fi
+
       - name: Build ${{ matrix.platform }} installer
         # --publish never: do not publish to GitHub Releases (we use our version API)
+        # SERVER_API_BASE_URL is baked into the packaged app at build time
         run: npm run ${{ matrix.dist_script }} -- --publish never
+        env:
+          SERVER_API_BASE_URL: ${{ secrets.SERVER_API_BASE_URL }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -104,19 +119,10 @@ jobs:
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Require API URL
-        if: steps.publish.outputs.enabled == 'true'
-        shell: bash
-        run: |
-          if [ -z "$RELEASE_API_BASE_URL" ]; then
-            echo "::error::Missing repository secret RELEASE_API_BASE_URL (e.g. https://api.example.com/api/v1)"
-            exit 1
-          fi
-
       - name: Publish to version API
         if: steps.publish.outputs.enabled == 'true'
         run: npm run publish:release:yes
         env:
           PUBLISH_RELEASE: '1'
-          RELEASE_API_BASE_URL: ${{ secrets.RELEASE_API_BASE_URL }}
+          SERVER_API_BASE_URL: ${{ secrets.SERVER_API_BASE_URL }}
           RELEASE_TYPE: ${{ env.RELEASE_TYPE }}

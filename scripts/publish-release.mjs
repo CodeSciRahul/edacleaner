@@ -9,7 +9,7 @@
  *   npm run publish:release
  *
  * Env:
- *   RELEASE_API_BASE_URL | MAIN_VITE_API_BASE_URL | VITE_API_BASE_URL
+ *   SERVER_API_BASE_URL
  *   PUBLISH_RELEASE=1   (same as --yes when non-interactive)
  *   RELEASE_VERSION     (optional override of package.json version)
  *   RELEASE_TYPE        (stable | beta | alpha; default stable)
@@ -94,11 +94,7 @@ function loadDotEnv() {
 }
 
 function resolveApiBaseUrl() {
-  const raw =
-    process.env.RELEASE_API_BASE_URL ||
-    process.env.MAIN_VITE_API_BASE_URL ||
-    process.env.VITE_API_BASE_URL ||
-    'http://localhost:5000/api/v1'
+  const raw = process.env.SERVER_API_BASE_URL || 'http://localhost:5000/api/v1'
   return raw.replace(/\/$/, '')
 }
 

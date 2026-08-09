@@ -18,15 +18,15 @@ export interface CachedApiPayload<T = unknown> {
 
 export function resolveApiBaseUrl(): string {
   const fromEnv =
-    typeof import.meta.env.MAIN_VITE_API_BASE_URL === 'string'
-      ? import.meta.env.MAIN_VITE_API_BASE_URL
+    typeof import.meta.env.SERVER_API_BASE_URL === 'string'
+      ? import.meta.env.SERVER_API_BASE_URL
       : undefined
-  const fallback = 'http://localhost:5000/api/v1'
+  const fallback = 'https://edacleaner.com/api/v1'
   const resolved = (fromEnv?.trim() || fallback).replace(/\/$/, '')
 
   if (app.isPackaged) {
     if (!fromEnv?.trim()) {
-      log.error('MAIN_VITE_API_BASE_URL is required in packaged builds')
+      log.error('SERVER_API_BASE_URL is required in packaged builds')
       throw new Error('API base URL is not configured for production')
     }
     if (!/^https:\/\//i.test(resolved)) {

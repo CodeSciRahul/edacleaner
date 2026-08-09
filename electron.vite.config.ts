@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   main: {
+    // Expose SERVER_API_BASE_URL (default electron-vite prefix is MAIN_VITE_)
+    envPrefix: 'SERVER_',
     plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
@@ -41,6 +43,8 @@ export default defineConfig({
   },
   renderer: {
     root: resolve('renderer'),
+    // Keep VITE_ for flags; also expose SERVER_API_BASE_URL
+    envPrefix: ['VITE_', 'SERVER_'],
     css: {
       postcss: resolve(__dirname, 'postcss.config.cjs')
     },
