@@ -13,6 +13,14 @@ module.exports = {
     buildResources: 'resources'
   },
   files: ['out/**/*', 'package.json'],
+  // Runtime window/taskbar icon (Windows/Linux). Packaged outside asar.
+  extraResources: [
+    {
+      from: 'resources/icons',
+      to: 'icons',
+      filter: ['icon.ico', 'icon.png', '512.png']
+    }
+  ],
   asar: true,
   // sql.js WASM must be unpackable for require.resolve at runtime.
   asarUnpack: ['**/node_modules/sql.js/**'],
@@ -24,10 +32,11 @@ module.exports = {
   // afterSign: 'build/notarize.js',
 
   win: {
-    icon: 'resources/icons/icon.png',
-    // Avoid winCodeSign symlink extract (needs Windows Developer Mode / admin).
-    // Re-enable for production signing + exe icon embedding.
-    signAndEditExecutable: false,
+    icon: 'resources/icons/icon.ico',
+    // Required for embedding the app icon + version metadata into the .exe via rcedit.
+    // Signing still no-ops when CSC_IDENTITY_AUTO_DISCOVERY=false / no cert is present.
+    // Setting this to false leaves the default Electron icon on the packaged binary.
+    signAndEditExecutable: true,
     target: [
       {
         target: 'nsis',
@@ -42,11 +51,14 @@ module.exports = {
     allowToChangeInstallationDirectory: true,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    shortcutName: 'EDA Cleaner'
+    shortcutName: 'EDA Cleaner',
+    installerIcon: 'resources/icons/icon.ico',
+    uninstallerIcon: 'resources/icons/icon.ico',
+    installerHeaderIcon: 'resources/icons/icon.ico'
   },
 
   mac: {
-    icon: 'resources/icons/icon.png',
+    icon: 'resources/icons/icon.icns',
     target: [
       {
         target: 'dmg',
