@@ -1,4 +1,4 @@
-import { ipcMain, dialog, type OpenDialogOptions, type SaveDialogOptions } from 'electron'
+import { ipcMain, dialog, BrowserWindow, type OpenDialogOptions, type SaveDialogOptions } from 'electron'
 import { readFile, writeFile, access } from 'fs/promises'
 import { constants } from 'fs'
 import { IPC_CHANNELS } from '@shared/constants'
@@ -45,6 +45,10 @@ function failure(error: string): IpcResponse {
   return { success: false, error }
 }
 
+function senderWindow(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
+  return BrowserWindow.fromWebContents(event.sender)
+}
+
 export function registerAppIpc(): void {
   ipcMain.handle(IPC_CHANNELS.APP.GET_VERSION, () => success(appService.getVersion()))
   ipcMain.handle(IPC_CHANNELS.APP.GET_PLATFORM, () => success(appService.getPlatform()))
@@ -61,13 +65,40 @@ export function registerAppIpc(): void {
   )
   ipcMain.handle(IPC_CHANNELS.APP.OPEN_EXTERNAL, async (_event, rawUrl?: unknown) => {
     try {
-      if (typeof rawUrl !== 'string' || !rawUrl.trim()) {
+      if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
         throw new Error('url must be a non-empty string')
       }
       return success(await appService.openExternal(rawUrl))
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Failed to open URL')
     }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_MINIMIZE, (event) => {
+    senderWindow(event)?.minimize()
+    return success(null)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_TOGGLE_MAXIMIZE, (event) => {
+    const window = senderWindow(event)
+    if (!window) return success(null)
+    if (window.isFullScreen()) {
+      window.setFullScreen(false)
+    } else if (window.isMaximized()) {
+      window.unmaximize()
+    } else {
+      window.maximize()
+    }
+    return success(null)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_CLOSE, (event) => {
+    senderWindow(event)?.close()
+    return success(null)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_IS_MAXIMIZED, (event) => {
+    return success(Boolean(senderWindow(event)?.isMaximized()))
   })
 }
 

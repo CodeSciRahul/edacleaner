@@ -11,7 +11,12 @@ export const IPC_CHANNELS = {
     RELAUNCH: 'app:relaunch',
     GET_PATH: 'app:get-path',
     OPEN_EXTERNAL: 'app:open-external',
-    DEEP_LINK: 'app:deep-link'
+    DEEP_LINK: 'app:deep-link',
+    WINDOW_MINIMIZE: 'app:window-minimize',
+    WINDOW_TOGGLE_MAXIMIZE: 'app:window-toggle-maximize',
+    WINDOW_CLOSE: 'app:window-close',
+    WINDOW_IS_MAXIMIZED: 'app:window-is-maximized',
+    WINDOW_MAXIMIZED_CHANGED: 'app:window-maximized-changed'
   },
   SYSTEM: {
     GET_INFO: 'system:get-info',

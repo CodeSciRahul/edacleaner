@@ -225,6 +225,7 @@ export const subscriptionService = {
   async listPlans(): Promise<PublicPlan[]> {
     const response = await apiClient.get<PublicPlan[]>('/plans', {
       skipOfflineQueue: true,
+      skipAuth: true,
       cache: { ttlMs: 5 * 60_000, key: 'plans:list' }
     })
     const plans = asPlanArray(response.data)

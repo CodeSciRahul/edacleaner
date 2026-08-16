@@ -1,6 +1,7 @@
 import { BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
+import { IPC_CHANNELS } from '@shared/constants'
 import { configManager } from '@main/config'
 import { getMainWindowOptions, getRendererPath } from '@main/windows'
 
@@ -31,6 +32,9 @@ export class WindowManager {
       title: config.name
     })
 
+    window.setMenuBarVisibility(false)
+    window.removeMenu()
+
     window.on('ready-to-show', () => {
       window.show()
     })
@@ -51,6 +55,18 @@ export class WindowManager {
     }
 
     this.windows.set('main', window)
+
+    const emitMaximized = (): void => {
+      if (window.isDestroyed()) return
+      window.webContents.send(
+        IPC_CHANNELS.APP.WINDOW_MAXIMIZED_CHANGED,
+        window.isMaximized()
+      )
+    }
+    window.on('maximize', emitMaximized)
+    window.on('unmaximize', emitMaximized)
+    window.on('enter-full-screen', emitMaximized)
+    window.on('leave-full-screen', emitMaximized)
 
     window.on('closed', () => {
       this.windows.delete('main')

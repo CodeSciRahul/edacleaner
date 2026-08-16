@@ -12,7 +12,10 @@ export function getMainWindowOptions(preloadPath: string): BrowserWindowConstruc
     minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
     minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
     show: false,
+    frame: false,
+    titleBarStyle: 'hidden',
     autoHideMenuBar: true,
+    backgroundColor: '#0f172a',
     ...(icon ? { icon } : {}),
     webPreferences: {
       preload: preloadPath,

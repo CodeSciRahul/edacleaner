@@ -1,4 +1,7 @@
 export { AppShell } from './AppShell'
+export { TitleBar } from './TitleBar'
+export { WindowFrame } from './WindowFrame'
+export { WindowControls } from './WindowControls'
 export { Toolbar } from './Toolbar'
 export { MetricCard } from './MetricCard'
 export { CircularProgress } from './CircularProgress'

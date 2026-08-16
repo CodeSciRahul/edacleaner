@@ -74,6 +74,19 @@ const appApi = {
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.APP.DEEP_LINK, listener)
     }
+  },
+  minimizeWindow: () => invoke<void>(IPC_CHANNELS.APP.WINDOW_MINIMIZE),
+  toggleMaximizeWindow: () => invoke<void>(IPC_CHANNELS.APP.WINDOW_TOGGLE_MAXIMIZE),
+  closeWindow: () => invoke<void>(IPC_CHANNELS.APP.WINDOW_CLOSE),
+  isWindowMaximized: () => invoke<boolean>(IPC_CHANNELS.APP.WINDOW_IS_MAXIMIZED),
+  onWindowMaximizedChange: (callback: (maximized: boolean) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, maximized: unknown): void => {
+      callback(maximized === true)
+    }
+    ipcRenderer.on(IPC_CHANNELS.APP.WINDOW_MAXIMIZED_CHANGED, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.APP.WINDOW_MAXIMIZED_CHANGED, listener)
+    }
   }
 }
 

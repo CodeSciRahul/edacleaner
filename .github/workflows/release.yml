@@ -51,8 +51,8 @@ jobs:
     env:
       SERVER_API_BASE_URL: ${{ secrets.SERVER_API_BASE_URL }}
       RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'stable' }}
-      # Skip electron-builder code signing until certificates are configured
-      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # Windows/Linux: do not auto-discover certs. macOS uses CSC_LINK when present.
+      CSC_IDENTITY_AUTO_DISCOVERY: ${{ matrix.platform == 'macos' && 'true' || 'false' }}
 
     steps:
       - name: Checkout
@@ -78,6 +78,28 @@ jobs:
             libarchive-tools \
             xz-utils
 
+      - name: Prepare macOS Developer ID certificate
+        if: matrix.platform == 'macos'
+        env:
+          CSC_LINK_SECRET: ${{ secrets.CSC_LINK }}
+        run: |
+          if [ -z "$CSC_LINK_SECRET" ]; then
+            echo "::warning::CSC_LINK is not set. The Mac DMG will be unsigned and macOS Gatekeeper will show it as damaged after a browser download. Add a Developer ID Application .p12 (base64) plus APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, and APPLE_TEAM_ID."
+            exit 0
+          fi
+          if [[ "$CSC_LINK_SECRET" == http://* || "$CSC_LINK_SECRET" == https://* || "$CSC_LINK_SECRET" == /* ]]; then
+            echo "CSC_LINK=$CSC_LINK_SECRET" >> "$GITHUB_ENV"
+          else
+            python3 - <<'PY'
+import base64, os, pathlib
+raw = os.environ["CSC_LINK_SECRET"].strip()
+path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "developer-id.p12"
+path.write_bytes(base64.b64decode(raw))
+print(f"Imported Developer ID certificate ({path.stat().st_size} bytes)")
+PY
+            echo "CSC_LINK=$RUNNER_TEMP/developer-id.p12" >> "$GITHUB_ENV"
+          fi
+
       - name: Require API URL for packaged build
         shell: bash
         run: |
@@ -96,6 +118,10 @@ jobs:
         run: npm run ${{ matrix.dist_script }} -- --publish never
         env:
           SERVER_API_BASE_URL: ${{ secrets.SERVER_API_BASE_URL }}
+          CSC_KEY_PASSWORD: ${{ matrix.platform == 'macos' && secrets.CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ matrix.platform == 'macos' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'macos' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ matrix.platform == 'macos' && secrets.APPLE_TEAM_ID || '' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

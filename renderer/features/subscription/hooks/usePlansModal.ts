@@ -23,9 +23,14 @@ export type PlanChangeFeedback =
 interface UsePlansModalOptions {
   open: boolean
   onSubscriptionUpdated?: () => void
+  onUnauthorized?: () => void
 }
 
-export function usePlansModal({ open, onSubscriptionUpdated }: UsePlansModalOptions) {
+export function usePlansModal({
+  open,
+  onSubscriptionUpdated,
+  onUnauthorized
+}: UsePlansModalOptions) {
   const { t } = useTranslation()
   const online = useOfflineStore((s) => s.online)
 
@@ -42,6 +47,8 @@ export function usePlansModal({ open, onSubscriptionUpdated }: UsePlansModalOpti
   const loadGeneration = useRef(0)
   const onUpdatedRef = useRef(onSubscriptionUpdated)
   onUpdatedRef.current = onSubscriptionUpdated
+  const onUnauthorizedRef = useRef(onUnauthorized)
+  onUnauthorizedRef.current = onUnauthorized
 
   const visiblePlans = useMemo(
     () => filterPlansByInterval(plans, billingInterval),
@@ -185,6 +192,9 @@ export function usePlansModal({ open, onSubscriptionUpdated }: UsePlansModalOpti
             ? t('plans.error.unauthorized')
             : mapped.message || t('plans.error.change')
         )
+        if (mapped.unauthorized) {
+          onUnauthorizedRef.current?.()
+        }
       } finally {
         setActionPlanId(null)
       }

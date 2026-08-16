@@ -10,6 +10,8 @@ import { cn } from '@/utils/cn'
 interface PlansModalProps {
   open: boolean
   onClose: () => void
+  onUnauthorized?: () => void
+  onSubscriptionUpdated?: () => void
 }
 
 function BillingToggle({
@@ -67,7 +69,12 @@ function BillingToggle({
   )
 }
 
-export function PlansModal({ open, onClose }: PlansModalProps): React.ReactElement | null {
+export function PlansModal({
+  open,
+  onClose,
+  onUnauthorized,
+  onSubscriptionUpdated
+}: PlansModalProps): React.ReactElement | null {
   const { t } = useTranslation()
   const {
     plans,
@@ -83,7 +90,7 @@ export function PlansModal({ open, onClose }: PlansModalProps): React.ReactEleme
     online,
     reload,
     selectPlan
-  } = usePlansModal({ open })
+  } = usePlansModal({ open, onUnauthorized, onSubscriptionUpdated })
 
   useEffect(() => {
     if (feedback?.type !== 'upgraded') return

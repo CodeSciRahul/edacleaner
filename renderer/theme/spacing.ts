@@ -18,6 +18,7 @@ export const layout = {
   sidebarWidth: '260px',
   sidebarCollapsedWidth: '68px',
   toolbarHeight: '64px',
+  titlebarHeight: '44px',
   contentPadding: '24px',
   gridGap: '20px',
   cardPadding: '24px'

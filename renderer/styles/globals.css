@@ -169,8 +169,12 @@
     background: hsl(var(--muted-foreground) / 0.28);
   }
 
-  .animate-sidebar-tooltip {
-    animation: sidebar-tooltip-in 150ms ease-out both;
+  .app-drag {
+    -webkit-app-region: drag;
+  }
+
+  .app-no-drag {
+    -webkit-app-region: no-drag;
   }
 }
 

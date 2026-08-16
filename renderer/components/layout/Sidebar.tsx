@@ -1,5 +1,4 @@
-import { PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react'
-import { APP_NAME } from '@shared/constants'
+import { PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useUiStore } from '@/store/ui-store'
 import { sidebarNavItems } from '@/components/layout/sidebar-nav'
@@ -22,40 +21,7 @@ export function Sidebar(): React.ReactElement {
         collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
       )}
     >
-      <div
-        className={cn(
-          'flex h-toolbar shrink-0 items-center border-b border-sidebar-border',
-          collapsed ? 'justify-center px-2' : 'gap-3 px-4'
-        )}
-      >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-          <ShieldCheck className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-        </div>
-        {!collapsed && (
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold tracking-tight text-foreground">
-              {APP_NAME}
-            </p>
-            <p className="truncate text-[11px] text-muted-foreground">{t('sidebar.tagline')}</p>
-          </div>
-        )}
-        {!collapsed && (
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            aria-label={t('sidebar.collapse')}
-            className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground',
-              'transition-colors duration-150 hover:bg-sidebar-hover hover:text-foreground',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-            )}
-          >
-            <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
-          </button>
-        )}
-      </div>
-
-      <nav className="sidebar-scroll flex-1 space-y-0.5 overflow-y-auto px-2 py-3" aria-label={t('sidebar.navPrimary')}>
+      <nav className="sidebar-scroll flex-1 space-y-0.5 overflow-y-auto px-2 py-2" aria-label={t('sidebar.navPrimary')}>
         {sidebarNavItems.map((item) => (
           <SidebarNavItem key={item.id} item={item} collapsed={collapsed} />
         ))}

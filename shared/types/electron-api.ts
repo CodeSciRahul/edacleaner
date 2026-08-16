@@ -57,6 +57,11 @@ export interface AppApi {
   getPath: (name: AppPath) => Promise<string>
   openExternal: (url: string) => Promise<{ opened: true }>
   onDeepLink: (callback: (event: DeepLinkEvent) => void) => () => void
+  minimizeWindow: () => Promise<void>
+  toggleMaximizeWindow: () => Promise<void>
+  closeWindow: () => Promise<void>
+  isWindowMaximized: () => Promise<boolean>
+  onWindowMaximizedChange: (callback: (maximized: boolean) => void) => () => void
 }
 
 export interface SystemApi {
