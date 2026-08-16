@@ -73,6 +73,20 @@ export const en = {
 
   'onboarding.progress': 'Step {{current}} of {{total}}',
   'onboarding.progressNav': 'Onboarding progress',
+  'onboarding.hero.titleLead': 'A Faster, Cleaner',
+  'onboarding.hero.titleAccent': 'PC Awaits You',
+  'onboarding.hero.body':
+    'EdaCleaner helps you clean junk files, optimize performance, and keep your PC secure.',
+  'onboarding.hero.cleanTitle': 'Deep Cleaning',
+  'onboarding.hero.cleanBody': 'Remove junk files and free up valuable space.',
+  'onboarding.hero.boostTitle': 'Performance Boost',
+  'onboarding.hero.boostBody': 'Optimize system settings and improve speed.',
+  'onboarding.hero.privacyTitle': 'Privacy Protection',
+  'onboarding.hero.privacyBody': 'Protect your data and keep your PC secure.',
+  'onboarding.hero.manageTitle': 'Smart Management',
+  'onboarding.hero.manageBody': 'Manage startup items and system resources.',
+  'onboarding.hero.trust': '30-Day Money Back Guarantee • Secure & Trusted',
+  'onboarding.hero.artAlt': 'EdaCleaner on a laptop, with cleanup and performance tools',
   'onboarding.welcome.eyebrow': 'EDA Cleaner',
   'onboarding.welcome.title': 'Welcome to EDA Cleaner',
   'onboarding.welcome.body':
@@ -101,7 +115,9 @@ export const en = {
   'onboarding.license.accountNote':
     'Account sign-in is separate from purchasing. New accounts start on the Free plan. You can upgrade at any time.',
   'onboarding.license.activate': 'Activate',
+  'onboarding.license.activateHint': 'I have a license key',
   'onboarding.license.buy': 'Buy License',
+  'onboarding.license.buyHint': 'Get full access now',
   'onboarding.account.activateEyebrow': 'Activate',
   'onboarding.account.activateTitle': 'Sign in to activate',
   'onboarding.account.activateBody':

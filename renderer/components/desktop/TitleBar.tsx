@@ -28,7 +28,7 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
 
   if (variant === 'simple') {
     return (
-      <header className="flex h-titlebar shrink-0 select-none border-b border-sidebar-border bg-sidebar">
+      <header className="flex h-titlebar shrink-0 select-none bg-sidebar">
         <div
           className="app-drag flex min-w-0 flex-1 items-center gap-2.5 px-4"
           onDoubleClick={toggleMaximize}
@@ -49,7 +49,7 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
       <div
         className={cn(
           'app-drag flex h-full items-center',
-          'border-r border-sidebar-border transition-[width] duration-300 ease-out',
+          'transition-[width] duration-300 ease-out',
           collapsed ? 'w-sidebar-collapsed justify-center px-2' : 'w-sidebar gap-2.5 px-4'
         )}
       >
@@ -88,7 +88,7 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
       </div>
 
       <div
-        className="app-drag flex h-full min-w-0 flex-1 items-center border-b border-sidebar-border"
+        className="app-drag flex h-full min-w-0 flex-1 items-center"
         onDoubleClick={toggleMaximize}
       >
         {accessory ? (

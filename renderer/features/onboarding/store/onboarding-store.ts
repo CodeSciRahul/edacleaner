@@ -1,27 +1,17 @@
 import { create } from 'zustand'
 
-export type OnboardingStep =
-  | 'welcome'
-  | 'value'
-  | 'features'
-  | 'license'
-  | 'account'
-  | 'ready'
+export type OnboardingStep = 'hero' | 'account' | 'ready'
 
 export type AuthIntent = 'activate' | 'purchase'
 
-export const INTRO_STEPS: OnboardingStep[] = ['welcome', 'value', 'features', 'license']
-
 const STORAGE_KEY = 'eda-cleaner-onboarding'
 
-const VALID_STEPS = new Set<OnboardingStep>([
-  'welcome',
-  'value',
-  'features',
-  'license',
-  'account',
-  'ready'
-])
+const VALID_STEPS = new Set<OnboardingStep>(['hero', 'account', 'ready'])
+
+function normalizeStep(value: unknown): OnboardingStep {
+  if (VALID_STEPS.has(value as OnboardingStep)) return value as OnboardingStep
+  return 'hero'
+}
 
 interface PersistedOnboarding {
   completed: boolean
@@ -31,17 +21,14 @@ interface PersistedOnboarding {
 function readPersisted(): PersistedOnboarding {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { completed: false, step: 'welcome' }
+    if (!raw) return { completed: false, step: 'hero' }
     const parsed = JSON.parse(raw) as Partial<PersistedOnboarding>
-    const step = VALID_STEPS.has(parsed.step as OnboardingStep)
-      ? (parsed.step as OnboardingStep)
-      : 'welcome'
     return {
       completed: parsed.completed === true,
-      step: parsed.completed ? 'welcome' : step
+      step: parsed.completed ? 'hero' : normalizeStep(parsed.step)
     }
   } catch {
-    return { completed: false, step: 'welcome' }
+    return { completed: false, step: 'hero' }
   }
 }
 
@@ -58,10 +45,8 @@ interface OnboardingState {
   step: OnboardingStep
   authIntent: AuthIntent
   plansOpen: boolean
-  /** True while this launch is inside the first-run / re-auth flow. */
   flowActive: boolean
   setStep: (step: OnboardingStep) => void
-  nextIntro: () => void
   back: () => void
   startActivate: () => void
   startPurchase: () => void
@@ -77,37 +62,19 @@ const persisted = readPersisted()
 
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   completed: persisted.completed,
-  step: persisted.completed ? 'welcome' : persisted.step,
+  step: persisted.completed ? 'hero' : persisted.step,
   authIntent: 'activate',
   plansOpen: false,
   flowActive: false,
 
   setStep: (step) => {
-    const completed = get().completed
-    writePersisted(completed, step)
+    writePersisted(get().completed, step)
     set({ step })
   },
 
-  nextIntro: () => {
-    const { step } = get()
-    const index = INTRO_STEPS.indexOf(step)
-    const next = INTRO_STEPS[Math.min(index + 1, INTRO_STEPS.length - 1)] ?? 'license'
-    writePersisted(get().completed, next)
-    set({ step: next })
-  },
-
   back: () => {
-    const { step } = get()
-    if (step === 'account' || step === 'ready') {
-      writePersisted(get().completed, 'license')
-      set({ step: 'license', plansOpen: false })
-      return
-    }
-    const index = INTRO_STEPS.indexOf(step)
-    if (index <= 0) return
-    const prev = INTRO_STEPS[index - 1] ?? 'welcome'
-    writePersisted(get().completed, prev)
-    set({ step: prev })
+    writePersisted(get().completed, 'hero')
+    set({ step: 'hero', plansOpen: false })
   },
 
   beginAccount: (intent) => {
@@ -127,23 +94,22 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   closePlans: () => set({ plansOpen: false }),
 
   complete: () => {
-    writePersisted(true, 'welcome')
-    set({ completed: true, flowActive: false, plansOpen: false, step: 'welcome' })
+    writePersisted(true, 'hero')
+    set({ completed: true, flowActive: false, plansOpen: false, step: 'hero' })
   },
 
   markFlowActive: () => {
     if (get().flowActive) return
-    const completed = get().completed
-    if (completed) {
-      writePersisted(true, 'license')
-      set({ flowActive: true, step: 'license' })
+    if (get().completed) {
+      writePersisted(true, 'hero')
+      set({ flowActive: true, step: 'hero' })
       return
     }
     set({ flowActive: true })
   },
 
   skipForExistingSession: () => {
-    writePersisted(true, 'welcome')
+    writePersisted(true, 'hero')
     set({ completed: true, flowActive: false, plansOpen: false })
   }
 }))

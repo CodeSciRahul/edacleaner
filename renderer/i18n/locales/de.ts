@@ -80,6 +80,20 @@ export const de: Record<TranslationKey, string> = {
 
   'onboarding.progress': 'Schritt {{current}} von {{total}}',
   'onboarding.progressNav': 'Einrichtungsfortschritt',
+  'onboarding.hero.titleLead': 'Ein schnellerer, sauberer',
+  'onboarding.hero.titleAccent': 'PC wartet auf Sie',
+  'onboarding.hero.body':
+    'EdaCleaner hilft Ihnen, Junk-Dateien zu entfernen, die Leistung zu steigern und Ihren PC zu schützen.',
+  'onboarding.hero.cleanTitle': 'Tiefenreinigung',
+  'onboarding.hero.cleanBody': 'Entfernen Sie Junk-Dateien und gewinnen Sie Speicherplatz.',
+  'onboarding.hero.boostTitle': 'Leistungsboost',
+  'onboarding.hero.boostBody': 'Optimieren Sie Systemeinstellungen und steigern Sie die Geschwindigkeit.',
+  'onboarding.hero.privacyTitle': 'Datenschutz',
+  'onboarding.hero.privacyBody': 'Schützen Sie Ihre Daten und halten Sie den PC sicher.',
+  'onboarding.hero.manageTitle': 'Intelligente Verwaltung',
+  'onboarding.hero.manageBody': 'Verwalten Sie Autostart und Systemressourcen.',
+  'onboarding.hero.trust': '30 Tage Geld-zurück-Garantie • Sicher und vertrauenswürdig',
+  'onboarding.hero.artAlt': 'EdaCleaner auf einem Laptop, mit Bereinigungs- und Performance-Tools',
   'onboarding.welcome.eyebrow': 'EDA Cleaner',
   'onboarding.welcome.title': 'Willkommen bei EDA Cleaner',
   'onboarding.welcome.body':
@@ -108,7 +122,9 @@ export const de: Record<TranslationKey, string> = {
   'onboarding.license.accountNote':
     'Kontoanmeldung und Kauf sind getrennt. Neue Konten starten mit Free. Ein Upgrade ist jederzeit möglich.',
   'onboarding.license.activate': 'Aktivieren',
+  'onboarding.license.activateHint': 'Ich habe einen Lizenzschlüssel',
   'onboarding.license.buy': 'Lizenz kaufen',
+  'onboarding.license.buyHint': 'Jetzt vollen Zugriff erhalten',
   'onboarding.account.activateEyebrow': 'Aktivieren',
   'onboarding.account.activateTitle': 'Zum Aktivieren anmelden',
   'onboarding.account.activateBody':

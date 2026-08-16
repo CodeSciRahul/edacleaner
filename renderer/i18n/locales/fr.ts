@@ -80,6 +80,20 @@ export const fr: Record<TranslationKey, string> = {
 
   'onboarding.progress': 'Étape {{current}} sur {{total}}',
   'onboarding.progressNav': 'Progression de la configuration',
+  'onboarding.hero.titleLead': 'Un PC plus rapide et plus propre',
+  'onboarding.hero.titleAccent': 'vous attend',
+  'onboarding.hero.body':
+    'EdaCleaner vous aide à supprimer les fichiers inutiles, à optimiser les performances et à sécuriser votre PC.',
+  'onboarding.hero.cleanTitle': 'Nettoyage en profondeur',
+  'onboarding.hero.cleanBody': 'Supprimez les fichiers inutiles et libérez de l’espace.',
+  'onboarding.hero.boostTitle': 'Boost de performances',
+  'onboarding.hero.boostBody': 'Optimisez les réglages système et gagnez en vitesse.',
+  'onboarding.hero.privacyTitle': 'Protection de la vie privée',
+  'onboarding.hero.privacyBody': 'Protégez vos données et sécurisez votre PC.',
+  'onboarding.hero.manageTitle': 'Gestion intelligente',
+  'onboarding.hero.manageBody': 'Gérez les programmes au démarrage et les ressources.',
+  'onboarding.hero.trust': 'Satisfait ou remboursé 30 jours • Sûr et de confiance',
+  'onboarding.hero.artAlt': 'EdaCleaner sur un ordinateur portable, avec des outils de nettoyage et de performance',
   'onboarding.welcome.eyebrow': 'EDA Cleaner',
   'onboarding.welcome.title': 'Bienvenue dans EDA Cleaner',
   'onboarding.welcome.body':
@@ -108,7 +122,9 @@ export const fr: Record<TranslationKey, string> = {
   'onboarding.license.accountNote':
     'La connexion au compte est distincte de l’achat. Les nouveaux comptes démarrent sur Free. Vous pouvez mettre à niveau à tout moment.',
   'onboarding.license.activate': 'Activer',
+  'onboarding.license.activateHint': 'J’ai une clé de licence',
   'onboarding.license.buy': 'Acheter une licence',
+  'onboarding.license.buyHint': 'Accès complet maintenant',
   'onboarding.account.activateEyebrow': 'Activer',
   'onboarding.account.activateTitle': 'Connectez-vous pour activer',
   'onboarding.account.activateBody':

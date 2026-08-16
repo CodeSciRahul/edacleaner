@@ -2,13 +2,9 @@ import { Gauge, HardDrive, ScanSearch, ShieldCheck, Sparkles, Trash2 } from 'luc
 import { APP_NAME } from '@shared/constants'
 import { cn } from '@/utils/cn'
 import { useTranslation } from '@/i18n/useTranslation'
-import type { OnboardingStep } from '@/features/onboarding/store/onboarding-store'
 import appIcon from '@/assets/app logo/App Icon3.svg'
 
-export type ProductStageVariant = Extract<
-  OnboardingStep,
-  'welcome' | 'value' | 'features' | 'license' | 'account' | 'ready'
->
+export type ProductStageVariant = 'welcome' | 'value' | 'features' | 'license' | 'account' | 'ready'
 
 interface ProductStageProps {
   variant: ProductStageVariant
