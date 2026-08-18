@@ -70,6 +70,13 @@ export const en = {
   'auth.error.invalid': 'Invalid email or password.',
   'auth.error.conflict': 'An account with this email already exists. Try logging in instead.',
   'auth.error.generic': 'Something went wrong. Please try again.',
+  'auth.window.loginHeading': 'Log in to edaCleaner',
+  'auth.window.registerHeading': 'Create an edaCleaner account',
+  'auth.window.productLine': 'PC Optimization',
+  'auth.window.emailPlaceholder': 'Username or Email',
+  'auth.window.forgotPassword': 'Forgot Password?',
+  'auth.window.forgotPasswordHint':
+    'Password reset is not available in the desktop app yet. Use the password for this account, or create a new one.',
 
   'onboarding.progress': 'Step {{current}} of {{total}}',
   'onboarding.progressNav': 'Onboarding progress',

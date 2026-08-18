@@ -61,6 +61,7 @@ export interface AppApi {
   toggleMaximizeWindow: () => Promise<void>
   closeWindow: () => Promise<void>
   isWindowMaximized: () => Promise<boolean>
+  setWindowLayout: (layout: 'onboarding' | 'app') => Promise<{ layout: 'onboarding' | 'app' }>
   onWindowMaximizedChange: (callback: (maximized: boolean) => void) => () => void
 }
 
@@ -231,6 +232,10 @@ export interface AuthApi {
     expiry: string | null
     features: string[]
     trial: { isTrialing: boolean; trialEnd: string | null }
+  }>
+  openWindow: (mode?: 'login' | 'register') => Promise<{
+    opened: true
+    mode: 'login' | 'register'
   }>
   onSessionChanged: (callback: (event: AuthSessionChangedEvent) => void) => () => void
 }

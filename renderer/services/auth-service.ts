@@ -21,6 +21,7 @@ export const authService = {
   hasPermission: (permission: string) =>
     electronService.auth().hasPermission(permission),
   getSubscription: () => electronService.auth().getSubscription(),
+  openWindow: (mode?: 'login' | 'register') => electronService.auth().openWindow(mode),
   onSessionChanged: (callback: (event: AuthSessionChangedEvent) => void) =>
     electronService.auth().onSessionChanged(callback)
 }

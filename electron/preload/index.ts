@@ -79,6 +79,8 @@ const appApi = {
   toggleMaximizeWindow: () => invoke<void>(IPC_CHANNELS.APP.WINDOW_TOGGLE_MAXIMIZE),
   closeWindow: () => invoke<void>(IPC_CHANNELS.APP.WINDOW_CLOSE),
   isWindowMaximized: () => invoke<boolean>(IPC_CHANNELS.APP.WINDOW_IS_MAXIMIZED),
+  setWindowLayout: (layout: 'onboarding' | 'app') =>
+    invoke<{ layout: 'onboarding' | 'app' }>(IPC_CHANNELS.APP.WINDOW_SET_LAYOUT, layout),
   onWindowMaximizedChange: (callback: (maximized: boolean) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, maximized: unknown): void => {
       callback(maximized === true)
@@ -402,6 +404,11 @@ const authApi = {
       features: string[]
       trial: { isTrialing: boolean; trialEnd: string | null }
     }>(IPC_CHANNELS.AUTH.GET_SUBSCRIPTION),
+  openWindow: (mode?: 'login' | 'register') =>
+    invoke<{ opened: true; mode: 'login' | 'register' }>(
+      IPC_CHANNELS.AUTH.OPEN_WINDOW,
+      mode ?? 'login'
+    ),
   onSessionChanged: (callback: (event: AuthSessionChangedEvent) => void) => {
     const listener = (
       _event: Electron.IpcRendererEvent,

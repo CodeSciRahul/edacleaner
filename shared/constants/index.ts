@@ -16,7 +16,8 @@ export const IPC_CHANNELS = {
     WINDOW_TOGGLE_MAXIMIZE: 'app:window-toggle-maximize',
     WINDOW_CLOSE: 'app:window-close',
     WINDOW_IS_MAXIMIZED: 'app:window-is-maximized',
-    WINDOW_MAXIMIZED_CHANGED: 'app:window-maximized-changed'
+    WINDOW_MAXIMIZED_CHANGED: 'app:window-maximized-changed',
+    WINDOW_SET_LAYOUT: 'app:window-set-layout'
   },
   SYSTEM: {
     GET_INFO: 'system:get-info',
@@ -133,7 +134,8 @@ export const IPC_CHANNELS = {
     REFRESH: 'auth:refresh',
     HAS_PERMISSION: 'auth:has-permission',
     GET_SUBSCRIPTION: 'auth:get-subscription',
-    SESSION_CHANGED: 'auth:session-changed'
+    SESSION_CHANGED: 'auth:session-changed',
+    OPEN_WINDOW: 'auth:open-window'
   }
 } as const
 
@@ -141,5 +143,24 @@ export const WINDOW_DEFAULTS = {
   WIDTH: 1200,
   HEIGHT: 800,
   MIN_WIDTH: 900,
-  MIN_HEIGHT: 600
+  MIN_HEIGHT: 600,
+  /** Native pixel size of onboarding.png */
+  ONBOARDING_PIXEL_WIDTH: 1024,
+  ONBOARDING_PIXEL_HEIGHT: 572,
+  /** 1280 × round(1280 * 572 / 1024) */
+  ONBOARDING_WIDTH: 1280,
+  ONBOARDING_HEIGHT: 715,
+  ONBOARDING_MIN_WIDTH: 1100,
+  ONBOARDING_MIN_HEIGHT: 615,
+  /** Native pixel size of auth.png */
+  AUTH_PIXEL_WIDTH: 1024,
+  AUTH_PIXEL_HEIGHT: 572,
+  /** 1280 × round(1280 * 572 / 1024) */
+  AUTH_WIDTH: 1280,
+  AUTH_HEIGHT: 715,
+  AUTH_MIN_WIDTH: 1100,
+  AUTH_MIN_HEIGHT: 615
 } as const
+
+export type WindowLayout = 'onboarding' | 'app'
+export type AuthWindowMode = 'login' | 'register'

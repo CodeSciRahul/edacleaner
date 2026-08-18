@@ -1,7 +1,7 @@
 import { ipcMain, dialog, BrowserWindow, type OpenDialogOptions, type SaveDialogOptions } from 'electron'
 import { readFile, writeFile, access } from 'fs/promises'
 import { constants } from 'fs'
-import { IPC_CHANNELS } from '@shared/constants'
+import { IPC_CHANNELS, type AuthWindowMode } from '@shared/constants'
 import type { IpcResponse } from '@shared/interfaces'
 import {
   appService,
@@ -30,6 +30,7 @@ import {
   entitlementService
 } from '@main/services'
 import { toPublicQueueItem } from '@main/services/offline/security/sanitize-headers'
+import { windowManager } from '@main/managers'
 import type { ApiHttpMethod, ApiRequestConfig } from '@shared/interfaces'
 import type {
   BoostOptions,
@@ -86,7 +87,7 @@ export function registerAppIpc(): void {
       window.setFullScreen(false)
     } else if (window.isMaximized()) {
       window.unmaximize()
-    } else {
+    } else if (window.isMaximizable()) {
       window.maximize()
     }
     return success(null)
@@ -99,6 +100,17 @@ export function registerAppIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.APP.WINDOW_IS_MAXIMIZED, (event) => {
     return success(Boolean(senderWindow(event)?.isMaximized()))
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_SET_LAYOUT, (event, raw?: unknown) => {
+    const layout = raw === 'onboarding' ? 'onboarding' : raw === 'app' ? 'app' : null
+    if (!layout) {
+      return failure('layout must be onboarding or app')
+    }
+    const window = senderWindow(event)
+    if (!window) return success(null)
+    windowManager.applyLayout(window, layout)
+    return success({ layout })
   })
 }
 
@@ -1010,6 +1022,21 @@ export function registerAuthIpc(): void {
       })
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Get subscription failed')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.OPEN_WINDOW, (event, raw?: unknown) => {
+    try {
+      const mode: AuthWindowMode = raw === 'register' ? 'register' : 'login'
+      const sender = senderWindow(event)
+      if (windowManager.isAuthWindow(sender)) {
+        sender?.focus()
+        return success({ opened: true, mode })
+      }
+      windowManager.createAuthWindow(mode)
+      return success({ opened: true, mode })
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to open sign-in window')
     }
   })
 }

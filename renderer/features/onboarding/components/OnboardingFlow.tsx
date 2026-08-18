@@ -1,15 +1,14 @@
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { OnboardingShell } from '@/features/onboarding/components/OnboardingShell'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding-store'
 import { PlansModal } from '@/features/subscription/components/PlansModal'
-import type { AuthCredentials, AuthSessionSnapshot } from '@/services/auth-service'
+import { authService } from '@/services/auth-service'
+import type { AuthSessionSnapshot } from '@/services/auth-service'
 import { useTranslation } from '@/i18n/useTranslation'
 
 interface OnboardingFlowProps {
   authenticated: boolean
   session: AuthSessionSnapshot | null
-  onLogin: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
-  onRegister: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
 }
 
 function planLabel(session: AuthSessionSnapshot | null, fallback: string): string {
@@ -20,9 +19,7 @@ function planLabel(session: AuthSessionSnapshot | null, fallback: string): strin
 
 export function OnboardingFlow({
   authenticated,
-  session,
-  onLogin,
-  onRegister
+  session
 }: OnboardingFlowProps): React.ReactElement {
   const { t } = useTranslation()
   const titleId = useId()
@@ -37,17 +34,22 @@ export function OnboardingFlow({
   const openPlans = useOnboardingStore((s) => s.openPlans)
   const closePlans = useOnboardingStore((s) => s.closePlans)
   const complete = useOnboardingStore((s) => s.complete)
+  const wasAuthenticated = useRef(authenticated)
 
   useEffect(() => {
-    if (authenticated && step === 'account') {
-      if (authIntent === 'purchase') {
-        setStep('hero')
-        openPlans()
-        return
-      }
-      setStep('ready')
+    if (!authenticated) {
+      wasAuthenticated.current = false
+      return
     }
-  }, [authenticated, authIntent, openPlans, setStep, step])
+    if (wasAuthenticated.current) return
+    wasAuthenticated.current = true
+    if (authIntent === 'purchase') {
+      setStep('hero')
+      openPlans()
+      return
+    }
+    setStep('ready')
+  }, [authenticated, authIntent, openPlans, setStep])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
@@ -75,13 +77,13 @@ export function OnboardingFlow({
     return () => window.removeEventListener('keydown', onKey)
   }, [back, closePlans, plansOpen, step])
 
-  function handleAuthenticated(_next: AuthSessionSnapshot): void {
-    if (authIntent === 'purchase') {
-      setStep('hero')
-      openPlans()
-      return
-    }
-    setStep('ready')
+  function handleActivate(): void {
+    startActivate()
+    void authService.openWindow('login')
+  }
+
+  function handleBuyLicense(): void {
+    startPurchase()
   }
 
   return (
@@ -90,16 +92,12 @@ export function OnboardingFlow({
         step={step}
         titleId={titleId}
         authenticated={authenticated}
-        authIntent={authIntent}
         planLabel={planLabel(session, t('plans.price.free'))}
-        onActivate={startActivate}
-        onBuyLicense={startPurchase}
+        onActivate={handleActivate}
+        onBuyLicense={handleBuyLicense}
         onContinueAuthenticated={() => setStep('ready')}
         onBack={back}
         onFinish={complete}
-        onLogin={onLogin}
-        onRegister={onRegister}
-        onAuthenticated={handleAuthenticated}
       />
 
       <PlansModal
@@ -107,6 +105,7 @@ export function OnboardingFlow({
         onClose={closePlans}
         onUnauthorized={() => {
           beginAccount('purchase')
+          void authService.openWindow('register')
         }}
         onSubscriptionUpdated={() => {
           closePlans()

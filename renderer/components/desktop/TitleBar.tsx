@@ -8,7 +8,7 @@ import { useWindowControls } from '@/hooks/useWindowControls'
 
 interface TitleBarProps {
   /** `app` aligns the brand with the sidebar column. */
-  variant?: 'app' | 'simple'
+  variant?: 'app' | 'simple' | 'overlay'
   accessory?: React.ReactNode
 }
 
@@ -25,6 +25,19 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
   const collapsed = useUiStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
   const { toggleMaximize } = useWindowControls()
+
+  if (variant === 'overlay') {
+    return (
+      <header className="flex h-titlebar shrink-0 select-none bg-gradient-to-b from-white/35 to-transparent">
+        <div
+          className="app-drag flex min-w-0 flex-1 items-center px-4"
+        >
+          {accessory ? <div className="app-no-drag min-w-0">{accessory}</div> : null}
+        </div>
+        <WindowControls showMaximize={false} />
+      </header>
+    )
+  }
 
   if (variant === 'simple') {
     return (

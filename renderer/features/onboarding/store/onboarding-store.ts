@@ -23,9 +23,10 @@ function readPersisted(): PersistedOnboarding {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return { completed: false, step: 'hero' }
     const parsed = JSON.parse(raw) as Partial<PersistedOnboarding>
+    const step = parsed.completed ? 'hero' : normalizeStep(parsed.step)
     return {
       completed: parsed.completed === true,
-      step: parsed.completed ? 'hero' : normalizeStep(parsed.step)
+      step: step === 'account' ? 'hero' : step
     }
   } catch {
     return { completed: false, step: 'hero' }
@@ -78,12 +79,11 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   },
 
   beginAccount: (intent) => {
-    writePersisted(get().completed, 'account')
-    set({ step: 'account', authIntent: intent, plansOpen: false })
+    set({ authIntent: intent, plansOpen: false })
   },
 
   startActivate: () => {
-    get().beginAccount('activate')
+    set({ authIntent: 'activate', plansOpen: false })
   },
 
   startPurchase: () => {

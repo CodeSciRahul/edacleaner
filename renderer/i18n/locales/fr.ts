@@ -77,6 +77,13 @@ export const fr: Record<TranslationKey, string> = {
   'auth.error.conflict':
     'Un compte existe déjà avec cet e-mail. Essayez de vous connecter.',
   'auth.error.generic': 'Une erreur s’est produite. Veuillez réessayer.',
+  'auth.window.loginHeading': 'Connexion à edaCleaner',
+  'auth.window.registerHeading': 'Créer un compte edaCleaner',
+  'auth.window.productLine': 'Optimisation PC',
+  'auth.window.emailPlaceholder': 'Nom d’utilisateur ou e-mail',
+  'auth.window.forgotPassword': 'Mot de passe oublié ?',
+  'auth.window.forgotPasswordHint':
+    'La réinitialisation du mot de passe n’est pas encore disponible dans l’application. Utilisez le mot de passe de ce compte, ou créez-en un nouveau.',
 
   'onboarding.progress': 'Étape {{current}} sur {{total}}',
   'onboarding.progressNav': 'Progression de la configuration',

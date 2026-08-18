@@ -2,13 +2,35 @@ import { useEffect } from 'react'
 import { AppProviders } from '@/providers/AppProviders'
 import { AppRouter } from '@/routes/AppRouter'
 import { AuthBootScreen } from '@/features/auth/components/AuthGate'
+import { AuthWindowPage } from '@/features/auth/components/AuthWindowPage'
+import { isAuthWindowHash, parseAuthWindowMode } from '@/features/auth/lib/auth-window'
 import { OnboardingFlow } from '@/features/onboarding/components/OnboardingFlow'
 import { WindowFrame } from '@/components/desktop/WindowFrame'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding-store'
 import { useAuthSession } from '@/hooks/useAuthSession'
+import { electronService } from '@/services/electron-service'
+
+function AuthWindowApp(): React.ReactElement {
+  const { status, login, register } = useAuthSession()
+  const defaultMode = parseAuthWindowMode()
+
+  if (status === 'loading') {
+    return (
+      <WindowFrame variant="overlay">
+        <AuthBootScreen />
+      </WindowFrame>
+    )
+  }
+
+  return (
+    <WindowFrame variant="overlay">
+      <AuthWindowPage onLogin={login} onRegister={register} defaultMode={defaultMode} />
+    </WindowFrame>
+  )
+}
 
 function AuthenticatedApp(): React.ReactElement {
-  const { status, session, login, register } = useAuthSession()
+  const { status, session } = useAuthSession()
   const completed = useOnboardingStore((s) => s.completed)
   const flowActive = useOnboardingStore((s) => s.flowActive)
   const markFlowActive = useOnboardingStore((s) => s.markFlowActive)
@@ -24,6 +46,14 @@ function AuthenticatedApp(): React.ReactElement {
     }
   }, [flowActive, markFlowActive, skipForExistingSession, status])
 
+  const showOnboarding =
+    status === 'unauthenticated' || (status === 'authenticated' && flowActive && !completed)
+
+  useEffect(() => {
+    if (status === 'loading') return
+    void electronService.app().setWindowLayout(showOnboarding ? 'onboarding' : 'app')
+  }, [showOnboarding, status])
+
   if (status === 'loading') {
     return (
       <WindowFrame variant="simple">
@@ -32,18 +62,10 @@ function AuthenticatedApp(): React.ReactElement {
     )
   }
 
-  const showOnboarding =
-    status === 'unauthenticated' || (status === 'authenticated' && flowActive && !completed)
-
   if (showOnboarding) {
     return (
-      <WindowFrame variant="simple">
-        <OnboardingFlow
-          authenticated={status === 'authenticated'}
-          session={session}
-          onLogin={login}
-          onRegister={register}
-        />
+      <WindowFrame variant="overlay">
+        <OnboardingFlow authenticated={status === 'authenticated'} session={session} />
       </WindowFrame>
     )
   }
@@ -58,7 +80,7 @@ function AuthenticatedApp(): React.ReactElement {
 export function App(): React.ReactElement {
   return (
     <AppProviders>
-      <AuthenticatedApp />
+      {isAuthWindowHash() ? <AuthWindowApp /> : <AuthenticatedApp />}
     </AppProviders>
   )
 }

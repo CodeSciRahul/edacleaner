@@ -77,6 +77,13 @@ export const de: Record<TranslationKey, string> = {
   'auth.error.conflict':
     'Ein Konto mit dieser E-Mail existiert bereits. Bitte melden Sie sich an.',
   'auth.error.generic': 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
+  'auth.window.loginHeading': 'Bei edaCleaner anmelden',
+  'auth.window.registerHeading': 'edaCleaner-Konto erstellen',
+  'auth.window.productLine': 'PC-Optimierung',
+  'auth.window.emailPlaceholder': 'Benutzername oder E-Mail',
+  'auth.window.forgotPassword': 'Passwort vergessen?',
+  'auth.window.forgotPasswordHint':
+    'Passwortzurücksetzung ist in der Desktop-App noch nicht verfügbar. Verwenden Sie das Passwort dieses Kontos oder erstellen Sie ein neues.',
 
   'onboarding.progress': 'Schritt {{current}} von {{total}}',
   'onboarding.progressNav': 'Einrichtungsfortschritt',
