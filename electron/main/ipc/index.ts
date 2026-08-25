@@ -921,9 +921,12 @@ export function registerSyncIpc(): void {
   })
 }
 
-function validateAuthCredentials(input: unknown): {
+function validateAuthCredentials(
+  input: unknown,
+  options: { passwordRequired: boolean }
+): {
   email: string
-  password: string
+  password?: string
   name?: string
 } {
   if (input == null || typeof input !== 'object') {
@@ -931,10 +934,11 @@ function validateAuthCredentials(input: unknown): {
   }
   const raw = input as Record<string, unknown>
   const email = assertString(raw.email, 'email')
-  const password = assertString(raw.password, 'password')
-  const result: { email: string; password: string; name?: string } = {
-    email,
-    password
+  const result: { email: string; password?: string; name?: string } = { email }
+  if (options.passwordRequired) {
+    result.password = assertString(raw.password, 'password')
+  } else if (typeof raw.password === 'string' && raw.password) {
+    result.password = raw.password
   }
   if (typeof raw.name === 'string' && raw.name.trim()) {
     result.name = raw.name.trim()
@@ -945,7 +949,7 @@ function validateAuthCredentials(input: unknown): {
 export function registerAuthIpc(): void {
   ipcMain.handle(IPC_CHANNELS.AUTH.LOGIN, async (_event, raw?: unknown) => {
     try {
-      const credentials = validateAuthCredentials(raw)
+      const credentials = validateAuthCredentials(raw, { passwordRequired: false })
       const session = await authSessionService.login(credentials)
       return success(session)
     } catch (err) {
@@ -955,11 +959,46 @@ export function registerAuthIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.AUTH.REGISTER, async (_event, raw?: unknown) => {
     try {
-      const credentials = validateAuthCredentials(raw)
+      const credentials = validateAuthCredentials(raw, { passwordRequired: true })
       const session = await authSessionService.register(credentials)
       return success(session)
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Register failed')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.REQUEST_OTP, async (_event, raw?: unknown) => {
+    try {
+      if (raw == null || typeof raw !== 'object') throw new Error('Invalid email')
+      const email = assertString((raw as Record<string, unknown>).email, 'email')
+      const data = await authSessionService.requestLoginOtp(email)
+      return success(data)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Could not send code')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.VERIFY_OTP, async (_event, raw?: unknown) => {
+    try {
+      if (raw == null || typeof raw !== 'object') throw new Error('Invalid code')
+      const payload = raw as Record<string, unknown>
+      const email = assertString(payload.email, 'email')
+      const code = assertString(payload.code, 'code')
+      const session = await authSessionService.verifyLoginOtp(email, code)
+      return success(session)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Could not verify code')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.SET_PASSWORD, async (_event, raw?: unknown) => {
+    try {
+      if (raw == null || typeof raw !== 'object') throw new Error('Invalid password')
+      const password = assertString((raw as Record<string, unknown>).password, 'password')
+      const session = await authSessionService.setPassword(password)
+      return success(session)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Could not set password')
     }
   })
 

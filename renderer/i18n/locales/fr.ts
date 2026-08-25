@@ -43,7 +43,9 @@ export const fr: Record<TranslationKey, string> = {
   'auth.tab.login': 'Connexion',
   'auth.tab.register': 'Créer un compte',
   'auth.login.title': 'Bon retour',
-  'auth.login.description': 'Utilisez votre compte EDA Cleaner pour continuer.',
+  'auth.login.description': 'Saisissez votre e-mail pour continuer.',
+  'auth.login.passwordStep': 'Saisissez le mot de passe de ce compte.',
+  'auth.login.continue': 'Continuer',
   'auth.register.title': 'Créer votre compte',
   'auth.register.description':
     'Commencez immédiatement avec l’offre Free après l’inscription.',
@@ -55,6 +57,7 @@ export const fr: Record<TranslationKey, string> = {
   'auth.placeholder.name': 'Votre nom',
   'auth.placeholder.email': 'vous@exemple.com',
   'auth.placeholder.password': 'Entrez votre mot de passe',
+  'auth.placeholder.passwordOptional': 'Mot de passe (laissez vide après un achat d’offre)',
   'auth.passwordHint': 'Utilisez au moins 8 caractères.',
   'auth.showPassword': 'Afficher le mot de passe',
   'auth.hidePassword': 'Masquer le mot de passe',
@@ -66,6 +69,8 @@ export const fr: Record<TranslationKey, string> = {
   'auth.offlineBanner':
     'Vous semblez hors ligne. Connectez-vous à Internet pour la première connexion ou création de compte.',
   'auth.error.required': 'L’e-mail et le mot de passe sont requis.',
+  'auth.error.emailRequired': 'L’e-mail est requis.',
+  'auth.error.passwordRequired': 'Le mot de passe est requis.',
   'auth.error.passwordLength': 'Le mot de passe doit contenir au moins 8 caractères.',
   'auth.error.offlineFirst':
     'Une connexion Internet est requise pour la première connexion ou création de compte.',
@@ -74,9 +79,22 @@ export const fr: Record<TranslationKey, string> = {
   'auth.error.network':
     'Erreur réseau. Vérifiez que le serveur est accessible et réessayez.',
   'auth.error.invalid': 'E-mail ou mot de passe invalide.',
+  'auth.error.setPasswordAfterPurchase':
+    'Saisissez l’e-mail du paiement. Nous enverrons un code de connexion.',
   'auth.error.conflict':
     'Un compte existe déjà avec cet e-mail. Essayez de vous connecter.',
   'auth.error.generic': 'Une erreur s’est produite. Veuillez réessayer.',
+  'auth.otp.heading': 'Vérifiez votre e-mail',
+  'auth.otp.body':
+    'Nous avons envoyé un code à 6 chiffres à l’e-mail du paiement. Saisissez-le pour vous connecter, puis définissez un mot de passe plus tard dans Paramètres.',
+  'auth.otp.placeholder': 'Code à 6 chiffres',
+  'auth.otp.submit': 'Vérifier le code',
+  'auth.otp.resend': 'Renvoyer le code',
+  'auth.otp.changeEmail': 'Utiliser un autre e-mail',
+  'auth.otp.sent': 'Un code de vérification a été envoyé à votre e-mail.',
+  'auth.otp.invalid': 'Saisissez le code à 6 chiffres reçu par e-mail.',
+  'auth.otp.expired': 'Ce code a expiré. Demandez-en un nouveau.',
+  'auth.otp.wait': 'Attendez un instant avant de demander un autre code.',
   'auth.window.loginHeading': 'Connexion à edaCleaner',
   'auth.window.registerHeading': 'Créer un compte edaCleaner',
   'auth.window.productLine': 'Optimisation PC',
@@ -122,25 +140,25 @@ export const fr: Record<TranslationKey, string> = {
   'onboarding.features.smartScan': 'Bilan de santé en un clic : fichiers inutiles, stockage et performances.',
   'onboarding.features.cleanup': 'Supprimez temporaires, caches et encombrement après un aperçu clair.',
   'onboarding.features.performance': 'Gérez le démarrage, les applications en arrière-plan et la charge système.',
-  'onboarding.license.eyebrow': 'Licence',
-  'onboarding.license.title': 'Activez ou achetez une licence',
+  'onboarding.license.eyebrow': 'Offre',
+  'onboarding.license.title': 'Activez ou achetez une offre',
   'onboarding.license.body':
-    'Connectez-vous pour activer votre compte EDA Cleaner et votre licence, ou achetez une licence pour comparer les offres Free, Pro et Premium.',
+    'Connectez-vous pour activer votre compte EDA Cleaner, ou achetez une offre pour comparer Free, Pro et Premium.',
   'onboarding.license.accountNote':
-    'La connexion au compte est distincte de l’achat. Les nouveaux comptes démarrent sur Free. Vous pouvez mettre à niveau à tout moment.',
+    'Vous pouvez acheter une offre sans vous connecter. Après le paiement, créez un compte avec le même e-mail pour l’activer sur ce PC.',
   'onboarding.license.activate': 'Activer',
-  'onboarding.license.activateHint': 'J’ai une clé de licence',
-  'onboarding.license.buy': 'Acheter une licence',
-  'onboarding.license.buyHint': 'Accès complet maintenant',
+  'onboarding.license.activateHint': 'J’ai déjà un compte',
+  'onboarding.license.buy': 'Acheter une offre',
+  'onboarding.license.buyHint': 'Choisir Free, Pro ou Premium',
   'onboarding.account.activateEyebrow': 'Activer',
   'onboarding.account.activateTitle': 'Connectez-vous pour activer',
   'onboarding.account.activateBody':
-    'Créez un compte ou connectez-vous. Cela active EDA Cleaner sur ce PC. L’achat d’une licence payante est une étape séparée.',
-  'onboarding.account.purchaseEyebrow': 'Acheter une licence',
-  'onboarding.account.purchaseTitle': 'Compte requis pour l’achat',
+    'Créez un compte ou connectez-vous. Cela active EDA Cleaner sur ce PC. L’achat d’une offre payante est une étape séparée.',
+  'onboarding.account.purchaseEyebrow': 'Acheter une offre',
+  'onboarding.account.purchaseTitle': 'Connectez-vous après l’achat',
   'onboarding.account.purchaseBody':
-    'Créez ou connectez-vous à votre compte EDA Cleaner. Ensuite, vous pourrez consulter les offres et finaliser l’achat.',
-  'onboarding.account.backToLicense': 'Retour aux options de licence',
+    'Connectez-vous avec le même e-mail que lors du paiement. Nous envoyons un code à usage unique pour débloquer votre offre. Vous pourrez définir un mot de passe dans Paramètres.',
+  'onboarding.account.backToLicense': 'Retour aux options d’offre',
   'onboarding.ready.title': 'Vous êtes prêt',
   'onboarding.ready.body':
     'Votre compte est actif sur ce PC. Ouvrez EDA Cleaner pour analyser, nettoyer et optimiser.',
@@ -161,7 +179,7 @@ export const fr: Record<TranslationKey, string> = {
   'onboarding.preview.smartScan': 'Contrôle guidé des fichiers inutiles, du stockage et de la vitesse.',
   'onboarding.preview.monitor': 'Graphiques CPU, RAM et disque en direct.',
   'onboarding.preview.storageHint': 'Voyez où va l’espace disque — puis libérez-le à votre rythme.',
-  'onboarding.preview.license': 'Activation sécurisée du compte et de la licence',
+  'onboarding.preview.license': 'Activation sécurisée du compte et de l’offre',
 
   'sidebar.tagline': 'Optimiseur PC',
   'sidebar.collapse': 'Réduire la barre latérale',
@@ -192,6 +210,8 @@ export const fr: Record<TranslationKey, string> = {
   'plans.title': 'Choisissez votre offre',
   'plans.description':
     'Comparez Free, Pro et Premium. Les paiements s’ouvrent en toute sécurité dans votre navigateur.',
+  'plans.guestNotice':
+    'Payez dans le navigateur avec votre e-mail. Après le paiement, connectez-vous avec cet e-mail — nous envoyons un code, puis vous définissez un mot de passe dans Paramètres.',
   'plans.loading': 'Chargement des offres…',
   'plans.recommended': 'Recommandé',
   'plans.currentBadge': 'Actuelle',
@@ -215,6 +235,8 @@ export const fr: Record<TranslationKey, string> = {
     'Une connexion Internet est requise pour acheter ou modifier un abonnement. Votre offre en cache reste active hors ligne.',
   'plans.feedback.checkoutOpened':
     'Le paiement s’est ouvert dans votre navigateur. Revenez ici après le paiement — votre offre se mettra à jour automatiquement.',
+  'plans.feedback.guestCheckoutOpened':
+    'Le paiement s’est ouvert dans votre navigateur. Utilisez l’e-mail de cette offre. Après le paiement, connectez-vous avec cet e-mail et saisissez le code reçu.',
   'plans.feedback.updated': 'Votre abonnement est à jour.',
   'plans.feedback.downgradeScheduled':
     'Rétrogradation planifiée. Votre offre actuelle reste active jusqu’à la fin de la période.',
@@ -413,6 +435,12 @@ export const fr: Record<TranslationKey, string> = {
     'Vos jetons de session locaux seront effacés. L’historique de nettoyage sur ce PC est conservé.',
   'settings.account.logoutError':
     'Impossible de se déconnecter pour le moment. Veuillez réessayer.',
+  'settings.account.setPasswordTitle': 'Définir un mot de passe',
+  'settings.account.setPasswordBody':
+    'Vous vous êtes connecté avec un code e-mail après l’achat. Ajoutez un mot de passe pour les prochaines connexions.',
+  'settings.account.setPassword': 'Enregistrer le mot de passe',
+  'settings.account.passwordSet': 'Mot de passe enregistré. Vous pourrez l’utiliser à la prochaine connexion.',
+  'settings.account.passwordSetError': 'Impossible d’enregistrer le mot de passe. Réessayez.',
 
   'settings.about.title': 'À propos',
   'settings.about.description':

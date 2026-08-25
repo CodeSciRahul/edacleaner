@@ -39,6 +39,7 @@ interface ServerAuthPayload {
     email?: string
     name?: string
     trialUsed?: boolean
+    mustSetPassword?: boolean
   }
   subscription?: Partial<CachedSubscription> & {
     currentPlan?: string
@@ -52,6 +53,7 @@ interface ServerMePayload {
   email?: string
   name?: string
   trialUsed?: boolean
+  mustSetPassword?: boolean
   subscription?: Partial<CachedSubscription> & {
     currentPlan?: string
     status?: string
@@ -155,12 +157,71 @@ export class AuthSessionService {
   }
 
   async login(credentials: AuthCredentials): Promise<AuthSessionSnapshot> {
-    this.assertCredentials(credentials)
-    const response = await apiClient.post<ServerAuthPayload>(
-      '/auth/login',
+    if (!credentials.email?.trim()) {
+      throw new Error('Email is required')
+    }
+    try {
+      const response = await apiClient.post<
+        ServerAuthPayload & { requiresOtp?: boolean; requiresPassword?: boolean }
+      >(
+        '/auth/login',
+        {
+          email: credentials.email.trim().toLowerCase(),
+          ...(credentials.password ? { password: credentials.password } : {})
+        },
+        {
+          skipAuth: true,
+          skipAuthRefresh: true,
+          skipOfflineQueue: true,
+          skipOfflineCache: true
+        }
+      )
+      if (this.isOtpChallenge(response.data)) {
+        throw new Error('OTP_REQUIRED')
+      }
+      if (this.isPasswordChallenge(response.data)) {
+        throw new Error('PASSWORD_REQUIRED')
+      }
+      await this.persistAuthPayload(response.data)
+    } catch (err) {
+      if (err instanceof Error && err.message === 'OTP_REQUIRED') throw err
+      if (err instanceof Error && err.message === 'PASSWORD_REQUIRED') throw err
+      if (err instanceof ApiError && /password is required/i.test(err.message)) {
+        throw new Error('PASSWORD_REQUIRED')
+      }
+      throw err
+    }
+    await this.syncSubscriptionStatus().catch((err) => {
+      log.warn('Post-login subscription sync failed — using login payload cache', {
+        error: err instanceof Error ? err.message : String(err)
+      })
+    })
+    this.emitChanged('login')
+    return this.getSession()
+  }
+
+  async requestLoginOtp(email: string): Promise<{ requiresOtp: true }> {
+    const trimmed = email.trim().toLowerCase()
+    if (!trimmed) throw new Error('Email is required')
+    await apiClient.post(
+      '/auth/otp/request',
+      { email: trimmed },
       {
-        email: credentials.email.trim().toLowerCase(),
-        password: credentials.password
+        skipAuth: true,
+        skipAuthRefresh: true,
+        skipOfflineQueue: true,
+        skipOfflineCache: true
+      }
+    )
+    return { requiresOtp: true }
+  }
+
+  async verifyLoginOtp(email: string, code: string): Promise<AuthSessionSnapshot> {
+    const response = await apiClient.post<ServerAuthPayload>(
+      '/auth/otp/verify',
+      {
+        email: email.trim().toLowerCase(),
+        code: code.trim()
       },
       {
         skipAuth: true,
@@ -171,7 +232,7 @@ export class AuthSessionService {
     )
     await this.persistAuthPayload(response.data)
     await this.syncSubscriptionStatus().catch((err) => {
-      log.warn('Post-login subscription sync failed — using login payload cache', {
+      log.warn('Post-OTP subscription sync failed — using login payload cache', {
         error: err instanceof Error ? err.message : String(err)
       })
     })
@@ -179,11 +240,35 @@ export class AuthSessionService {
     return this.getSession()
   }
 
+  async setPassword(password: string): Promise<AuthSessionSnapshot> {
+    if (!password || password.length < 8) {
+      throw new Error('Password must be at least 8 characters')
+    }
+    await apiClient.post(
+      '/auth/set-password',
+      { password },
+      {
+        skipOfflineQueue: true,
+        skipOfflineCache: true
+      }
+    )
+    const profile = this.getProfile()
+    if (profile) {
+      localStorageService.set(
+        KEY_PROFILE,
+        { ...profile, mustSetPassword: false },
+        NS
+      )
+    }
+    this.emitChanged('set-password')
+    return this.getSession()
+  }
+
   async register(credentials: AuthCredentials): Promise<AuthSessionSnapshot> {
     this.assertCredentials(credentials)
     const body: Record<string, string> = {
       email: credentials.email.trim().toLowerCase(),
-      password: credentials.password
+      password: credentials.password ?? ''
     }
     if (credentials.name?.trim()) body.name = credentials.name.trim()
 
@@ -447,7 +532,8 @@ export class AuthSessionService {
         id: payload.user.id,
         email: payload.user.email,
         name: typeof payload.user.name === 'string' ? payload.user.name : '',
-        trialUsed: Boolean(payload.user.trialUsed)
+        trialUsed: Boolean(payload.user.trialUsed),
+        mustSetPassword: Boolean(payload.user.mustSetPassword)
       }
       localStorageService.set(KEY_PROFILE, profile, NS)
     } else if (!options.mergeProfile && !this.getProfile()) {
@@ -516,7 +602,8 @@ export class AuthSessionService {
         id: data.id,
         email: data.email,
         name: typeof data.name === 'string' ? data.name : '',
-        trialUsed: Boolean(data.trialUsed)
+        trialUsed: Boolean(data.trialUsed),
+        mustSetPassword: Boolean(data.mustSetPassword)
       }
       localStorageService.set(KEY_PROFILE, profile, NS)
     }
@@ -593,6 +680,28 @@ export class AuthSessionService {
       if (key) permissions.add(`feature:${key}`)
     }
     return [...permissions]
+  }
+
+  private isOtpChallenge(
+    data: ServerAuthPayload & { requiresOtp?: boolean; requiresPassword?: boolean }
+  ): boolean {
+    return (
+      data.requiresOtp === true &&
+      !data.accessToken &&
+      !data.token &&
+      !data.refreshToken
+    )
+  }
+
+  private isPasswordChallenge(
+    data: ServerAuthPayload & { requiresOtp?: boolean; requiresPassword?: boolean }
+  ): boolean {
+    return (
+      data.requiresPassword === true &&
+      !data.accessToken &&
+      !data.token &&
+      !data.refreshToken
+    )
   }
 
   private assertCredentials(credentials: AuthCredentials): void {

@@ -244,6 +244,20 @@ export const subscriptionService = {
     return asChangePlanResult(response.data)
   },
 
+  async guestCheckout(planId: string): Promise<ChangePlanResult> {
+    const response = await apiClient.post<unknown>(
+      '/subscription/guest-checkout',
+      { planId },
+      {
+        skipAuth: true,
+        skipAuthRefresh: true,
+        skipOfflineQueue: true,
+        skipOfflineCache: true
+      }
+    )
+    return asChangePlanResult(response.data)
+  },
+
   async openCheckoutUrl(url: string): Promise<void> {
     const trimmed = url.trim()
     if (!trimmed.startsWith('https://') && !trimmed.startsWith('http://')) {

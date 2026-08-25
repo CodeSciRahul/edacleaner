@@ -221,6 +221,9 @@ export interface SyncApi {
 export interface AuthApi {
   login: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
   register: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
+  requestLoginOtp: (email: string) => Promise<{ requiresOtp: true }>
+  verifyLoginOtp: (email: string, code: string) => Promise<AuthSessionSnapshot>
+  setPassword: (password: string) => Promise<AuthSessionSnapshot>
   logout: () => Promise<AuthSessionSnapshot>
   getSession: () => Promise<AuthSessionSnapshot>
   sync: (reason?: string) => Promise<AuthSessionSnapshot>

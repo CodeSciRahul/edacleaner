@@ -103,9 +103,10 @@ export function OnboardingFlow({
       <PlansModal
         open={plansOpen}
         onClose={closePlans}
-        onUnauthorized={() => {
+        onGuestCheckoutReturn={() => {
+          closePlans()
           beginAccount('purchase')
-          void authService.openWindow('register')
+          void authService.openWindow('login')
         }}
         onSubscriptionUpdated={() => {
           closePlans()

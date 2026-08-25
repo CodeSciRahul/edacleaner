@@ -385,6 +385,12 @@ const authApi = {
     invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.LOGIN, credentials),
   register: (credentials: AuthCredentials) =>
     invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.REGISTER, credentials),
+  requestLoginOtp: (email: string) =>
+    invoke<{ requiresOtp: true }>(IPC_CHANNELS.AUTH.REQUEST_OTP, { email }),
+  verifyLoginOtp: (email: string, code: string) =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.VERIFY_OTP, { email, code }),
+  setPassword: (password: string) =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.SET_PASSWORD, { password }),
   logout: () => invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.LOGOUT),
   getSession: () =>
     invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.GET_SESSION),

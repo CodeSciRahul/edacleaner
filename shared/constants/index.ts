@@ -128,6 +128,9 @@ export const IPC_CHANNELS = {
   AUTH: {
     LOGIN: 'auth:login',
     REGISTER: 'auth:register',
+    REQUEST_OTP: 'auth:request-otp',
+    VERIFY_OTP: 'auth:verify-otp',
+    SET_PASSWORD: 'auth:set-password',
     LOGOUT: 'auth:logout',
     GET_SESSION: 'auth:get-session',
     SYNC: 'auth:sync',

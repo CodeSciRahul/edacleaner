@@ -40,7 +40,10 @@ export const en = {
   'auth.tab.login': 'Log in',
   'auth.tab.register': 'Create account',
   'auth.login.title': 'Welcome back',
-  'auth.login.description': 'Use your EDA Cleaner account to continue.',
+  'auth.login.description': 'Enter your email to continue.',
+  'auth.login.passwordStep': 'Enter the password for this account.',
+  'auth.login.continue': 'Continue',
+  'auth.login.submit': 'Log in',
   'auth.register.title': 'Create your account',
   'auth.register.description': 'Get started on the Free plan instantly after signup.',
   'auth.register.freePlan':
@@ -51,10 +54,10 @@ export const en = {
   'auth.placeholder.name': 'Your name',
   'auth.placeholder.email': 'you@example.com',
   'auth.placeholder.password': 'Enter your password',
+  'auth.placeholder.passwordOptional': 'Password (leave blank after a plan purchase)',
   'auth.passwordHint': 'Use at least 8 characters.',
   'auth.showPassword': 'Show password',
   'auth.hidePassword': 'Hide password',
-  'auth.login.submit': 'Log in',
   'auth.register.submit': 'Create account',
   'auth.submitting': 'Please wait…',
   'auth.requiredNotice':
@@ -62,14 +65,29 @@ export const en = {
   'auth.offlineBanner':
     'You appear to be offline. Connect to the internet for your first sign-in or account creation.',
   'auth.error.required': 'Email and password are required.',
+  'auth.error.emailRequired': 'Email is required.',
+  'auth.error.passwordRequired': 'Password is required.',
   'auth.error.passwordLength': 'Password must be at least 8 characters.',
   'auth.error.offlineFirst':
     'An internet connection is required for the first login or account creation.',
   'auth.error.offline': 'Unable to reach the server. Check your connection and try again.',
   'auth.error.network': 'Network error. Make sure the server is reachable and try again.',
   'auth.error.invalid': 'Invalid email or password.',
+  'auth.error.setPasswordAfterPurchase':
+    'Enter the same checkout email. We will send a login code to your inbox.',
   'auth.error.conflict': 'An account with this email already exists. Try logging in instead.',
   'auth.error.generic': 'Something went wrong. Please try again.',
+  'auth.otp.heading': 'Check your email',
+  'auth.otp.body':
+    'We sent a 6-digit code to the email you used at checkout. Enter it to sign in, then set a password later in Settings.',
+  'auth.otp.placeholder': '6-digit code',
+  'auth.otp.submit': 'Verify code',
+  'auth.otp.resend': 'Resend code',
+  'auth.otp.changeEmail': 'Use a different email',
+  'auth.otp.sent': 'A verification code was sent to your email.',
+  'auth.otp.invalid': 'Enter the 6-digit code from your email.',
+  'auth.otp.expired': 'That code expired. Request a new one.',
+  'auth.otp.wait': 'Wait a moment before requesting another code.',
   'auth.window.loginHeading': 'Log in to edaCleaner',
   'auth.window.registerHeading': 'Create an edaCleaner account',
   'auth.window.productLine': 'PC Optimization',
@@ -115,25 +133,25 @@ export const en = {
   'onboarding.features.smartScan': 'One-click health check across junk, storage, and performance.',
   'onboarding.features.cleanup': 'Remove temp files, caches, and clutter with a clear review step.',
   'onboarding.features.performance': 'Manage startup items, background apps, and live system load.',
-  'onboarding.license.eyebrow': 'License',
-  'onboarding.license.title': 'Activate or buy a license',
+  'onboarding.license.eyebrow': 'Plan',
+  'onboarding.license.title': 'Activate or purchase a plan',
   'onboarding.license.body':
-    'Sign in to activate your EDA Cleaner account and existing license, or buy a license to compare Free, Pro, and Premium plans.',
+    'Sign in to activate your EDA Cleaner account, or purchase a plan to compare Free, Pro, and Premium.',
   'onboarding.license.accountNote':
-    'Account sign-in is separate from purchasing. New accounts start on the Free plan. You can upgrade at any time.',
+    'You can purchase a plan without signing in first. After checkout, create an account with the same email to unlock it on this PC.',
   'onboarding.license.activate': 'Activate',
-  'onboarding.license.activateHint': 'I have a license key',
-  'onboarding.license.buy': 'Buy License',
-  'onboarding.license.buyHint': 'Get full access now',
+  'onboarding.license.activateHint': 'I already have an account',
+  'onboarding.license.buy': 'Purchase Plan',
+  'onboarding.license.buyHint': 'Choose Free, Pro, or Premium',
   'onboarding.account.activateEyebrow': 'Activate',
   'onboarding.account.activateTitle': 'Sign in to activate',
   'onboarding.account.activateBody':
-    'Create an account or log in. This activates EDA Cleaner on this PC. Buying a paid license is a separate step.',
-  'onboarding.account.purchaseEyebrow': 'Buy License',
-  'onboarding.account.purchaseTitle': 'Account required to purchase',
+    'Create an account or log in. This activates EDA Cleaner on this PC. You can purchase a paid plan separately.',
+  'onboarding.account.purchaseEyebrow': 'Purchase Plan',
+  'onboarding.account.purchaseTitle': 'Sign in after your purchase',
   'onboarding.account.purchaseBody':
-    'Create or sign in to your EDA Cleaner account first. After that, you can review plans and complete purchase.',
-  'onboarding.account.backToLicense': 'Back to license options',
+    'Log in with the same email you used at checkout. We send a one-time code so you can unlock your plan, then set a password in Settings.',
+  'onboarding.account.backToLicense': 'Back to plan options',
   'onboarding.ready.title': 'You are ready',
   'onboarding.ready.body':
     'Your account is active on this PC. Open EDA Cleaner to scan, clean, and optimize.',
@@ -154,7 +172,7 @@ export const en = {
   'onboarding.preview.smartScan': 'Guided check of junk, storage, and speed.',
   'onboarding.preview.monitor': 'Live CPU, RAM, and disk charts.',
   'onboarding.preview.storageHint': 'See where disk space goes — then free it on your terms.',
-  'onboarding.preview.license': 'Secure account and license activation',
+  'onboarding.preview.license': 'Secure account and plan activation',
 
   'sidebar.tagline': 'PC Optimizer',
   'sidebar.collapse': 'Collapse sidebar',
@@ -185,6 +203,8 @@ export const en = {
   'plans.title': 'Choose your plan',
   'plans.description':
     'Compare Free, Pro, and Premium. Payments open securely in your browser.',
+  'plans.guestNotice':
+    'Pay in the browser with your email. After payment, log in with that email — we send a one-time code, then you can set a password in Settings.',
   'plans.loading': 'Loading plans…',
   'plans.recommended': 'Recommended',
   'plans.currentBadge': 'Current',
@@ -208,6 +228,8 @@ export const en = {
     'An internet connection is required to purchase or change subscriptions. Your cached plan stays active offline.',
   'plans.feedback.checkoutOpened':
     'Checkout opened in your browser. Return here after payment — your plan will refresh automatically.',
+  'plans.feedback.guestCheckoutOpened':
+    'Checkout opened in your browser. Use the email you want for this plan. After payment, log in with that email and enter the code we send you.',
   'plans.feedback.updated': 'Your subscription is up to date.',
   'plans.feedback.downgradeScheduled':
     'Downgrade scheduled. Your current plan stays active until the billing period ends.',
@@ -394,6 +416,12 @@ export const en = {
   'settings.account.logoutConfirmDetail':
     'Your local session tokens will be cleared. Cached cleanup history on this PC is kept.',
   'settings.account.logoutError': 'Could not log out right now. Please try again.',
+  'settings.account.setPasswordTitle': 'Set a password',
+  'settings.account.setPasswordBody':
+    'You signed in with an email code after purchasing a plan. Add a password so you can log in without a code next time.',
+  'settings.account.setPassword': 'Save password',
+  'settings.account.passwordSet': 'Password saved. You can use it the next time you log in.',
+  'settings.account.passwordSetError': 'Could not save the password. Try again.',
 
   'settings.about.title': 'About',
   'settings.about.description':

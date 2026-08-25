@@ -12,6 +12,7 @@ interface PlansModalProps {
   onClose: () => void
   onUnauthorized?: () => void
   onSubscriptionUpdated?: () => void
+  onGuestCheckoutReturn?: () => void
 }
 
 function BillingToggle({
@@ -73,7 +74,8 @@ export function PlansModal({
   open,
   onClose,
   onUnauthorized,
-  onSubscriptionUpdated
+  onSubscriptionUpdated,
+  onGuestCheckoutReturn
 }: PlansModalProps): React.ReactElement | null {
   const { t } = useTranslation()
   const {
@@ -87,10 +89,16 @@ export function PlansModal({
     actionPlanId,
     error,
     feedback,
+    guestMode,
     online,
     reload,
     selectPlan
-  } = usePlansModal({ open, onUnauthorized, onSubscriptionUpdated })
+  } = usePlansModal({
+    open,
+    onUnauthorized,
+    onSubscriptionUpdated,
+    onGuestCheckoutReturn
+  })
 
   useEffect(() => {
     if (feedback?.type !== 'upgraded') return
@@ -140,7 +148,7 @@ export function PlansModal({
               {t('plans.title')}
             </h2>
             <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
-              {t('plans.description')}
+              {guestMode ? t('plans.guestNotice') : t('plans.description')}
             </p>
           </div>
 
@@ -177,12 +185,15 @@ export function PlansModal({
             </div>
           ) : null}
 
-          {feedback?.type === 'checkout-opened' ? (
+          {feedback?.type === 'checkout-opened' ||
+          feedback?.type === 'guest-checkout-opened' ? (
             <p
               role="status"
               className="mb-4 rounded-xl border border-primary/25 bg-primary/[0.05] px-3 py-2.5 text-xs text-foreground"
             >
-              {t('plans.feedback.checkoutOpened')}
+              {feedback.type === 'guest-checkout-opened'
+                ? t('plans.feedback.guestCheckoutOpened')
+                : t('plans.feedback.checkoutOpened')}
             </p>
           ) : null}
           {feedback?.type === 'upgraded' ? (

@@ -28,19 +28,25 @@ export function AuthForm({
   const formId = useId()
   const {
     mode,
+    step,
     name,
     setName,
     email,
     setEmail,
     password,
     setPassword,
+    otp,
+    setOtp,
     showPassword,
     setShowPassword,
     submitting,
     error,
+    notice,
     online,
     handleSubmit,
-    switchMode
+    switchMode,
+    resendOtp,
+    backToCredentials
   } = useAuthSubmit({ onLogin, onRegister, onAuthenticated, defaultMode })
 
   return (
@@ -82,10 +88,20 @@ export function AuthForm({
       >
         <div>
           <h2 className="text-[15px] font-semibold text-foreground">
-            {mode === 'login' ? t('auth.login.title') : t('auth.register.title')}
+            {step === 'otp'
+              ? t('auth.otp.heading')
+              : mode === 'login'
+                ? t('auth.login.title')
+                : t('auth.register.title')}
           </h2>
           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-            {mode === 'login' ? t('auth.login.description') : t('auth.register.description')}
+            {step === 'otp'
+              ? t('auth.otp.body')
+              : step === 'password'
+                ? t('auth.login.passwordStep')
+                : mode === 'login'
+                  ? t('auth.login.description')
+                  : t('auth.register.description')}
           </p>
         </div>
 
@@ -109,61 +125,83 @@ export function AuthForm({
           </label>
         ) : null}
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-foreground">{t('auth.field.email')}</span>
-          <div className="relative">
-            <Mail
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t('auth.placeholder.email')}
-              className="pl-9"
-              disabled={submitting}
-            />
-          </div>
-        </label>
+        {mode === 'register' || step === 'email' ? (
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-foreground">{t('auth.field.email')}</span>
+            <div className="relative">
+              <Mail
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t('auth.placeholder.email')}
+                className="pl-9"
+                disabled={submitting}
+              />
+            </div>
+          </label>
+        ) : (
+          <p className="text-xs text-muted-foreground">{email}</p>
+        )}
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-foreground">{t('auth.field.password')}</span>
-          <div className="relative">
-            <Lock
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
+        {step === 'otp' ? (
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-foreground">{t('auth.otp.placeholder')}</span>
             <Input
-              type={showPassword ? 'text' : 'password'}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('auth.placeholder.password')}
-              className="pl-9 pr-10"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder={t('auth.otp.placeholder')}
+              className="text-center tracking-[0.35em]"
               disabled={submitting}
             />
-            <button
-              type="button"
-              className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-              tabIndex={-1}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Eye className="h-4 w-4" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-          {mode === 'register' ? (
-            <p className="text-[11px] text-muted-foreground">{t('auth.passwordHint')}</p>
-          ) : null}
-        </label>
+          </label>
+        ) : null}
+
+        {mode === 'register' || step === 'password' ? (
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-foreground">{t('auth.field.password')}</span>
+            <div className="relative">
+              <Lock
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t('auth.placeholder.password')}
+                className="pl-9 pr-10"
+                disabled={submitting}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Eye className="h-4 w-4" aria-hidden="true" />
+                )}
+              </button>
+            </div>
+            {mode === 'register' ? (
+              <p className="text-[11px] text-muted-foreground">{t('auth.passwordHint')}</p>
+            ) : null}
+          </label>
+        ) : null}
 
         {mode === 'register' ? (
           <p className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-xs leading-relaxed text-muted-foreground">
@@ -180,6 +218,15 @@ export function AuthForm({
           </p>
         ) : null}
 
+        {notice && !error ? (
+          <p
+            role="status"
+            className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-xs text-muted-foreground"
+          >
+            {notice}
+          </p>
+        ) : null}
+
         {error ? (
           <p
             role="alert"
@@ -193,10 +240,46 @@ export function AuthForm({
           {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
           {submitting
             ? t('auth.submitting')
-            : mode === 'login'
-              ? t('auth.login.submit')
-              : t('auth.register.submit')}
+            : step === 'otp'
+              ? t('auth.otp.submit')
+              : mode === 'register'
+                ? t('auth.register.submit')
+                : step === 'password'
+                  ? t('auth.login.submit')
+                  : t('auth.login.continue')}
         </Button>
+        {step === 'otp' ? (
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 flex-1"
+              disabled={submitting}
+              onClick={() => void resendOtp()}
+            >
+              {t('auth.otp.resend')}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-10 flex-1"
+              disabled={submitting}
+              onClick={backToCredentials}
+            >
+              {t('auth.otp.changeEmail')}
+            </Button>
+          </div>
+        ) : step === 'password' ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-10 w-full"
+            disabled={submitting}
+            onClick={backToCredentials}
+          >
+            {t('auth.otp.changeEmail')}
+          </Button>
+        ) : null}
       </form>
     </div>
   )

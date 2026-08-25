@@ -43,7 +43,9 @@ export const de: Record<TranslationKey, string> = {
   'auth.tab.login': 'Anmelden',
   'auth.tab.register': 'Konto erstellen',
   'auth.login.title': 'Willkommen zurück',
-  'auth.login.description': 'Melden Sie sich mit Ihrem EDA-Cleaner-Konto an.',
+  'auth.login.description': 'Geben Sie Ihre E-Mail ein, um fortzufahren.',
+  'auth.login.passwordStep': 'Geben Sie das Passwort für dieses Konto ein.',
+  'auth.login.continue': 'Weiter',
   'auth.register.title': 'Konto erstellen',
   'auth.register.description':
     'Starten Sie nach der Registrierung sofort mit dem Free-Tarif.',
@@ -55,6 +57,7 @@ export const de: Record<TranslationKey, string> = {
   'auth.placeholder.name': 'Ihr Name',
   'auth.placeholder.email': 'sie@beispiel.com',
   'auth.placeholder.password': 'Passwort eingeben',
+  'auth.placeholder.passwordOptional': 'Passwort (nach Tarifkauf leer lassen)',
   'auth.passwordHint': 'Mindestens 8 Zeichen verwenden.',
   'auth.showPassword': 'Passwort anzeigen',
   'auth.hidePassword': 'Passwort verbergen',
@@ -66,6 +69,8 @@ export const de: Record<TranslationKey, string> = {
   'auth.offlineBanner':
     'Sie scheinen offline zu sein. Stellen Sie eine Internetverbindung für die erste Anmeldung oder Kontoerstellung her.',
   'auth.error.required': 'E-Mail und Passwort sind erforderlich.',
+  'auth.error.emailRequired': 'E-Mail ist erforderlich.',
+  'auth.error.passwordRequired': 'Passwort ist erforderlich.',
   'auth.error.passwordLength': 'Das Passwort muss mindestens 8 Zeichen haben.',
   'auth.error.offlineFirst':
     'Für die erste Anmeldung oder Kontoerstellung ist eine Internetverbindung erforderlich.',
@@ -74,9 +79,22 @@ export const de: Record<TranslationKey, string> = {
   'auth.error.network':
     'Netzwerkfehler. Stellen Sie sicher, dass der Server erreichbar ist.',
   'auth.error.invalid': 'Ungültige E-Mail oder Passwort.',
+  'auth.error.setPasswordAfterPurchase':
+    'Geben Sie die Checkout-E-Mail ein. Wir senden einen Anmeldecode.',
   'auth.error.conflict':
     'Ein Konto mit dieser E-Mail existiert bereits. Bitte melden Sie sich an.',
   'auth.error.generic': 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
+  'auth.otp.heading': 'E-Mail prüfen',
+  'auth.otp.body':
+    'Wir haben einen 6-stelligen Code an die Checkout-E-Mail gesendet. Geben Sie ihn ein, um sich anzumelden. Ein Passwort können Sie später unter Einstellungen festlegen.',
+  'auth.otp.placeholder': '6-stelliger Code',
+  'auth.otp.submit': 'Code prüfen',
+  'auth.otp.resend': 'Code erneut senden',
+  'auth.otp.changeEmail': 'Andere E-Mail verwenden',
+  'auth.otp.sent': 'Ein Bestätigungscode wurde an Ihre E-Mail gesendet.',
+  'auth.otp.invalid': 'Geben Sie den 6-stelligen Code aus der E-Mail ein.',
+  'auth.otp.expired': 'Dieser Code ist abgelaufen. Fordern Sie einen neuen an.',
+  'auth.otp.wait': 'Warten Sie einen Moment, bevor Sie einen neuen Code anfordern.',
   'auth.window.loginHeading': 'Bei edaCleaner anmelden',
   'auth.window.registerHeading': 'edaCleaner-Konto erstellen',
   'auth.window.productLine': 'PC-Optimierung',
@@ -122,25 +140,25 @@ export const de: Record<TranslationKey, string> = {
   'onboarding.features.smartScan': 'Gesundheitscheck mit einem Klick für Junk, Speicher und Leistung.',
   'onboarding.features.cleanup': 'Temp-Dateien, Caches und Ballast nach einer klaren Prüfung entfernen.',
   'onboarding.features.performance': 'Autostart, Hintergrund-Apps und Systemlast verwalten.',
-  'onboarding.license.eyebrow': 'Lizenz',
-  'onboarding.license.title': 'Lizenz aktivieren oder kaufen',
+  'onboarding.license.eyebrow': 'Tarif',
+  'onboarding.license.title': 'Aktivieren oder Tarif kaufen',
   'onboarding.license.body':
-    'Melden Sie sich an, um Ihr EDA-Cleaner-Konto und Ihre Lizenz zu aktivieren, oder kaufen Sie eine Lizenz und vergleichen Sie Free, Pro und Premium.',
+    'Melden Sie sich an, um Ihr EDA-Cleaner-Konto zu aktivieren, oder kaufen Sie einen Tarif und vergleichen Sie Free, Pro und Premium.',
   'onboarding.license.accountNote':
-    'Kontoanmeldung und Kauf sind getrennt. Neue Konten starten mit Free. Ein Upgrade ist jederzeit möglich.',
+    'Sie können einen Tarif kaufen, ohne sich vorher anzumelden. Nach dem Checkout erstellen Sie mit derselben E-Mail ein Konto, um ihn auf diesem PC freizuschalten.',
   'onboarding.license.activate': 'Aktivieren',
-  'onboarding.license.activateHint': 'Ich habe einen Lizenzschlüssel',
-  'onboarding.license.buy': 'Lizenz kaufen',
-  'onboarding.license.buyHint': 'Jetzt vollen Zugriff erhalten',
+  'onboarding.license.activateHint': 'Ich habe bereits ein Konto',
+  'onboarding.license.buy': 'Tarif kaufen',
+  'onboarding.license.buyHint': 'Free, Pro oder Premium wählen',
   'onboarding.account.activateEyebrow': 'Aktivieren',
   'onboarding.account.activateTitle': 'Zum Aktivieren anmelden',
   'onboarding.account.activateBody':
-    'Erstellen Sie ein Konto oder melden Sie sich an. Dadurch wird EDA Cleaner auf diesem PC aktiviert. Der Kauf einer bezahlten Lizenz ist ein eigener Schritt.',
-  'onboarding.account.purchaseEyebrow': 'Lizenz kaufen',
-  'onboarding.account.purchaseTitle': 'Konto für den Kauf erforderlich',
+    'Erstellen Sie ein Konto oder melden Sie sich an. Dadurch wird EDA Cleaner auf diesem PC aktiviert. Der Kauf eines bezahlten Tarifs ist ein eigener Schritt.',
+  'onboarding.account.purchaseEyebrow': 'Tarif kaufen',
+  'onboarding.account.purchaseTitle': 'Nach dem Kauf anmelden',
   'onboarding.account.purchaseBody':
-    'Erstellen oder melden Sie sich zuerst bei Ihrem EDA-Cleaner-Konto an. Danach können Sie Tarife prüfen und den Kauf abschließen.',
-  'onboarding.account.backToLicense': 'Zurück zu den Lizenzoptionen',
+    'Melden Sie sich mit derselben E-Mail wie beim Checkout an. Wir senden einen Einmalcode, um Ihren Tarif freizuschalten. Ein Passwort legen Sie später unter Einstellungen fest.',
+  'onboarding.account.backToLicense': 'Zurück zu den Tarifoptionen',
   'onboarding.ready.title': 'Sie sind startklar',
   'onboarding.ready.body':
     'Ihr Konto ist auf diesem PC aktiv. Öffnen Sie EDA Cleaner zum Scannen, Bereinigen und Optimieren.',
@@ -161,7 +179,7 @@ export const de: Record<TranslationKey, string> = {
   'onboarding.preview.smartScan': 'Geführte Prüfung von Junk, Speicher und Tempo.',
   'onboarding.preview.monitor': 'Live-Diagramme für CPU, RAM und Datenträger.',
   'onboarding.preview.storageHint': 'Sehen Sie, wohin der Speicherplatz geht — und geben Sie ihn gezielt frei.',
-  'onboarding.preview.license': 'Sichere Konto- und Lizenzaktivierung',
+  'onboarding.preview.license': 'Sichere Konto- und Tarifaktivierung',
 
   'sidebar.tagline': 'PC-Optimizer',
   'sidebar.collapse': 'Seitenleiste einklappen',
@@ -192,6 +210,8 @@ export const de: Record<TranslationKey, string> = {
   'plans.title': 'Tarif wählen',
   'plans.description':
     'Vergleichen Sie Free, Pro und Premium. Zahlungen öffnen sicher in Ihrem Browser.',
+  'plans.guestNotice':
+    'Zahlen Sie im Browser mit Ihrer E-Mail. Nach der Zahlung melden Sie sich mit dieser E-Mail an — wir senden einen Code, danach können Sie unter Einstellungen ein Passwort festlegen.',
   'plans.loading': 'Tarife werden geladen…',
   'plans.recommended': 'Empfohlen',
   'plans.currentBadge': 'Aktuell',
@@ -215,6 +235,8 @@ export const de: Record<TranslationKey, string> = {
     'Für Kauf oder Tarifwechsel ist eine Internetverbindung erforderlich. Ihr zwischengespeicherter Tarif bleibt offline aktiv.',
   'plans.feedback.checkoutOpened':
     'Checkout im Browser geöffnet. Kehren Sie nach der Zahlung zurück — Ihr Tarif wird automatisch aktualisiert.',
+  'plans.feedback.guestCheckoutOpened':
+    'Checkout im Browser geöffnet. Verwenden Sie die E-Mail für diesen Tarif. Nach der Zahlung melden Sie sich mit dieser E-Mail an und geben den zugesandten Code ein.',
   'plans.feedback.updated': 'Ihr Abonnement ist aktuell.',
   'plans.feedback.downgradeScheduled':
     'Downgrade geplant. Ihr aktueller Tarif bleibt bis Periodenende aktiv.',
@@ -414,6 +436,12 @@ export const de: Record<TranslationKey, string> = {
     'Ihre lokalen Sitzungstoken werden gelöscht. Der Bereinigungsverlauf auf diesem PC bleibt erhalten.',
   'settings.account.logoutError':
     'Abmelden ist gerade nicht möglich. Bitte erneut versuchen.',
+  'settings.account.setPasswordTitle': 'Passwort festlegen',
+  'settings.account.setPasswordBody':
+    'Sie haben sich nach dem Tarifkauf per E-Mail-Code angemeldet. Legen Sie ein Passwort für die nächste Anmeldung fest.',
+  'settings.account.setPassword': 'Passwort speichern',
+  'settings.account.passwordSet': 'Passwort gespeichert. Sie können es beim nächsten Login verwenden.',
+  'settings.account.passwordSetError': 'Passwort konnte nicht gespeichert werden. Erneut versuchen.',
 
   'settings.about.title': 'Info',
   'settings.about.description':

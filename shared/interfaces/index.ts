@@ -610,6 +610,7 @@ export interface AuthUserProfile {
   email: string
   name: string
   trialUsed: boolean
+  mustSetPassword?: boolean
 }
 
 export type SubscriptionPlanSlug = 'free' | 'pro' | 'premium'
@@ -659,8 +660,9 @@ export interface AuthSessionSnapshot {
 
 export interface AuthCredentials {
   email: string
-  password: string
+  password?: string
   name?: string
+  code?: string
 }
 
 export interface AuthSessionChangedEvent {
