@@ -118,7 +118,8 @@ export const fr: Record<TranslationKey, string> = {
   'onboarding.hero.manageTitle': 'Gestion intelligente',
   'onboarding.hero.manageBody': 'Gérez les programmes au démarrage et les ressources.',
   'onboarding.hero.trust': 'Satisfait ou remboursé 30 jours • Sûr et de confiance',
-  'onboarding.hero.artAlt': 'EdaCleaner sur un ordinateur portable, avec des outils de nettoyage et de performance',
+  'onboarding.hero.artAlt': 'EdaCleaner aide à optimiser un PC, avec des outils de nettoyage et de sécurité',
+  'onboarding.ready.artAlt': 'EdaCleaner avec un PC optimisé et une offre de protection active',
   'onboarding.welcome.eyebrow': 'EDA Cleaner',
   'onboarding.welcome.title': 'Bienvenue dans EDA Cleaner',
   'onboarding.welcome.body':
@@ -146,10 +147,15 @@ export const fr: Record<TranslationKey, string> = {
     'Connectez-vous pour activer votre compte EDA Cleaner, ou achetez une offre pour comparer Free, Pro et Premium.',
   'onboarding.license.accountNote':
     'Vous pouvez acheter une offre sans vous connecter. Après le paiement, créez un compte avec le même e-mail pour l’activer sur ce PC.',
+  'onboarding.license.choicesLabel': 'Choisissez comment continuer',
+  'onboarding.license.alreadyPurchased': 'Déjà acheté',
+  'onboarding.license.alreadyPurchasedHint': 'Connectez-vous pour activer ce PC',
   'onboarding.license.activate': 'Activer',
-  'onboarding.license.activateHint': 'J’ai déjà un compte',
+  'onboarding.license.activateHint': 'Créer un nouveau compte',
   'onboarding.license.buy': 'Acheter une offre',
   'onboarding.license.buyHint': 'Choisir Free, Pro ou Premium',
+  'onboarding.license.viewPlans': 'Voir les offres',
+  'onboarding.license.viewPlansHint': 'Comparer Free, Pro et Premium',
   'onboarding.account.activateEyebrow': 'Activer',
   'onboarding.account.activateTitle': 'Connectez-vous pour activer',
   'onboarding.account.activateBody':
@@ -162,6 +168,9 @@ export const fr: Record<TranslationKey, string> = {
   'onboarding.ready.title': 'Vous êtes prêt',
   'onboarding.ready.body':
     'Votre compte est actif sur ce PC. Ouvrez EDA Cleaner pour analyser, nettoyer et optimiser.',
+  'onboarding.ready.paidTitle': 'Tout est prêt',
+  'onboarding.ready.paidBody':
+    '{{plan}} est actif sur ce PC. Ouvrez EDA Cleaner pour analyser, nettoyer et optimiser.',
   'onboarding.ready.plan': 'Offre actuelle : {{plan}}',
   'onboarding.ready.start': 'Commencer',
   'onboarding.preview.alt': 'Aperçu du produit EDA Cleaner',
@@ -214,6 +223,7 @@ export const fr: Record<TranslationKey, string> = {
     'Payez dans le navigateur avec votre e-mail. Après le paiement, connectez-vous avec cet e-mail — nous envoyons un code, puis vous définissez un mot de passe dans Paramètres.',
   'plans.loading': 'Chargement des offres…',
   'plans.recommended': 'Recommandé',
+  'plans.yourPlan': 'Votre offre actuelle : {{plan}}',
   'plans.currentBadge': 'Actuelle',
   'plans.price.free': 'Gratuit',
   'plans.price.forever': 'Gratuit pour toujours',
@@ -227,6 +237,7 @@ export const fr: Record<TranslationKey, string> = {
   'plans.saveAmount': 'Économisez {{amount}}',
   'plans.trial': 'Essai gratuit de {{days}} jours disponible',
   'plans.pendingHint': 'Changement prévu en fin de période',
+  'plans.action.activate': 'Activer',
   'plans.action.current': 'Offre actuelle',
   'plans.action.upgrade': 'Mettre à niveau',
   'plans.action.downgrade': 'Rétrograder',

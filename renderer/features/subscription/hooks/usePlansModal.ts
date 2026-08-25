@@ -26,19 +26,21 @@ interface UsePlansModalOptions {
   onSubscriptionUpdated?: () => void
   onUnauthorized?: () => void
   onGuestCheckoutReturn?: () => void
+  onActivateAccount?: () => void
 }
 
 export function usePlansModal({
   open,
   onSubscriptionUpdated,
   onUnauthorized,
-  onGuestCheckoutReturn
+  onGuestCheckoutReturn,
+  onActivateAccount
 }: UsePlansModalOptions) {
   const { t } = useTranslation()
   const online = useOfflineStore((s) => s.online)
 
   const [plans, setPlans] = useState<PublicPlan[]>([])
-  const [currentPlan, setCurrentPlan] = useState<PlanSlug>('free')
+  const [currentPlan, setCurrentPlan] = useState<PlanSlug | null>(null)
   const [currentInterval, setCurrentInterval] = useState<BillingInterval>('month')
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('year')
   const [pendingPlan, setPendingPlan] = useState<string | null>(null)
@@ -55,6 +57,8 @@ export function usePlansModal({
   onUnauthorizedRef.current = onUnauthorized
   const onGuestCheckoutReturnRef = useRef(onGuestCheckoutReturn)
   onGuestCheckoutReturnRef.current = onGuestCheckoutReturn
+  const onActivateAccountRef = useRef(onActivateAccount)
+  onActivateAccountRef.current = onActivateAccount
   const guestCheckoutPending = useRef(false)
 
   const visiblePlans = useMemo(
@@ -84,7 +88,7 @@ export function usePlansModal({
         await refreshLocalSubscription()
       } else {
         setGuestMode(true)
-        setCurrentPlan('free')
+        setCurrentPlan(null)
         setPendingPlan(null)
         setCurrentInterval('month')
       }
@@ -190,6 +194,14 @@ export function usePlansModal({
         currentInterval,
         targetInterval
       })
+      if (action === 'activate') {
+        if (onActivateAccountRef.current) {
+          onActivateAccountRef.current()
+        } else {
+          void authService.openWindow('register')
+        }
+        return
+      }
       if (action === 'current' || actionPlanId) return
 
       if (!online) {

@@ -15,7 +15,7 @@ import { cn } from '@/utils/cn'
 
 interface PlanCardProps {
   plan: PublicPlan
-  currentPlan: PlanSlug
+  currentPlan: PlanSlug | null
   currentInterval: BillingInterval
   pendingPlan: string | null
   online: boolean
@@ -61,11 +61,14 @@ export function PlanCard({
         }).format(plan.savingsDisplay)
       : null
 
-  const actionLabel = isCurrent
-    ? t('plans.action.current')
-    : action === 'upgrade'
-      ? t('plans.action.upgrade')
-      : t('plans.action.downgrade')
+  const actionLabel =
+    action === 'activate'
+      ? t('plans.action.activate')
+      : isCurrent
+        ? t('plans.action.current')
+        : action === 'upgrade'
+          ? t('plans.action.upgrade')
+          : t('plans.action.downgrade')
 
   return (
     <div
@@ -192,8 +195,10 @@ export function PlanCard({
       <Button
         size="sm"
         className="mt-auto h-10 w-full rounded-xl text-[13px] font-semibold"
-        variant={isCurrent ? 'secondary' : action === 'upgrade' ? 'default' : 'outline'}
-        disabled={disabled || isCurrent || !online || busy}
+        variant={
+          isCurrent ? 'secondary' : action === 'upgrade' || action === 'activate' ? 'default' : 'outline'
+        }
+        disabled={disabled || isCurrent || busy || (!online && action !== 'activate')}
         onClick={() => onSelect(plan)}
       >
         {busy ? (

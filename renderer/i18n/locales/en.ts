@@ -111,7 +111,8 @@ export const en = {
   'onboarding.hero.manageTitle': 'Smart Management',
   'onboarding.hero.manageBody': 'Manage startup items and system resources.',
   'onboarding.hero.trust': '30-Day Money Back Guarantee • Secure & Trusted',
-  'onboarding.hero.artAlt': 'EdaCleaner on a laptop, with cleanup and performance tools',
+  'onboarding.hero.artAlt': 'EdaCleaner helping optimize a PC, with cleanup and security tools',
+  'onboarding.ready.artAlt': 'EdaCleaner with an optimized PC and an active protection plan',
   'onboarding.welcome.eyebrow': 'EDA Cleaner',
   'onboarding.welcome.title': 'Welcome to EDA Cleaner',
   'onboarding.welcome.body':
@@ -139,10 +140,15 @@ export const en = {
     'Sign in to activate your EDA Cleaner account, or purchase a plan to compare Free, Pro, and Premium.',
   'onboarding.license.accountNote':
     'You can purchase a plan without signing in first. After checkout, create an account with the same email to unlock it on this PC.',
+  'onboarding.license.choicesLabel': 'Choose how to continue',
+  'onboarding.license.alreadyPurchased': 'Already purchased',
+  'onboarding.license.alreadyPurchasedHint': 'Sign in to unlock this PC',
   'onboarding.license.activate': 'Activate',
-  'onboarding.license.activateHint': 'I already have an account',
+  'onboarding.license.activateHint': 'Create a new account',
   'onboarding.license.buy': 'Purchase Plan',
   'onboarding.license.buyHint': 'Choose Free, Pro, or Premium',
+  'onboarding.license.viewPlans': 'View plans',
+  'onboarding.license.viewPlansHint': 'Compare Free, Pro, and Premium',
   'onboarding.account.activateEyebrow': 'Activate',
   'onboarding.account.activateTitle': 'Sign in to activate',
   'onboarding.account.activateBody':
@@ -155,6 +161,9 @@ export const en = {
   'onboarding.ready.title': 'You are ready',
   'onboarding.ready.body':
     'Your account is active on this PC. Open EDA Cleaner to scan, clean, and optimize.',
+  'onboarding.ready.paidTitle': "You're all set",
+  'onboarding.ready.paidBody':
+    '{{plan}} is active on this PC. Open EDA Cleaner to scan, clean, and optimize.',
   'onboarding.ready.plan': 'Current plan: {{plan}}',
   'onboarding.ready.start': 'Get started',
   'onboarding.preview.alt': 'EDA Cleaner product preview',
@@ -207,6 +216,7 @@ export const en = {
     'Pay in the browser with your email. After payment, log in with that email — we send a one-time code, then you can set a password in Settings.',
   'plans.loading': 'Loading plans…',
   'plans.recommended': 'Recommended',
+  'plans.yourPlan': 'Your current plan: {{plan}}',
   'plans.currentBadge': 'Current',
   'plans.price.free': 'Free',
   'plans.price.forever': 'Forever free',
@@ -220,6 +230,7 @@ export const en = {
   'plans.saveAmount': 'Save {{amount}}',
   'plans.trial': '{{days}}-day free trial available',
   'plans.pendingHint': 'Scheduled to switch at period end',
+  'plans.action.activate': 'Activate',
   'plans.action.current': 'Current plan',
   'plans.action.upgrade': 'Upgrade',
   'plans.action.downgrade': 'Downgrade',

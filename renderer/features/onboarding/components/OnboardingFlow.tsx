@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId } from 'react'
 import { OnboardingShell } from '@/features/onboarding/components/OnboardingShell'
+import { sessionHasPaidPlan } from '@/features/onboarding/lib/session-plan'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding-store'
 import { PlansModal } from '@/features/subscription/components/PlansModal'
 import { authService } from '@/services/auth-service'
@@ -24,32 +25,21 @@ export function OnboardingFlow({
   const { t } = useTranslation()
   const titleId = useId()
   const step = useOnboardingStore((s) => s.step)
-  const authIntent = useOnboardingStore((s) => s.authIntent)
   const plansOpen = useOnboardingStore((s) => s.plansOpen)
   const setStep = useOnboardingStore((s) => s.setStep)
   const back = useOnboardingStore((s) => s.back)
   const startActivate = useOnboardingStore((s) => s.startActivate)
   const startPurchase = useOnboardingStore((s) => s.startPurchase)
   const beginAccount = useOnboardingStore((s) => s.beginAccount)
-  const openPlans = useOnboardingStore((s) => s.openPlans)
   const closePlans = useOnboardingStore((s) => s.closePlans)
   const complete = useOnboardingStore((s) => s.complete)
-  const wasAuthenticated = useRef(authenticated)
+  const hasPaidPlan = sessionHasPaidPlan(session)
 
   useEffect(() => {
-    if (!authenticated) {
-      wasAuthenticated.current = false
-      return
-    }
-    if (wasAuthenticated.current) return
-    wasAuthenticated.current = true
-    if (authIntent === 'purchase') {
-      setStep('hero')
-      openPlans()
-      return
-    }
+    if (!authenticated) return
+    closePlans()
     setStep('ready')
-  }, [authenticated, authIntent, openPlans, setStep])
+  }, [authenticated, closePlans, setStep])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
@@ -67,7 +57,7 @@ export function OnboardingFlow({
 
       if (typing || plansOpen) return
 
-      if ((event.key === 'ArrowLeft' || event.key === 'Escape') && step !== 'hero') {
+      if ((event.key === 'ArrowLeft' || event.key === 'Escape') && step !== 'hero' && !authenticated) {
         event.preventDefault()
         back()
       }
@@ -75,34 +65,47 @@ export function OnboardingFlow({
 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [back, closePlans, plansOpen, step])
+  }, [authenticated, back, closePlans, plansOpen, step])
 
-  function handleActivate(): void {
+  function handleAlreadyPurchased(): void {
     startActivate()
     void authService.openWindow('login')
   }
 
-  function handleBuyLicense(): void {
+  function handleActivate(): void {
+    beginAccount('activate')
+    void authService.openWindow('register')
+  }
+
+  function handleViewPlans(): void {
     startPurchase()
+  }
+
+  function handleFreePlanActivate(): void {
+    closePlans()
+    beginAccount('activate')
+    void authService.openWindow('register')
   }
 
   return (
     <div className="h-full min-h-0 w-full" role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <OnboardingShell
-        step={step}
+        step={authenticated ? 'ready' : step}
         titleId={titleId}
         authenticated={authenticated}
+        hasPaidPlan={hasPaidPlan}
         planLabel={planLabel(session, t('plans.price.free'))}
+        onAlreadyPurchased={handleAlreadyPurchased}
         onActivate={handleActivate}
-        onBuyLicense={handleBuyLicense}
-        onContinueAuthenticated={() => setStep('ready')}
+        onViewPlans={handleViewPlans}
         onBack={back}
         onFinish={complete}
       />
 
       <PlansModal
-        open={plansOpen}
+        open={plansOpen && !authenticated}
         onClose={closePlans}
+        onActivateAccount={handleFreePlanActivate}
         onGuestCheckoutReturn={() => {
           closePlans()
           beginAccount('purchase')

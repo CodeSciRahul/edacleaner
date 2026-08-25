@@ -13,6 +13,7 @@ interface PlansModalProps {
   onUnauthorized?: () => void
   onSubscriptionUpdated?: () => void
   onGuestCheckoutReturn?: () => void
+  onActivateAccount?: () => void
 }
 
 function BillingToggle({
@@ -75,7 +76,8 @@ export function PlansModal({
   onClose,
   onUnauthorized,
   onSubscriptionUpdated,
-  onGuestCheckoutReturn
+  onGuestCheckoutReturn,
+  onActivateAccount
 }: PlansModalProps): React.ReactElement | null {
   const { t } = useTranslation()
   const {
@@ -92,13 +94,21 @@ export function PlansModal({
     guestMode,
     online,
     reload,
-    selectPlan
+    selectPlan,
+    allPlans
   } = usePlansModal({
     open,
     onUnauthorized,
     onSubscriptionUpdated,
-    onGuestCheckoutReturn
+    onGuestCheckoutReturn,
+    onActivateAccount
   })
+
+  const currentPlanName =
+    currentPlan == null
+      ? null
+      : allPlans.find((plan) => normalizePlanSlug(plan.slug) === currentPlan)?.name ??
+        currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)
 
   useEffect(() => {
     if (feedback?.type !== 'upgraded') return
@@ -147,6 +157,11 @@ export function PlansModal({
             <h2 id="plans-modal-title" className="text-lg font-semibold tracking-tight text-foreground">
               {t('plans.title')}
             </h2>
+            {currentPlanName ? (
+              <p className="mt-1 text-xs font-medium text-foreground">
+                {t('plans.yourPlan', { plan: currentPlanName })}
+              </p>
+            ) : null}
             <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
               {guestMode ? t('plans.guestNotice') : t('plans.description')}
             </p>
