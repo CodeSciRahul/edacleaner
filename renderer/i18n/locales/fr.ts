@@ -102,6 +102,9 @@ export const fr: Record<TranslationKey, string> = {
   'auth.window.forgotPassword': 'Mot de passe oublié ?',
   'auth.window.forgotPasswordHint':
     'La réinitialisation du mot de passe n’est pas encore disponible dans l’application. Utilisez le mot de passe de ce compte, ou créez-en un nouveau.',
+  'auth.window.modeLabel': 'Options du compte',
+  'auth.window.needAccount': 'Pas encore de compte ?',
+  'auth.window.haveAccount': 'Vous avez déjà un compte ?',
 
   'onboarding.progress': 'Étape {{current}} sur {{total}}',
   'onboarding.progressNav': 'Progression de la configuration',

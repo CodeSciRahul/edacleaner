@@ -1,4 +1,4 @@
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, screen, shell } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { IPC_CHANNELS, WINDOW_DEFAULTS, type AuthWindowMode, type WindowLayout } from '@shared/constants'
@@ -164,7 +164,8 @@ export class WindowManager {
         height: WINDOW_DEFAULTS.AUTH_HEIGHT,
         minWidth: WINDOW_DEFAULTS.AUTH_MIN_WIDTH,
         minHeight: WINDOW_DEFAULTS.AUTH_MIN_HEIGHT,
-        ratio: WINDOW_DEFAULTS.AUTH_PIXEL_WIDTH / WINDOW_DEFAULTS.AUTH_PIXEL_HEIGHT
+        ratio: WINDOW_DEFAULTS.AUTH_ASPECT_RATIO,
+        offsetFromMain: true
       })
       return
     }
@@ -174,8 +175,7 @@ export class WindowManager {
         height: WINDOW_DEFAULTS.ONBOARDING_HEIGHT,
         minWidth: WINDOW_DEFAULTS.ONBOARDING_MIN_WIDTH,
         minHeight: WINDOW_DEFAULTS.ONBOARDING_MIN_HEIGHT,
-        ratio:
-          WINDOW_DEFAULTS.ONBOARDING_PIXEL_WIDTH / WINDOW_DEFAULTS.ONBOARDING_PIXEL_HEIGHT
+        ratio: WINDOW_DEFAULTS.ONBOARDING_ASPECT_RATIO
       })
       return
     }
@@ -184,15 +184,87 @@ export class WindowManager {
 
   private applyFixedArtLayout(
     window: BrowserWindow,
-    size: { width: number; height: number; minWidth: number; minHeight: number; ratio: number }
+    size: {
+      width: number
+      height: number
+      minWidth: number
+      minHeight: number
+      ratio: number
+      offsetFromMain?: boolean
+    }
   ): void {
     if (window.isMaximized()) window.unmaximize()
     if (window.isFullScreen()) window.setFullScreen(false)
+
+    const fitted = this.fitWindowToWorkArea(size)
     window.setMaximizable(false)
-    window.setMinimumSize(size.minWidth, size.minHeight)
-    window.setSize(size.width, size.height)
+    window.setMinimumSize(fitted.minWidth, fitted.minHeight)
+    window.setSize(fitted.width, fitted.height)
     window.setAspectRatio(size.ratio)
-    window.center()
+
+    if (size.offsetFromMain) {
+      this.positionRelativeToMain(window, fitted.width, fitted.height)
+    } else {
+      window.center()
+    }
+  }
+
+  /** Place auth slightly down-right of onboarding so both windows read as open. */
+  private positionRelativeToMain(
+    window: BrowserWindow,
+    width: number,
+    height: number
+  ): void {
+    const main = this.getMainWindow()
+    const display = screen.getDisplayMatching(main?.getBounds() ?? window.getBounds())
+    const work = display.workArea
+
+    let x: number
+    let y: number
+
+    if (main && !main.isDestroyed()) {
+      const bounds = main.getBounds()
+      x = bounds.x + WINDOW_DEFAULTS.AUTH_OFFSET_X
+      y = bounds.y + WINDOW_DEFAULTS.AUTH_OFFSET_Y
+    } else {
+      x = Math.round(work.x + (work.width - width) / 2) + WINDOW_DEFAULTS.AUTH_OFFSET_X
+      y = Math.round(work.y + (work.height - height) / 2) + WINDOW_DEFAULTS.AUTH_OFFSET_Y
+    }
+
+    const maxX = work.x + Math.max(0, work.width - width)
+    const maxY = work.y + Math.max(0, work.height - height)
+    x = Math.min(Math.max(work.x, x), maxX)
+    y = Math.min(Math.max(work.y, y), maxY)
+
+    window.setPosition(x, y)
+  }
+
+  private fitWindowToWorkArea(size: {
+    width: number
+    height: number
+    minWidth: number
+    minHeight: number
+    ratio: number
+  }): { width: number; height: number; minWidth: number; minHeight: number } {
+    const work = screen.getPrimaryDisplay().workAreaSize
+    const pad = 48
+    const maxW = Math.max(640, work.width - pad)
+    const maxH = Math.max(480, work.height - pad)
+
+    let width = size.width
+    let height = size.height
+    if (width > maxW) {
+      width = maxW
+      height = Math.round(width / size.ratio)
+    }
+    if (height > maxH) {
+      height = maxH
+      width = Math.round(height * size.ratio)
+    }
+
+    const minWidth = Math.min(size.minWidth, width)
+    const minHeight = Math.min(size.minHeight, height)
+    return { width, height, minWidth, minHeight }
   }
 
   private applyAppLayout(window: BrowserWindow): void {

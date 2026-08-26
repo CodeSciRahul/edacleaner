@@ -22,12 +22,12 @@ export function AuthWindowPage({
       <img
         src={authArt}
         alt={t('onboarding.hero.artAlt')}
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[22%_center]"
       />
 
-      <div className="relative grid h-full min-h-0 grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)] items-center gap-6 px-8 py-8">
+      <div className="relative grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(380px,min(42vw,460px))] items-center gap-6 px-8 py-7 lg:px-10 lg:py-8">
         <div aria-hidden="true" />
-        <div className="flex max-h-full justify-end">
+        <div className="flex max-h-full min-h-0 justify-end overflow-hidden">
           <AuthWindowForm
             onLogin={onLogin}
             onRegister={onRegister}

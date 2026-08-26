@@ -95,6 +95,9 @@ export const en = {
   'auth.window.forgotPassword': 'Forgot Password?',
   'auth.window.forgotPasswordHint':
     'Password reset is not available in the desktop app yet. Use the password for this account, or create a new one.',
+  'auth.window.modeLabel': 'Account options',
+  'auth.window.needAccount': "Don't have an account?",
+  'auth.window.haveAccount': 'Already have an account?',
 
   'onboarding.progress': 'Step {{current}} of {{total}}',
   'onboarding.progressNav': 'Onboarding progress',

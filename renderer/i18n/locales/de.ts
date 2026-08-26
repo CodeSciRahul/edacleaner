@@ -102,6 +102,9 @@ export const de: Record<TranslationKey, string> = {
   'auth.window.forgotPassword': 'Passwort vergessen?',
   'auth.window.forgotPasswordHint':
     'Passwortzurücksetzung ist in der Desktop-App noch nicht verfügbar. Verwenden Sie das Passwort dieses Kontos oder erstellen Sie ein neues.',
+  'auth.window.modeLabel': 'Kontooptionen',
+  'auth.window.needAccount': 'Noch kein Konto?',
+  'auth.window.haveAccount': 'Bereits ein Konto?',
 
   'onboarding.progress': 'Schritt {{current}} von {{total}}',
   'onboarding.progressNav': 'Einrichtungsfortschritt',

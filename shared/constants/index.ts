@@ -147,22 +147,23 @@ export const WINDOW_DEFAULTS = {
   HEIGHT: 800,
   MIN_WIDTH: 900,
   MIN_HEIGHT: 600,
-  /** Native pixel size of onboarding.png */
-  ONBOARDING_PIXEL_WIDTH: 1024,
-  ONBOARDING_PIXEL_HEIGHT: 572,
-  /** 1280 × round(1280 * 572 / 1024) */
+  /**
+   * Welcome / license window — 16:10, the usual production desktop splash ratio
+   * (more vertical room than locking to the illustration’s native pixels).
+   */
   ONBOARDING_WIDTH: 1280,
-  ONBOARDING_HEIGHT: 715,
-  ONBOARDING_MIN_WIDTH: 1100,
-  ONBOARDING_MIN_HEIGHT: 615,
-  /** Native pixel size of auth.png */
-  AUTH_PIXEL_WIDTH: 1024,
-  AUTH_PIXEL_HEIGHT: 572,
-  /** 1280 × round(1280 * 572 / 1024) */
+  ONBOARDING_HEIGHT: 800,
+  ONBOARDING_MIN_WIDTH: 1024,
+  ONBOARDING_MIN_HEIGHT: 640,
+  ONBOARDING_ASPECT_RATIO: 16 / 10,
   AUTH_WIDTH: 1280,
-  AUTH_HEIGHT: 715,
-  AUTH_MIN_WIDTH: 1100,
-  AUTH_MIN_HEIGHT: 615
+  AUTH_HEIGHT: 800,
+  AUTH_MIN_WIDTH: 1024,
+  AUTH_MIN_HEIGHT: 640,
+  AUTH_ASPECT_RATIO: 16 / 10,
+  /** Offset login/register from the onboarding window so both feel open. */
+  AUTH_OFFSET_X: 48,
+  AUTH_OFFSET_Y: 40
 } as const
 
 export type WindowLayout = 'onboarding' | 'app'
