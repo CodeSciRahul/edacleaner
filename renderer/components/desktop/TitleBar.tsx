@@ -1,10 +1,11 @@
-import { PanelLeftClose, ShieldCheck } from 'lucide-react'
+import { PanelLeftClose } from 'lucide-react'
 import { APP_NAME } from '@shared/constants'
 import { cn } from '@/utils/cn'
 import { useUiStore } from '@/store/ui-store'
 import { useTranslation } from '@/i18n/useTranslation'
 import { WindowControls } from '@/components/desktop/WindowControls'
 import { useWindowControls } from '@/hooks/useWindowControls'
+import appIcon from '@/assets/app logo/App Icon1.svg'
 
 interface TitleBarProps {
   /** `app` aligns the brand with the sidebar column. */
@@ -12,11 +13,15 @@ interface TitleBarProps {
   accessory?: React.ReactNode
 }
 
-function BrandMark(): React.ReactElement {
+function BrandMark({ size = 'sm' }: { size?: 'sm' | 'md' }): React.ReactElement {
+  const dim = size === 'md' ? 'h-8 w-8' : 'h-7 w-7'
   return (
-    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
-      <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-    </div>
+    <img
+      src={appIcon}
+      alt=""
+      className={cn(dim, 'shrink-0 rounded-md object-contain shadow-sm')}
+      draggable={false}
+    />
   )
 }
 
@@ -41,7 +46,7 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
 
   if (variant === 'simple') {
     return (
-      <header className="flex h-titlebar shrink-0 select-none bg-sidebar">
+      <header className="flex h-titlebar shrink-0 select-none border-b border-sidebar-border bg-sidebar">
         <div
           className="app-drag flex min-w-0 flex-1 items-center gap-2.5 px-4"
           onDoubleClick={toggleMaximize}
@@ -58,10 +63,10 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
   }
 
   return (
-    <header className="flex h-titlebar shrink-0 select-none bg-sidebar">
+    <header className="flex h-titlebar shrink-0 select-none border-b border-sidebar-border bg-sidebar">
       <div
         className={cn(
-          'app-drag flex h-full items-center',
+          'app-drag flex h-full items-center border-r border-sidebar-border',
           'transition-[width] duration-300 ease-out',
           collapsed ? 'w-sidebar-collapsed justify-center px-2' : 'w-sidebar gap-2.5 px-4'
         )}
@@ -76,11 +81,11 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
             aria-label={t('sidebar.expand')}
             onClick={toggleSidebar}
           >
-            <BrandMark />
+            <BrandMark size="md" />
           </button>
         ) : (
           <>
-            <BrandMark />
+            <BrandMark size="md" />
             <p className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-none tracking-tight text-foreground">
               {APP_NAME}
             </p>

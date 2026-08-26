@@ -16,7 +16,7 @@ export function Sidebar(): React.ReactElement {
     <aside
       aria-label={t('sidebar.navMain')}
       className={cn(
-        'relative flex h-full shrink-0 flex-col bg-sidebar',
+        'relative flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar',
         'transition-[width] duration-300 ease-out',
         collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
       )}
