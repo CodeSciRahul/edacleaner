@@ -12,7 +12,6 @@ import {
 export function useSmartScanHistory() {
   const [history, setHistory] = useState<SmartScanPersistedRecord | null>(null)
   const [hydrated, setHydrated] = useState(false)
-  const [animateKey, setAnimateKey] = useState(0)
 
   useEffect(() => {
     setHistory(loadSmartScanHistory())
@@ -22,14 +21,12 @@ export function useSmartScanHistory() {
   const persistResult = useCallback((result: SmartScanResult) => {
     const next = saveSmartScanHistory(result)
     setHistory(next)
-    setAnimateKey((k) => k + 1)
     return next
   }, [])
 
   return {
     history,
     hydrated,
-    animateKey,
     hasHistory: Boolean(history),
     persistResult
   }

@@ -9,6 +9,8 @@ import {
 import type { ReportsAnalytics } from '@/features/reports/lib/reports-analytics'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import heroCardBgDark from '@/assets/dashboard/hero-card-bg-dark.png'
+import heroCardBgLight from '@/assets/dashboard/hero-card-bg-light.png'
 
 interface DashboardHeroProps {
   analytics: ReportsAnalytics | null
@@ -75,16 +77,28 @@ export function DashboardHero({
     <section
       aria-label={t('home.hero.aria')}
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-primary/[0.08] p-6 shadow-card sm:p-7',
+        'relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-card sm:p-7',
         'animate-in fade-in-0 slide-in-from-top-1 duration-300'
       )}
     >
-      <div
-        className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl"
+      {/* Full-card theme backgrounds — `.light` / `.dark` on <html> */}
+      <img
+        src={heroCardBgLight}
+        alt=""
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right dark:hidden"
+        draggable={false}
         aria-hidden="true"
       />
+      <img
+        src={heroCardBgDark}
+        alt=""
+        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-right dark:block"
+        draggable={false}
+        aria-hidden="true"
+      />
+      {/* Soft left scrim keeps title/CTAs readable if the art bleeds left */}
       <div
-        className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-success/10 blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/90 via-card/55 to-transparent sm:via-card/40"
         aria-hidden="true"
       />
 
@@ -120,7 +134,7 @@ export function DashboardHero({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="relative z-10 flex flex-wrap items-center gap-2">
           <Button
             className="h-10 gap-2 rounded-lg px-4 text-[13px]"
             onClick={() => navigate('/smart-scan')}

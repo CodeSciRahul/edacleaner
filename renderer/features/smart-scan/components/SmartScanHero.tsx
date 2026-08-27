@@ -3,6 +3,8 @@ import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import type { SmartScanResult } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
+import scanHeroBgDark from '@/assets/smart-scan/scan-hero-bg-dark.png'
+import scanHeroBgLight from '@/assets/smart-scan/scan-hero-bg-light.png'
 
 interface SmartScanHeroProps {
   result: SmartScanResult
@@ -16,37 +18,52 @@ export function SmartScanHero({ result }: SmartScanHeroProps): React.ReactElemen
     <section
       aria-label={t('smartScan.results')}
       className={cn(
-        'relative overflow-hidden rounded-2xl border p-6 shadow-card animate-in fade-in-0 slide-in-from-top-1 duration-300 sm:p-7',
-        healthy
-          ? 'border-success/25 bg-gradient-to-br from-card via-card to-success/[0.08]'
-          : 'border-primary/25 bg-gradient-to-br from-card via-card to-primary/[0.08]'
+        'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card',
+        'animate-in fade-in-0 slide-in-from-top-1 duration-300 sm:p-7',
+        healthy ? 'border-success/25' : 'border-primary/25'
       )}
     >
+      {/* Full-card scan art — `.light` / `.dark` on <html> */}
+      <img
+        src={scanHeroBgLight}
+        alt=""
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right dark:hidden"
+        draggable={false}
+        aria-hidden="true"
+      />
+      <img
+        src={scanHeroBgDark}
+        alt=""
+        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-right dark:block"
+        draggable={false}
+        aria-hidden="true"
+      />
+      {/* Soft left scrim keeps copy/score readable over calm left of art */}
       <div
-        className={cn(
-          'pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full blur-3xl',
-          healthy ? 'bg-success/15' : 'bg-primary/12'
-        )}
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/90 via-card/55 to-transparent sm:via-card/40"
         aria-hidden="true"
       />
 
-      <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="max-w-xl space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-background/60 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm">
-            <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+      {/* Copy + score stay in the left zone; art owns the right */}
+      <div className="relative z-10 flex min-h-[200px] max-w-md flex-col justify-center gap-5 sm:min-h-[240px] sm:max-w-lg sm:gap-6 lg:max-w-xl">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-success/25 bg-success/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-success">
+            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
             {t('smartScan.hero.complete')}
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.65rem]">
-            {result.summaryTitle}
-          </h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">{result.summaryMessage}</p>
+          <div>
+            <h2 className="text-section-title text-foreground sm:text-2xl">{result.summaryTitle}</h2>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+              {result.summaryMessage}
+            </p>
+          </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-border/80 bg-card/80 px-4 py-3 shadow-sm backdrop-blur-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Gauge className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
+        <div className="flex w-full max-w-sm items-center gap-3 rounded-xl border border-border/70 bg-background/55 px-3.5 py-3 backdrop-blur-sm">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Gauge className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               {t('smartScan.hero.healthScore')}
             </p>
@@ -56,18 +73,18 @@ export function SmartScanHero({ result }: SmartScanHeroProps): React.ReactElemen
             </p>
           </div>
         </div>
-      </div>
 
-      {result.totalReclaimableBytes > 0 ? (
-        <div className="relative mt-4 flex items-start gap-2 rounded-xl border border-success/20 bg-success/5 px-3.5 py-3">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            {t('smartScan.hero.reclaimHint', {
-              bytes: formatBytes(result.totalReclaimableBytes)
-            })}
-          </p>
-        </div>
-      ) : null}
+        {result.totalReclaimableBytes > 0 ? (
+          <div className="flex max-w-sm items-start gap-2 rounded-xl border border-success/20 bg-success/5 px-3.5 py-2.5 backdrop-blur-sm">
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {t('smartScan.hero.reclaimHint', {
+                bytes: formatBytes(result.totalReclaimableBytes)
+              })}
+            </p>
+          </div>
+        ) : null}
+      </div>
     </section>
   )
 }

@@ -23,9 +23,8 @@ import {
   useSmartScanProgress
 } from '@/features/smart-scan/hooks/useSmartScan'
 import { useSmartScanHistory } from '@/features/smart-scan/hooks/useSmartScanHistory'
-import { SmartScanProgressPanel } from '@/features/smart-scan/components/SmartScanProgressPanel'
+import { SmartScanLoaderModal } from '@/features/smart-scan/components/SmartScanLoaderModal'
 import { SmartScanHero } from '@/features/smart-scan/components/SmartScanHero'
-import { SmartScanHistoryCard } from '@/features/smart-scan/components/SmartScanHistoryCard'
 import {
   formatScanDuration,
   smartScanAreaIcons,
@@ -40,6 +39,8 @@ import { formatRelativeScanTime } from '@/features/smart-scan/lib/scan-history'
 import { useSettingsStore } from '@/store/settings-store'
 import { appendSmartScanActivity } from '@/features/reports/lib/activity-history'
 import { useTranslation } from '@/i18n/useTranslation'
+import scanHeroBgDark from '@/assets/smart-scan/scan-hero-bg-dark.png'
+import scanHeroBgLight from '@/assets/smart-scan/scan-hero-bg-light.png'
 
 const AREA_ORDER: SmartScanAreaId[] = ['cleanup', 'storage', 'performance', 'security']
 
@@ -52,7 +53,7 @@ export function SmartScanPage(): React.ReactElement {
   const restoreLastSmartScan = useSettingsStore((s) => s.restoreLastSmartScan)
   const showCompletionFeedback = useSettingsStore((s) => s.showCompletionFeedback)
 
-  const { history, hydrated, animateKey, hasHistory, persistResult } = useSmartScanHistory()
+  const { history, hydrated, hasHistory, persistResult } = useSmartScanHistory()
   const runScan = useRunSmartScan()
   const cancelScan = useCancelSmartScan()
   const isScanning = runScan.isPending
@@ -181,35 +182,66 @@ export function SmartScanPage(): React.ReactElement {
         }
       />
 
+      <SmartScanLoaderModal
+        open={isScanning}
+        message={progress?.message}
+        percent={progress?.percent}
+        currentItem={progress?.currentItem}
+        areaId={progress?.areaId}
+        areaOrder={AREA_ORDER}
+        onCancel={() => void handleCancel()}
+        cancelPending={cancelScan.isPending}
+      />
+
       <div className="space-y-6 p-content-pad">
         {showEmptyState ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-gradient-to-b from-muted/40 to-muted/10 px-8 py-16 text-center animate-in fade-in-0 duration-300">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
-              <ScanSearch className="h-7 w-7" strokeWidth={1.5} aria-hidden="true" />
+          <section
+            aria-label={t('smartScan.emptyTitle')}
+            className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-card animate-in fade-in-0 duration-300 sm:p-7"
+          >
+            {/* Full-card scan art — same pattern as DashboardHero / SmartScanHero */}
+            <img
+              src={scanHeroBgLight}
+              alt=""
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right dark:hidden"
+              draggable={false}
+              aria-hidden="true"
+            />
+            <img
+              src={scanHeroBgDark}
+              alt=""
+              className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-right dark:block"
+              draggable={false}
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/90 via-card/55 to-transparent sm:via-card/40"
+              aria-hidden="true"
+            />
+
+            <div className="relative z-10 flex min-h-[200px] max-w-md flex-col justify-center gap-5 sm:min-h-[240px] sm:max-w-lg sm:gap-6 lg:max-w-xl">
+              <div className="space-y-3">
+                <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                  <Sparkles className="h-3 w-3" aria-hidden="true" />
+                  {t('smartScan.title')}
+                </div>
+                <div>
+                  <h2 className="text-section-title text-foreground sm:text-2xl">
+                    {t('smartScan.emptyTitle')}
+                  </h2>
+                  <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
+                    {t('smartScan.emptyDesc')}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <Button className="h-10 gap-2 rounded-lg px-4 text-[13px]" onClick={() => void handleScan()}>
+                  <ScanSearch className="h-4 w-4" aria-hidden="true" />
+                  {t('smartScan.firstScan')}
+                </Button>
+              </div>
             </div>
-            <h2 className="text-section-title text-foreground">{t('smartScan.emptyTitle')}</h2>
-            <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              {t('smartScan.emptyDesc')}
-            </p>
-            <Button className="mt-6 gap-2" onClick={() => void handleScan()}>
-              <ScanSearch className="h-4 w-4" aria-hidden="true" />
-              {t('smartScan.firstScan')}
-            </Button>
-          </div>
-        ) : null}
-
-        {isScanning && progress ? (
-          <SmartScanProgressPanel
-            message={progress.message}
-            percent={progress.percent}
-            currentItem={progress.currentItem}
-            areaId={progress.areaId}
-            areaOrder={AREA_ORDER}
-          />
-        ) : null}
-
-        {!isScanning && history ? (
-          <SmartScanHistoryCard history={history} animateKey={animateKey} />
+          </section>
         ) : null}
 
         {scanned && result ? (
