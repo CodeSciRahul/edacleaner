@@ -1,18 +1,14 @@
 import { useMemo, useState } from 'react'
 import {
   AlertCircle,
-  Check,
   ClipboardCopy,
   Copy,
-  FolderOpen,
-  RefreshCw,
-  Trash2,
-  X
+  FolderOpen
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Toolbar } from '@/components/desktop/Toolbar'
 import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
+import { DuplicatesHero } from '@/features/storage/components/DuplicatesHero'
 import { StorageSubnav } from '@/features/storage/components/StorageSubnav'
 import { StorageFilterBar } from '@/features/storage/components/StorageFilterBar'
 import { FileTypeIcon } from '@/features/storage/components/FileTypeIcon'
@@ -28,9 +24,7 @@ import type { DuplicateGroup } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
 import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
-import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 type SortKey = 'size' | 'copies' | 'name'
 type SizeFilter = 'all' | '10mb' | '50mb' | '100mb' | '500mb'
@@ -160,62 +154,25 @@ export function DuplicatesPage(): React.ReactElement {
 
   return (
     <>
-      <Toolbar
-        title={t('duplicates.title')}
-        description={t('duplicates.description')}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            {!access.allowed ? <PremiumBadge plan="pro" /> : null}
-            <FeatureLockButton
-              feature="duplicates"
-              size="sm"
-              variant="outline"
-              className="h-9 gap-2"
-              forceDisabled={isFetching}
-              onClick={() => {
-                setNotice(null)
-                void refetch()
-              }}
-            >
-              <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-              {t('common.refresh')}
-            </FeatureLockButton>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 gap-2"
-              disabled={!access.allowed || filtered.length === 0}
-              onClick={selectAllExceptKeep}
-            >
-              <Check className="h-4 w-4" />
-              Select duplicates
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 gap-2"
-              disabled={selected.length === 0}
-              onClick={clearSelection}
-            >
-              <X className="h-4 w-4" />
-              {t('common.clear')}
-            </Button>
-            <FeatureLockButton
-              feature="duplicates"
-              size="sm"
-              variant="destructive"
-              className="h-9 gap-2"
-              forceDisabled={selected.length === 0 || deleteFiles.isPending}
-              onClick={() => void handleDeleteSelected()}
-            >
-              <Trash2 className="h-4 w-4" />
-              {t('duplicates.delete', { count: selected.length })}
-            </FeatureLockButton>
-          </div>
-        }
-      />
-
       <div className="space-y-4 p-content-pad">
+        <DuplicatesHero
+          isLoading={isLoading}
+          isFetching={isFetching}
+          accessAllowed={access.allowed}
+          groupCount={filtered.length}
+          wasteBytes={wasteBytes}
+          selectedCount={selected.length}
+          selectDisabled={!access.allowed || filtered.length === 0}
+          clearDisabled={selected.length === 0}
+          deleteDisabled={selected.length === 0 || deleteFiles.isPending}
+          onRefresh={() => {
+            setNotice(null)
+            void refetch()
+          }}
+          onSelectDuplicates={selectAllExceptKeep}
+          onClear={clearSelection}
+          onDelete={() => void handleDeleteSelected()}
+        />
         <FeatureLockedCallout feature="duplicates" compact />
         <PageBreadcrumb
           items={[

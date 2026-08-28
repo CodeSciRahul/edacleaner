@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertCircle, HardDrive } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Toolbar } from '@/components/desktop/Toolbar'
+import { StorageHero } from '@/features/storage/components/StorageHero'
 import { formatBytes } from '@shared/utils'
 import {
   useAnalyzeStorage,
@@ -19,12 +19,13 @@ import {
   FolderBreakdownPanel,
   buildSegmentColors
 } from '@/features/storage/components/FolderBreakdownPanel'
+import { aggregateDriveTotals } from '@/features/storage/lib/storage-health'
 import { StorageInsightsSection } from '@/features/storage/components/StorageInsightsSection'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
 import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
-import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
+import { StorageLoaderModal } from '@/features/storage/components/StorageLoaderModal'
+import { useStorageAnalyzeProgress } from '@/features/storage/hooks/useStorageAnalyzeProgress'
 
 export function StoragePage(): React.ReactElement {
   const { t } = useTranslation()
@@ -64,6 +65,7 @@ export function StoragePage(): React.ReactElement {
     dupAccess.allowed
   )
   const analyze = useAnalyzeStorage()
+  const analyzeProgress = useStorageAnalyzeProgress(analyze.isPending)
   const reveal = useRevealInFolder()
 
   const largeTotalBytes = largeFiles.reduce((sum, file) => sum + file.sizeBytes, 0)
@@ -73,6 +75,7 @@ export function StoragePage(): React.ReactElement {
   )
 
   const segments = buildSegmentColors(usage?.segments ?? [], formatBytes)
+  const storageTotals = useMemo(() => aggregateDriveTotals(drives), [drives])
 
   const isAnalyzing =
     analyze.isPending ||
@@ -86,27 +89,26 @@ export function StoragePage(): React.ReactElement {
 
   return (
     <>
-      <Toolbar
-        title={t('storage.title')}
-        description={t('storage.description')}
-        actions={
-          <div className="flex items-center gap-2">
-            {!storageAccess.allowed ? <PremiumBadge plan="pro" /> : null}
-            <FeatureLockButton
-              feature="storage_overview"
-              size="sm"
-              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
-              forceDisabled={isAnalyzing || !mountPath}
-              onClick={() => void analyze.mutateAsync(mountPath)}
-            >
-              <HardDrive className="h-4 w-4" aria-hidden="true" />
-              {analyze.isPending ? t('storage.analyzing') : t('storage.analyze')}
-            </FeatureLockButton>
-          </div>
+      <StorageLoaderModal
+        open={analyze.isPending}
+        message={
+          analyzeProgress ? t(analyzeProgress.messageKey) : t('storage.analyzing.message')
         }
+        percent={analyzeProgress?.percent ?? (analyze.isPending ? 8 : 0)}
+        currentItem={analyzeProgress?.currentItem}
+        stepId={analyzeProgress?.stepId}
       />
 
       <div className="space-y-6 p-content-pad">
+        <StorageHero
+          isAnalyzing={analyze.isPending}
+          analyzeDisabled={isAnalyzing || !mountPath}
+          storageAllowed={storageAccess.allowed}
+          hasUsage={Boolean(usage)}
+          storageTotals={drives.length > 0 ? storageTotals : undefined}
+          onAnalyze={() => void analyze.mutateAsync(mountPath)}
+        />
+
         <FeatureLockedCallout feature="storage_overview" />
         <StorageSubnav />
 

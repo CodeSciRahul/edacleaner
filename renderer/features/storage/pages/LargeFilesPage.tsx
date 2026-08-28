@@ -2,15 +2,13 @@ import { useMemo, useState } from 'react'
 import {
   AlertCircle,
   ClipboardCopy,
-  Download,
   FileStack,
   FolderOpen,
-  RefreshCw,
   Trash2
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Toolbar } from '@/components/desktop/Toolbar'
 import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
+import { LargeFilesHero } from '@/features/storage/components/LargeFilesHero'
 import { StorageSubnav } from '@/features/storage/components/StorageSubnav'
 import { StorageFilterBar } from '@/features/storage/components/StorageFilterBar'
 import { FileTypeIcon } from '@/features/storage/components/FileTypeIcon'
@@ -26,9 +24,7 @@ import type { LargeFile } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
 import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
-import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
 type SortKey = 'size' | 'name' | 'path'
 type SizeFilter = 'all' | '100mb' | '500mb' | '1gb' | '5gb'
@@ -192,52 +188,23 @@ export function LargeFilesPage(): React.ReactElement {
 
   return (
     <>
-      <Toolbar
-        title={t('largeFiles.title')}
-        description={t('largeFiles.description')}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            {!access.allowed ? <PremiumBadge plan="pro" /> : null}
-            <FeatureLockButton
-              feature="large_files"
-              size="sm"
-              variant="outline"
-              className="h-9 gap-2"
-              forceDisabled={isFetching}
-              onClick={() => {
-                setNotice(null)
-                void refetch()
-              }}
-            >
-              <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-              {t('common.refresh')}
-            </FeatureLockButton>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 gap-2"
-              disabled={!access.allowed || filtered.length === 0}
-              onClick={exportCsv}
-            >
-              <Download className="h-4 w-4" />
-              {t('largeFiles.export')}
-            </Button>
-            <FeatureLockButton
-              feature="large_files"
-              size="sm"
-              variant="destructive"
-              className="h-9 gap-2"
-              forceDisabled={selected.length === 0 || deleteFiles.isPending}
-              onClick={() => void handleDeleteSelected()}
-            >
-              <Trash2 className="h-4 w-4" />
-              {t('largeFiles.delete', { count: selected.length })}
-            </FeatureLockButton>
-          </div>
-        }
-      />
-
       <div className="space-y-4 p-content-pad">
+        <LargeFilesHero
+          isLoading={isLoading}
+          isFetching={isFetching}
+          accessAllowed={access.allowed}
+          fileCount={filtered.length}
+          totalBytes={totalBytes}
+          selectedCount={selected.length}
+          exportDisabled={!access.allowed || filtered.length === 0}
+          deleteDisabled={selected.length === 0 || deleteFiles.isPending}
+          onRefresh={() => {
+            setNotice(null)
+            void refetch()
+          }}
+          onExport={exportCsv}
+          onDelete={() => void handleDeleteSelected()}
+        />
         <FeatureLockedCallout feature="large_files" compact />
         <PageBreadcrumb
           items={[

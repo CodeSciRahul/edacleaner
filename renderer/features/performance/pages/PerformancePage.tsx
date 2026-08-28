@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Power, Layers, Cpu, Activity, Monitor } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Toolbar } from '@/components/desktop/Toolbar'
+import { Power, Layers, Cpu, Activity } from 'lucide-react'
 import { TopProcessesTable } from '@/components/desktop/TopProcessesTable'
 import { formatBytes } from '@shared/utils'
 import { electronService } from '@/services/electron-service'
@@ -21,7 +19,7 @@ import {
   PerformanceActionGrid,
   type PerformanceActionItem
 } from '@/features/performance/components/PerformanceActionGrid'
-import { BoostProgressPanel } from '@/features/performance/components/BoostProgressPanel'
+import { PerformanceBoostLoaderModal } from '@/features/performance/components/PerformanceBoostLoaderModal'
 import { PerformanceQuickLinks } from '@/features/performance/components/PerformanceQuickLinks'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendBoostActivity } from '@/features/reports/lib/activity-history'
@@ -199,22 +197,6 @@ export function PerformancePage(): React.ReactElement {
 
   return (
     <>
-      <Toolbar
-        title={t('performance.title')}
-        description={t('performance.description')}
-        actions={
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2"
-            onClick={() => navigate('/monitoring')}
-          >
-            <Monitor className="h-4 w-4" />
-            {t('performance.liveMonitoring')}
-          </Button>
-        }
-      />
-
       <div className="space-y-6 p-content-pad">
         <FeatureLockedCallout feature="performance_boost" />
         <PerformanceHero
@@ -229,15 +211,17 @@ export function PerformancePage(): React.ReactElement {
           boostLocked={!boostAccess.allowed}
           onBoost={() => void handleBoost()}
           onCancel={() => cancelBoost.mutate()}
+          onOpenMonitoring={() => navigate('/monitoring')}
         />
 
-        {isBoosting && progress ? (
-          <BoostProgressPanel
-            message={progress.message}
-            percent={progress.percent}
-            currentItem={progress.currentItem}
-          />
-        ) : null}
+        <PerformanceBoostLoaderModal
+          open={isBoosting}
+          message={progress?.message}
+          percent={progress?.percent}
+          currentItem={progress?.currentItem}
+          onCancel={() => cancelBoost.mutate()}
+          cancelPending={cancelBoost.isPending}
+        />
 
         {lastResult ? <BoostResultsCard result={lastResult} /> : null}
 

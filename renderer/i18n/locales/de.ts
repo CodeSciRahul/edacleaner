@@ -29,6 +29,7 @@ export const de: Record<TranslationKey, string> = {
   'common.manage': 'Verwalten',
   'common.optimize': 'Optimieren',
   'common.scanning': 'Wird gescannt…',
+  'common.optimizing': 'Wird optimiert…',
   'common.analyzing': 'Wird analysiert…',
   'common.items': '{{count}} Elemente',
   'common.updates': '{{count}} Updates',
@@ -650,6 +651,8 @@ export const de: Record<TranslationKey, string> = {
   'cleanup.confirm.title': 'PC optimieren?',
   'cleanup.confirm.body': '{{count}} ausgewählte Kategorien optimieren?',
   'cleanup.confirm.bodyOne': '1 ausgewählte Kategorie optimieren?',
+  'cleanup.confirm.detail':
+    'Wir geben Junk-, Temp- und Cache-Dateien sicher frei. Persönliche Dokumente bleiben unberührt. Einige geöffnete Dateien können übersprungen werden, damit Ihre Apps stabil laufen.',
   'cleanup.confirm.notNow': 'Nicht jetzt',
   'cleanup.confirm.confirm': 'Jetzt optimieren',
 
@@ -671,6 +674,7 @@ export const de: Record<TranslationKey, string> = {
   'smartScan.bootImpact': 'Startauswirkung',
   'smartScan.goPerformance': 'Zur Leistung',
   'smartScan.duration': 'Scan-Dauer',
+  'smartScan.goReports': 'Zu Berichte',
   'smartScan.onTrack': 'Auf Kurs',
   'smartScan.status.scanningTitle': 'Smart-Scan läuft…',
   'smartScan.status.scanningMsg':
@@ -707,8 +711,32 @@ export const de: Record<TranslationKey, string> = {
   'storage.title': 'Speicher',
   'storage.description':
     'Festplattenkapazität verstehen und Speicher mit Zuversicht freigeben.',
+  'storage.hero.overview': 'Speicher-Übersicht',
+  'storage.hero.badge': 'Festplatten-Analyse',
+  'storage.hero.idleHeadline': 'Sehen Sie, wohin Ihr Speicher geht.',
+  'storage.hero.idleSub':
+    'Analysieren Sie lokale Laufwerke, um Ordnernutzung zu kartieren, große Dateien zu finden und doppelten Ballast zu erkennen.',
+  'storage.hero.analyzingHeadline': 'Festplattennutzung wird kartiert…',
+  'storage.hero.analyzingSub':
+    'Ordner werden indexiert und die Nutzung auf den Laufwerken gemessen. Dies kann eine Minute dauern.',
+  'storage.hero.readyHeadline': '{{percent}}% belegt — {{used}} von {{total}}',
+  'storage.hero.readySub':
+    'Prüfen Sie die Ordneraufteilung unten oder analysieren Sie erneut, um die Nutzung auf allen Laufwerken zu aktualisieren.',
+  'storage.hero.readySubNoAnalysis':
+    'Analysieren Sie unten ein Laufwerk, um Ordnernutzung zu kartieren und Speicher freizugeben.',
   'storage.analyze': 'Festplatte analysieren',
   'storage.analyzing': 'Wird analysiert…',
+  'storage.analyzing.title': 'Speicher wird analysiert…',
+  'storage.analyzing.message':
+    'Ordner werden indexiert und die Festplattennutzung auf Ihren Laufwerken gemessen.',
+  'storage.analyzing.badge': 'Speicher-Scan',
+  'storage.analyzing.scanning': 'Volumes und Dateiindizes werden gescannt…',
+  'storage.analyzing.working': '{{path}} wird indexiert…',
+  'storage.analyzing.steps': 'Analyseschritte',
+  'storage.analyzing.step.drives': 'Laufwerke',
+  'storage.analyzing.step.usage': 'Speichernutzung',
+  'storage.analyzing.step.largeFiles': 'Große Dateien',
+  'storage.analyzing.step.duplicates': 'Duplikate',
   'storage.drivesError': 'Laufwerke konnten nicht geladen werden',
   'storage.localDisks': 'Lokale Laufwerke',
   'storage.localDisksHint':
@@ -757,6 +785,39 @@ export const de: Record<TranslationKey, string> = {
   'storage.filter.path': 'Nach Ordnerpfad filtern…',
   'storage.filter.sort': 'Sortieren',
   'storage.filter.allTypes': 'Alle Typen',
+
+  'storage.largeFiles.hero.overview': 'Große Dateien',
+  'storage.largeFiles.hero.badge': 'Speicherfresser',
+  'storage.largeFiles.hero.badgeScanning': 'Suche läuft',
+  'storage.largeFiles.hero.scanningHeadline': 'Übergroße Dateien werden gesucht…',
+  'storage.largeFiles.hero.scanningSub':
+    'Dateien über 100 MB auf Ihren Laufwerken werden indexiert. Das kann einen Moment dauern.',
+  'storage.largeFiles.hero.emptyHeadline': 'Keine großen Dateien gefunden.',
+  'storage.largeFiles.hero.emptySub':
+    'Nichts über 100 MB erkannt. Führen Sie eine Speicheranalyse in der Übersicht aus, um zu aktualisieren.',
+  'storage.largeFiles.hero.readyHeadline': '{{count}} große Dateien — {{bytes}} gesamt',
+  'storage.largeFiles.hero.readySub':
+    'Dateien auswählen, in den Papierkorb verschieben, exportieren oder unten filtern.',
+  'storage.largeFiles.hero.selectedHeadline': '{{count}} Datei(en) ausgewählt',
+  'storage.largeFiles.hero.selectedSub':
+    'Auswahl unten prüfen, dann löschen oder vor dem Entfernen exportieren.',
+
+  'storage.duplicates.hero.overview': 'Doppelte Dateien',
+  'storage.duplicates.hero.badge': 'Duplikat-Finder',
+  'storage.duplicates.hero.badgeScanning': 'Suche läuft',
+  'storage.duplicates.hero.scanningHeadline': 'Doppelte Kopien werden gesucht…',
+  'storage.duplicates.hero.scanningSub':
+    'Datei-Hashes werden verglichen, um identische Kopien zu finden.',
+  'storage.duplicates.hero.emptyHeadline': 'Keine Duplikate gefunden.',
+  'storage.duplicates.hero.emptySub':
+    'Keine identischen Dateigruppen erkannt. Führen Sie eine Speicheranalyse in der Übersicht aus.',
+  'storage.duplicates.hero.readyHeadline': '{{count}} Duplikatgruppen — {{bytes}} freigebar',
+  'storage.duplicates.hero.readySub':
+    'Duplikat-Kopien auswählen und entfernen, ein Original pro Gruppe bleibt erhalten.',
+  'storage.duplicates.hero.selectedHeadline': '{{count}} Kopie(n) ausgewählt',
+  'storage.duplicates.hero.selectedSub':
+    'Ausgewählte Duplikate löschen. Originale in jeder Gruppe bleiben unberührt.',
+  'storage.duplicates.hero.selectDuplicates': 'Duplikate auswählen',
 
   'largeFiles.title': 'Große Dateien',
   'largeFiles.description':
@@ -822,6 +883,8 @@ export const de: Record<TranslationKey, string> = {
   'performance.quickStartupDesc': 'Steuern, was bei der Anmeldung startet.',
   'performance.quickBg': 'Hintergrund-Apps prüfen',
   'performance.quickBgDesc': 'Sichere Prozesse beenden, die Speicher halten.',
+  'performance.hero.overview': 'Leistungsübersicht',
+  'performance.hero.badge': 'Leistung',
   'performance.hero.healthy': 'Gesund',
   'performance.hero.attention': 'Aufmerksamkeit nötig',
   'performance.hero.pressure': 'Unter Druck',
@@ -834,6 +897,12 @@ export const de: Record<TranslationKey, string> = {
   'performance.hero.cancelBoost': 'Boost abbrechen',
   'performance.hero.boostHint':
     'Leert Temp-Dateien, Caches und freigebbaren Ballast sicher.',
+  'performance.boosting.title': 'Leistung wird gesteigert…',
+  'performance.boosting.message':
+    'Temp-Dateien und Caches werden bereinigt und Speicher freigegeben.',
+  'performance.boosting.badge': 'Leistungs-Boost',
+  'performance.boosting.scanning': 'Sichere Optimierungsschritte werden ausgeführt…',
+  'performance.boosting.working': 'Bearbeitung von {{path}}…',
 
   'startupApps.title': 'Autostart-Anwendungen',
   'startupApps.description': 'Steuern Sie Apps, die beim PC-Start laden.',

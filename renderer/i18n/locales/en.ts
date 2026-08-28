@@ -27,6 +27,7 @@ export const en = {
   'common.manage': 'Manage',
   'common.optimize': 'Optimize',
   'common.scanning': 'Scanning…',
+  'common.optimizing': 'Optimizing…',
   'common.analyzing': 'Analyzing…',
   'common.items': '{{count}} items',
   'common.updates': '{{count}} updates',
@@ -628,6 +629,8 @@ export const en = {
   'cleanup.confirm.title': 'Optimize your PC?',
   'cleanup.confirm.body': 'Optimize {{count}} selected categories?',
   'cleanup.confirm.bodyOne': 'Optimize 1 selected category?',
+  'cleanup.confirm.detail':
+    'We’ll safely reclaim junk, temp files, and caches. Personal documents are never touched. A few in-use files may be left alone so your apps stay stable.',
   'cleanup.confirm.notNow': 'Not now',
   'cleanup.confirm.confirm': 'Optimize now',
 
@@ -648,6 +651,7 @@ export const en = {
   'smartScan.bootImpact': 'Boot Impact',
   'smartScan.goPerformance': 'Go to Performance',
   'smartScan.duration': 'Scan Duration',
+  'smartScan.goReports': 'Go to Reports',
   'smartScan.onTrack': 'On track',
   'smartScan.status.scanningTitle': 'Smart Scan in progress…',
   'smartScan.status.scanningMsg':
@@ -683,8 +687,31 @@ export const en = {
 
   'storage.title': 'Storage',
   'storage.description': 'Understand disk capacity and free up space with confidence.',
+  'storage.hero.overview': 'Storage overview',
+  'storage.hero.badge': 'Disk usage analyzer',
+  'storage.hero.idleHeadline': 'See where your space goes.',
+  'storage.hero.idleSub':
+    'Analyze local drives to map folder usage, surface large files, and find duplicate waste.',
+  'storage.hero.analyzingHeadline': 'Mapping your disk usage…',
+  'storage.hero.analyzingSub':
+    'Indexing folders and measuring usage across drives. This may take a minute.',
+  'storage.hero.readyHeadline': '{{percent}}% used — {{used}} of {{total}}',
+  'storage.hero.readySub':
+    'Review the folder breakdown below or re-analyze to refresh usage across all drives.',
+  'storage.hero.readySubNoAnalysis':
+    'Analyze a drive below to map folder usage and find space to reclaim.',
   'storage.analyze': 'Analyze Disk',
   'storage.analyzing': 'Analyzing…',
+  'storage.analyzing.title': 'Analyzing storage…',
+  'storage.analyzing.message': 'Indexing folders and measuring disk usage across your drives.',
+  'storage.analyzing.badge': 'Storage scan',
+  'storage.analyzing.scanning': 'Scanning volumes and file indexes…',
+  'storage.analyzing.working': 'Indexing {{path}}…',
+  'storage.analyzing.steps': 'Analysis steps',
+  'storage.analyzing.step.drives': 'Drives',
+  'storage.analyzing.step.usage': 'Disk usage',
+  'storage.analyzing.step.largeFiles': 'Large files',
+  'storage.analyzing.step.duplicates': 'Duplicates',
   'storage.drivesError': 'Could not load drives',
   'storage.localDisks': 'Local disks',
   'storage.localDisksHint':
@@ -733,6 +760,39 @@ export const en = {
   'storage.filter.path': 'Filter by folder path…',
   'storage.filter.sort': 'Sort',
   'storage.filter.allTypes': 'All types',
+
+  'storage.largeFiles.hero.overview': 'Large files',
+  'storage.largeFiles.hero.badge': 'Space hogs',
+  'storage.largeFiles.hero.badgeScanning': 'Scanning',
+  'storage.largeFiles.hero.scanningHeadline': 'Finding oversized files…',
+  'storage.largeFiles.hero.scanningSub':
+    'Indexing files over 100 MB across your drives. This may take a moment.',
+  'storage.largeFiles.hero.emptyHeadline': 'No large files found.',
+  'storage.largeFiles.hero.emptySub':
+    'Nothing over 100 MB was detected. Run a storage analysis from Overview to refresh.',
+  'storage.largeFiles.hero.readyHeadline': '{{count}} large files — {{bytes}} total',
+  'storage.largeFiles.hero.readySub':
+    'Select files to move to trash, export a list, or filter below to narrow results.',
+  'storage.largeFiles.hero.selectedHeadline': '{{count}} file(s) selected',
+  'storage.largeFiles.hero.selectedSub':
+    'Review your selection below, then delete to reclaim space or export before removing.',
+
+  'storage.duplicates.hero.overview': 'Duplicate files',
+  'storage.duplicates.hero.badge': 'Dedup finder',
+  'storage.duplicates.hero.badgeScanning': 'Scanning',
+  'storage.duplicates.hero.scanningHeadline': 'Looking for duplicate copies…',
+  'storage.duplicates.hero.scanningSub':
+    'Comparing file hashes to find identical copies wasting disk space.',
+  'storage.duplicates.hero.emptyHeadline': 'No duplicates found.',
+  'storage.duplicates.hero.emptySub':
+    'No identical file groups were detected. Run a storage analysis from Overview to refresh.',
+  'storage.duplicates.hero.readyHeadline': '{{count}} duplicate groups — {{bytes}} reclaimable',
+  'storage.duplicates.hero.readySub':
+    'Select duplicate copies to remove while keeping one original per group.',
+  'storage.duplicates.hero.selectedHeadline': '{{count}} copy(ies) selected',
+  'storage.duplicates.hero.selectedSub':
+    'Delete selected duplicates to reclaim space. Originals in each group stay untouched.',
+  'storage.duplicates.hero.selectDuplicates': 'Select duplicates',
 
   'largeFiles.title': 'Large Files',
   'largeFiles.description': 'Find oversized files and free space with confidence.',
@@ -796,6 +856,8 @@ export const en = {
   'performance.quickStartupDesc': 'Control what launches when you sign in.',
   'performance.quickBg': 'Review background apps',
   'performance.quickBgDesc': 'Stop safe processes that hold memory.',
+  'performance.hero.overview': 'Performance overview',
+  'performance.hero.badge': 'Performance',
   'performance.hero.healthy': 'Healthy',
   'performance.hero.attention': 'Needs attention',
   'performance.hero.pressure': 'Under pressure',
@@ -807,6 +869,12 @@ export const en = {
   'performance.hero.boosting': 'Boosting…',
   'performance.hero.cancelBoost': 'Cancel Boost',
   'performance.hero.boostHint': 'Clears temps, caches, and reclaimable clutter safely.',
+  'performance.boosting.title': 'Boosting performance…',
+  'performance.boosting.message':
+    'Clearing temp files, caches, and reclaiming memory for a faster PC.',
+  'performance.boosting.badge': 'Performance boost',
+  'performance.boosting.scanning': 'Running safe optimization steps…',
+  'performance.boosting.working': 'Working on {{path}}…',
 
   'startupApps.title': 'Startup Applications',
   'startupApps.description': 'Control apps that launch when your PC starts.',
