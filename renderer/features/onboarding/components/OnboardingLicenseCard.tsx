@@ -147,13 +147,13 @@ export function OnboardingLicenseCard({
   return (
     <section
       className={cn(
-        'relative z-10 flex max-h-full w-full max-w-[440px] flex-col overflow-y-auto rounded-[24px]',
+        'relative z-10 flex max-h-full w-full max-w-[400px] flex-col overflow-y-auto rounded-[20px]',
         'border border-white/80 bg-white/90 backdrop-blur-xl',
         'shadow-[0_20px_48px_rgba(30,58,95,0.18)]',
         'animate-in fade-in-0 slide-in-from-right-4 duration-300'
       )}
     >
-      <div className="relative flex min-h-0 flex-1 flex-col p-6 sm:p-7">
+      <div className="relative flex min-h-0 flex-1 flex-col p-5 sm:p-6">
         {step === 'ready' ? (
           <>
             <BrandLockup />
@@ -191,7 +191,7 @@ export function OnboardingLicenseCard({
         {step === 'hero' ? (
           <>
             <BrandLockup />
-            <h1 className="text-center text-[24px] font-bold leading-[1.2] tracking-tight text-slate-900 sm:text-[26px]">
+            <h1 className="text-center text-[22px] font-bold leading-[1.2] tracking-tight text-slate-900 sm:text-[24px]">
               {t('onboarding.hero.titleLead')}{' '}
               <span className="text-[#2563EB]">{t('onboarding.hero.titleAccent')}</span>
             </h1>

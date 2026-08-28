@@ -1,8 +1,9 @@
-/** Typography scale — Inter, desktop-optimized */
+/** Typography scale — Plus Jakarta Sans, desktop-optimized */
 
 export const typography = {
   fontFamily: {
-    sans: 'Inter, system-ui, -apple-system, sans-serif'
+    sans:
+      "'Plus Jakarta Sans', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif"
   },
   display: {
     size: '32px',
