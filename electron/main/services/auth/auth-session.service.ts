@@ -13,6 +13,7 @@ import type {
   AuthUserProfile,
   CachedSubscription
 } from '@shared/interfaces'
+import { normalizeEmailInput } from '@shared/utils'
 
 const log = createLogger('AuthSession')
 
@@ -166,7 +167,7 @@ export class AuthSessionService {
       >(
         '/auth/login',
         {
-          email: credentials.email.trim().toLowerCase(),
+          email: normalizeEmailInput(credentials.email),
           ...(credentials.password ? { password: credentials.password } : {})
         },
         {
@@ -201,7 +202,7 @@ export class AuthSessionService {
   }
 
   async requestLoginOtp(email: string): Promise<{ requiresOtp: true }> {
-    const trimmed = email.trim().toLowerCase()
+    const trimmed = normalizeEmailInput(email)
     if (!trimmed) throw new Error('Email is required')
     await apiClient.post(
       '/auth/otp/request',
@@ -220,7 +221,7 @@ export class AuthSessionService {
     const response = await apiClient.post<ServerAuthPayload>(
       '/auth/otp/verify',
       {
-        email: email.trim().toLowerCase(),
+        email: normalizeEmailInput(email),
         code: code.trim()
       },
       {
@@ -267,7 +268,7 @@ export class AuthSessionService {
   async register(credentials: AuthCredentials): Promise<AuthSessionSnapshot> {
     this.assertCredentials(credentials)
     const body: Record<string, string> = {
-      email: credentials.email.trim().toLowerCase(),
+      email: normalizeEmailInput(credentials.email),
       password: credentials.password ?? ''
     }
     if (credentials.name?.trim()) body.name = credentials.name.trim()

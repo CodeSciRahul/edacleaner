@@ -4,6 +4,7 @@ import { authService } from '@/services/auth-service'
 import type { AuthCredentials, AuthSessionSnapshot } from '@/services/auth-service'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import { isPlausibleEmail, normalizeEmailInput } from '@shared/utils'
 
 export type AuthMode = 'login' | 'register'
 export type AuthStep = 'email' | 'password' | 'otp'
@@ -116,9 +117,13 @@ export function useAuthSubmit({
     setError(null)
     setNotice(null)
 
-    const trimmedEmail = email.trim()
+    const trimmedEmail = normalizeEmailInput(email)
     if (!trimmedEmail) {
       setError(t('auth.error.emailRequired'))
+      return
+    }
+    if (!isPlausibleEmail(trimmedEmail)) {
+      setError(t('auth.error.invalid'))
       return
     }
 
@@ -208,7 +213,7 @@ export function useAuthSubmit({
     if (!(await ensureOnline())) return
     setSubmitting(true)
     try {
-      await authService.requestLoginOtp(email.trim())
+      await authService.requestLoginOtp(normalizeEmailInput(email))
       setNotice(t('auth.otp.sent'))
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
