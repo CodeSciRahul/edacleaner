@@ -90,13 +90,7 @@ jobs:
           if [[ "$CSC_LINK_SECRET" == http://* || "$CSC_LINK_SECRET" == https://* || "$CSC_LINK_SECRET" == /* ]]; then
             echo "CSC_LINK=$CSC_LINK_SECRET" >> "$GITHUB_ENV"
           else
-            python3 - <<'PY'
-import base64, os, pathlib
-raw = os.environ["CSC_LINK_SECRET"].strip()
-path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "developer-id.p12"
-path.write_bytes(base64.b64decode(raw))
-print(f"Imported Developer ID certificate ({path.stat().st_size} bytes)")
-PY
+            python3 -c "import base64, os, pathlib; raw=os.environ['CSC_LINK_SECRET'].strip(); path=pathlib.Path(os.environ['RUNNER_TEMP'])/'developer-id.p12'; path.write_bytes(base64.b64decode(raw)); print(f'Imported Developer ID certificate ({path.stat().st_size} bytes)')"
             echo "CSC_LINK=$RUNNER_TEMP/developer-id.p12" >> "$GITHUB_ENV"
           fi
 
