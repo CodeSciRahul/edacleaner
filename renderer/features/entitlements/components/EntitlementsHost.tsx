@@ -39,7 +39,14 @@ export function EntitlementsHost(): React.ReactElement {
   return (
     <>
       <UpgradePromptModal />
-      <PlansModal open={plansModalOpen} onClose={closePlansModal} />
+      <PlansModal
+        open={plansModalOpen}
+        onClose={closePlansModal}
+        onActivateAccount={() => {
+          closePlansModal()
+          void authService.openWindow('register')
+        }}
+      />
     </>
   )
 }

@@ -1,7 +1,7 @@
-import { ipcMain, dialog, type OpenDialogOptions, type SaveDialogOptions } from 'electron'
+import { ipcMain, dialog, BrowserWindow, type OpenDialogOptions, type SaveDialogOptions } from 'electron'
 import { readFile, writeFile, access } from 'fs/promises'
 import { constants } from 'fs'
-import { IPC_CHANNELS } from '@shared/constants'
+import { IPC_CHANNELS, type AuthWindowMode } from '@shared/constants'
 import type { IpcResponse } from '@shared/interfaces'
 import {
   appService,
@@ -30,6 +30,7 @@ import {
   entitlementService
 } from '@main/services'
 import { toPublicQueueItem } from '@main/services/offline/security/sanitize-headers'
+import { windowManager } from '@main/managers'
 import type { ApiHttpMethod, ApiRequestConfig } from '@shared/interfaces'
 import type {
   BoostOptions,
@@ -43,6 +44,10 @@ function success<T>(data: T): IpcResponse<T> {
 
 function failure(error: string): IpcResponse {
   return { success: false, error }
+}
+
+function senderWindow(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
+  return BrowserWindow.fromWebContents(event.sender)
 }
 
 export function registerAppIpc(): void {
@@ -61,13 +66,51 @@ export function registerAppIpc(): void {
   )
   ipcMain.handle(IPC_CHANNELS.APP.OPEN_EXTERNAL, async (_event, rawUrl?: unknown) => {
     try {
-      if (typeof rawUrl !== 'string' || !rawUrl.trim()) {
+      if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
         throw new Error('url must be a non-empty string')
       }
       return success(await appService.openExternal(rawUrl))
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Failed to open URL')
     }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_MINIMIZE, (event) => {
+    senderWindow(event)?.minimize()
+    return success(null)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_TOGGLE_MAXIMIZE, (event) => {
+    const window = senderWindow(event)
+    if (!window) return success(null)
+    if (window.isFullScreen()) {
+      window.setFullScreen(false)
+    } else if (window.isMaximized()) {
+      window.unmaximize()
+    } else if (window.isMaximizable()) {
+      window.maximize()
+    }
+    return success(null)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_CLOSE, (event) => {
+    senderWindow(event)?.close()
+    return success(null)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_IS_MAXIMIZED, (event) => {
+    return success(Boolean(senderWindow(event)?.isMaximized()))
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP.WINDOW_SET_LAYOUT, (event, raw?: unknown) => {
+    const layout = raw === 'onboarding' ? 'onboarding' : raw === 'app' ? 'app' : null
+    if (!layout) {
+      return failure('layout must be onboarding or app')
+    }
+    const window = senderWindow(event)
+    if (!window) return success(null)
+    windowManager.applyLayout(window, layout)
+    return success({ layout })
   })
 }
 
@@ -878,9 +921,12 @@ export function registerSyncIpc(): void {
   })
 }
 
-function validateAuthCredentials(input: unknown): {
+function validateAuthCredentials(
+  input: unknown,
+  options: { passwordRequired: boolean }
+): {
   email: string
-  password: string
+  password?: string
   name?: string
 } {
   if (input == null || typeof input !== 'object') {
@@ -888,10 +934,11 @@ function validateAuthCredentials(input: unknown): {
   }
   const raw = input as Record<string, unknown>
   const email = assertString(raw.email, 'email')
-  const password = assertString(raw.password, 'password')
-  const result: { email: string; password: string; name?: string } = {
-    email,
-    password
+  const result: { email: string; password?: string; name?: string } = { email }
+  if (options.passwordRequired) {
+    result.password = assertString(raw.password, 'password')
+  } else if (typeof raw.password === 'string' && raw.password) {
+    result.password = raw.password
   }
   if (typeof raw.name === 'string' && raw.name.trim()) {
     result.name = raw.name.trim()
@@ -902,7 +949,7 @@ function validateAuthCredentials(input: unknown): {
 export function registerAuthIpc(): void {
   ipcMain.handle(IPC_CHANNELS.AUTH.LOGIN, async (_event, raw?: unknown) => {
     try {
-      const credentials = validateAuthCredentials(raw)
+      const credentials = validateAuthCredentials(raw, { passwordRequired: false })
       const session = await authSessionService.login(credentials)
       return success(session)
     } catch (err) {
@@ -912,11 +959,46 @@ export function registerAuthIpc(): void {
 
   ipcMain.handle(IPC_CHANNELS.AUTH.REGISTER, async (_event, raw?: unknown) => {
     try {
-      const credentials = validateAuthCredentials(raw)
+      const credentials = validateAuthCredentials(raw, { passwordRequired: true })
       const session = await authSessionService.register(credentials)
       return success(session)
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Register failed')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.REQUEST_OTP, async (_event, raw?: unknown) => {
+    try {
+      if (raw == null || typeof raw !== 'object') throw new Error('Invalid email')
+      const email = assertString((raw as Record<string, unknown>).email, 'email')
+      const data = await authSessionService.requestLoginOtp(email)
+      return success(data)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Could not send code')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.VERIFY_OTP, async (_event, raw?: unknown) => {
+    try {
+      if (raw == null || typeof raw !== 'object') throw new Error('Invalid code')
+      const payload = raw as Record<string, unknown>
+      const email = assertString(payload.email, 'email')
+      const code = assertString(payload.code, 'code')
+      const session = await authSessionService.verifyLoginOtp(email, code)
+      return success(session)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Could not verify code')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.SET_PASSWORD, async (_event, raw?: unknown) => {
+    try {
+      if (raw == null || typeof raw !== 'object') throw new Error('Invalid password')
+      const password = assertString((raw as Record<string, unknown>).password, 'password')
+      const session = await authSessionService.setPassword(password)
+      return success(session)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Could not set password')
     }
   })
 
@@ -979,6 +1061,21 @@ export function registerAuthIpc(): void {
       })
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Get subscription failed')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.OPEN_WINDOW, (event, raw?: unknown) => {
+    try {
+      const mode: AuthWindowMode = raw === 'register' ? 'register' : 'login'
+      const sender = senderWindow(event)
+      if (windowManager.isAuthWindow(sender)) {
+        sender?.focus()
+        return success({ opened: true, mode })
+      }
+      windowManager.createAuthWindow(mode)
+      return success({ opened: true, mode })
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to open sign-in window')
     }
   })
 }

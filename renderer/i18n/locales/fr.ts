@@ -24,9 +24,12 @@ export const fr: Record<TranslationKey, string> = {
   'common.refresh': 'Actualiser',
   'common.clear': 'Effacer',
   'common.close': 'Fermer',
+  'common.back': 'Retour',
+  'common.continue': 'Continuer',
   'common.manage': 'Gérer',
   'common.optimize': 'Optimiser',
   'common.scanning': 'Analyse…',
+  'common.optimizing': 'Optimisation…',
   'common.analyzing': 'Analyse en cours…',
   'common.items': '{{count}} éléments',
   'common.updates': '{{count}} mises à jour',
@@ -41,7 +44,9 @@ export const fr: Record<TranslationKey, string> = {
   'auth.tab.login': 'Connexion',
   'auth.tab.register': 'Créer un compte',
   'auth.login.title': 'Bon retour',
-  'auth.login.description': 'Utilisez votre compte EDA Cleaner pour continuer.',
+  'auth.login.description': 'Saisissez votre e-mail pour continuer.',
+  'auth.login.passwordStep': 'Saisissez le mot de passe de ce compte.',
+  'auth.login.continue': 'Continuer',
   'auth.register.title': 'Créer votre compte',
   'auth.register.description':
     'Commencez immédiatement avec l’offre Free après l’inscription.',
@@ -53,6 +58,7 @@ export const fr: Record<TranslationKey, string> = {
   'auth.placeholder.name': 'Votre nom',
   'auth.placeholder.email': 'vous@exemple.com',
   'auth.placeholder.password': 'Entrez votre mot de passe',
+  'auth.placeholder.passwordOptional': 'Mot de passe (laissez vide après un achat d’offre)',
   'auth.passwordHint': 'Utilisez au moins 8 caractères.',
   'auth.showPassword': 'Afficher le mot de passe',
   'auth.hidePassword': 'Masquer le mot de passe',
@@ -64,6 +70,8 @@ export const fr: Record<TranslationKey, string> = {
   'auth.offlineBanner':
     'Vous semblez hors ligne. Connectez-vous à Internet pour la première connexion ou création de compte.',
   'auth.error.required': 'L’e-mail et le mot de passe sont requis.',
+  'auth.error.emailRequired': 'L’e-mail est requis.',
+  'auth.error.passwordRequired': 'Le mot de passe est requis.',
   'auth.error.passwordLength': 'Le mot de passe doit contenir au moins 8 caractères.',
   'auth.error.offlineFirst':
     'Une connexion Internet est requise pour la première connexion ou création de compte.',
@@ -72,13 +80,128 @@ export const fr: Record<TranslationKey, string> = {
   'auth.error.network':
     'Erreur réseau. Vérifiez que le serveur est accessible et réessayez.',
   'auth.error.invalid': 'E-mail ou mot de passe invalide.',
+  'auth.error.setPasswordAfterPurchase':
+    'Saisissez l’e-mail du paiement. Nous enverrons un code de connexion.',
   'auth.error.conflict':
     'Un compte existe déjà avec cet e-mail. Essayez de vous connecter.',
   'auth.error.generic': 'Une erreur s’est produite. Veuillez réessayer.',
+  'auth.otp.heading': 'Vérifiez votre e-mail',
+  'auth.otp.body':
+    'Nous avons envoyé un code à 6 chiffres à l’e-mail du paiement. Saisissez-le pour vous connecter, puis définissez un mot de passe plus tard dans Paramètres.',
+  'auth.otp.placeholder': 'Code à 6 chiffres',
+  'auth.otp.submit': 'Vérifier le code',
+  'auth.otp.resend': 'Renvoyer le code',
+  'auth.otp.changeEmail': 'Utiliser un autre e-mail',
+  'auth.otp.sent': 'Un code de vérification a été envoyé à votre e-mail.',
+  'auth.otp.invalid': 'Saisissez le code à 6 chiffres reçu par e-mail.',
+  'auth.otp.expired': 'Ce code a expiré. Demandez-en un nouveau.',
+  'auth.otp.wait': 'Attendez un instant avant de demander un autre code.',
+  'auth.window.loginHeading': 'Connexion à edaCleaner',
+  'auth.window.registerHeading': 'Créer un compte edaCleaner',
+  'auth.window.productLine': 'Optimisation PC',
+  'auth.window.emailPlaceholder': 'Nom d’utilisateur ou e-mail',
+  'auth.window.forgotPassword': 'Mot de passe oublié ?',
+  'auth.window.forgotPasswordHint':
+    'La réinitialisation du mot de passe n’est pas encore disponible dans l’application. Utilisez le mot de passe de ce compte, ou créez-en un nouveau.',
+  'auth.window.modeLabel': 'Options du compte',
+  'auth.window.needAccount': 'Pas encore de compte ?',
+  'auth.window.haveAccount': 'Vous avez déjà un compte ?',
+
+  'onboarding.progress': 'Étape {{current}} sur {{total}}',
+  'onboarding.progressNav': 'Progression de la configuration',
+  'onboarding.hero.titleLead': 'Un PC plus rapide et plus propre',
+  'onboarding.hero.titleAccent': 'vous attend',
+  'onboarding.hero.body':
+    'EdaCleaner vous aide à supprimer les fichiers inutiles, à optimiser les performances et à sécuriser votre PC.',
+  'onboarding.hero.cleanTitle': 'Nettoyage en profondeur',
+  'onboarding.hero.cleanBody': 'Supprimez les fichiers inutiles et libérez de l’espace.',
+  'onboarding.hero.boostTitle': 'Boost de performances',
+  'onboarding.hero.boostBody': 'Optimisez les réglages système et gagnez en vitesse.',
+  'onboarding.hero.privacyTitle': 'Protection de la vie privée',
+  'onboarding.hero.privacyBody': 'Protégez vos données et sécurisez votre PC.',
+  'onboarding.hero.manageTitle': 'Gestion intelligente',
+  'onboarding.hero.manageBody': 'Gérez les programmes au démarrage et les ressources.',
+  'onboarding.hero.trust': 'Satisfait ou remboursé 30 jours • Sûr et de confiance',
+  'onboarding.hero.artAlt': 'EdaCleaner aide à optimiser un PC, avec des outils de nettoyage et de sécurité',
+  'onboarding.ready.artAlt': 'EdaCleaner avec un PC optimisé et une offre de protection active',
+  'onboarding.welcome.eyebrow': 'EDA Cleaner',
+  'onboarding.welcome.title': 'Bienvenue dans EDA Cleaner',
+  'onboarding.welcome.body':
+    'Un outil d’optimisation professionnel pour le nettoyage, le stockage et les performances — conçu pour garder ce PC rapide, sans approximation.',
+  'onboarding.welcome.point1': 'Trouvez les fichiers inutiles et l’espace disque récupérable',
+  'onboarding.welcome.point2': 'Améliorez la réactivité avec des outils de performance guidés',
+  'onboarding.welcome.point3': 'Surveillez le CPU, la mémoire et le disque en direct',
+  'onboarding.value.eyebrow': 'Pourquoi c’est important',
+  'onboarding.value.title': 'Nettoyez en toute confiance',
+  'onboarding.value.body':
+    'EDA Cleaner montre ce qu’il a trouvé, l’espace que vous pouvez récupérer, et vous laisse choisir quoi supprimer — rien n’est effacé avant confirmation.',
+  'onboarding.value.point1': 'Nettoyage par catégories, sans suppressions aveugles',
+  'onboarding.value.point2': 'Aperçu du stockage : gros fichiers et doublons',
+  'onboarding.value.point3': 'Un seul endroit pour les analyses, résultats et l’historique',
+  'onboarding.features.eyebrow': 'Fonctionnalités',
+  'onboarding.features.title': 'Tout ce qu’il vous faut, dans une application de bureau',
+  'onboarding.features.body':
+    'Commencez par une analyse intelligente, puis passez au nettoyage, au stockage ou aux performances selon vos besoins.',
+  'onboarding.features.smartScan': 'Bilan de santé en un clic : fichiers inutiles, stockage et performances.',
+  'onboarding.features.cleanup': 'Supprimez temporaires, caches et encombrement après un aperçu clair.',
+  'onboarding.features.performance': 'Gérez le démarrage, les applications en arrière-plan et la charge système.',
+  'onboarding.license.eyebrow': 'Offre',
+  'onboarding.license.title': 'Activez ou achetez une offre',
+  'onboarding.license.body':
+    'Connectez-vous pour activer votre compte EDA Cleaner, ou achetez une offre pour comparer Free, Pro et Premium.',
+  'onboarding.license.accountNote':
+    'Vous pouvez acheter une offre sans vous connecter. Après le paiement, créez un compte avec le même e-mail pour l’activer sur ce PC.',
+  'onboarding.license.choicesLabel': 'Choisissez comment continuer',
+  'onboarding.license.alreadyPurchased': 'Déjà acheté',
+  'onboarding.license.alreadyPurchasedHint': 'Connectez-vous pour activer ce PC',
+  'onboarding.license.activate': 'Activer',
+  'onboarding.license.activateHint': 'Créer un nouveau compte',
+  'onboarding.license.buy': 'Acheter une offre',
+  'onboarding.license.buyHint': 'Choisir Free, Pro ou Premium',
+  'onboarding.license.viewPlans': 'Voir les offres',
+  'onboarding.license.viewPlansHint': 'Comparer Free, Pro et Premium',
+  'onboarding.account.activateEyebrow': 'Activer',
+  'onboarding.account.activateTitle': 'Connectez-vous pour activer',
+  'onboarding.account.activateBody':
+    'Créez un compte ou connectez-vous. Cela active EDA Cleaner sur ce PC. L’achat d’une offre payante est une étape séparée.',
+  'onboarding.account.purchaseEyebrow': 'Acheter une offre',
+  'onboarding.account.purchaseTitle': 'Connectez-vous après l’achat',
+  'onboarding.account.purchaseBody':
+    'Connectez-vous avec le même e-mail que lors du paiement. Nous envoyons un code à usage unique pour débloquer votre offre. Vous pourrez définir un mot de passe dans Paramètres.',
+  'onboarding.account.backToLicense': 'Retour aux options d’offre',
+  'onboarding.ready.title': 'Vous êtes prêt',
+  'onboarding.ready.body':
+    'Votre compte est actif sur ce PC. Ouvrez EDA Cleaner pour analyser, nettoyer et optimiser.',
+  'onboarding.ready.paidTitle': 'Tout est prêt',
+  'onboarding.ready.paidBody':
+    '{{plan}} est actif sur ce PC. Ouvrez EDA Cleaner pour analyser, nettoyer et optimiser.',
+  'onboarding.ready.plan': 'Offre actuelle : {{plan}}',
+  'onboarding.ready.start': 'Commencer',
+  'onboarding.preview.alt': 'Aperçu du produit EDA Cleaner',
+  'onboarding.preview.overview': 'Aperçu',
+  'onboarding.preview.health': 'Santé du PC en un coup d’œil',
+  'onboarding.preview.cpu': 'CPU',
+  'onboarding.preview.memory': 'Mémoire',
+  'onboarding.preview.storage': 'Stockage',
+  'onboarding.preview.scanReady': 'Analyse intelligente prête',
+  'onboarding.preview.cleanup': 'Nettoyage',
+  'onboarding.preview.reclaim': '2,4 Go à examiner',
+  'onboarding.preview.temp': 'Fichiers temporaires',
+  'onboarding.preview.browser': 'Cache navigateur',
+  'onboarding.preview.recycle': 'Corbeille',
+  'onboarding.preview.smartScan': 'Contrôle guidé des fichiers inutiles, du stockage et de la vitesse.',
+  'onboarding.preview.monitor': 'Graphiques CPU, RAM et disque en direct.',
+  'onboarding.preview.storageHint': 'Voyez où va l’espace disque — puis libérez-le à votre rythme.',
+  'onboarding.preview.license': 'Activation sécurisée du compte et de l’offre',
 
   'sidebar.tagline': 'Optimiseur PC',
   'sidebar.collapse': 'Réduire la barre latérale',
   'sidebar.expand': 'Développer la barre latérale',
+  'window.minimize': 'Réduire',
+  'window.maximize': 'Agrandir',
+  'window.restore': 'Restaurer',
+  'window.close': 'Fermer la fenêtre',
+  'window.controls': 'Contrôles de la fenêtre',
   'sidebar.navMain': 'Navigation principale',
   'sidebar.navPrimary': 'Principal',
   'sidebar.status': 'État du système',
@@ -100,8 +223,11 @@ export const fr: Record<TranslationKey, string> = {
   'plans.title': 'Choisissez votre offre',
   'plans.description':
     'Comparez Free, Pro et Premium. Les paiements s’ouvrent en toute sécurité dans votre navigateur.',
+  'plans.guestNotice':
+    'Payez dans le navigateur avec votre e-mail. Après le paiement, connectez-vous avec cet e-mail — nous envoyons un code, puis vous définissez un mot de passe dans Paramètres.',
   'plans.loading': 'Chargement des offres…',
   'plans.recommended': 'Recommandé',
+  'plans.yourPlan': 'Votre offre actuelle : {{plan}}',
   'plans.currentBadge': 'Actuelle',
   'plans.price.free': 'Gratuit',
   'plans.price.forever': 'Gratuit pour toujours',
@@ -115,6 +241,7 @@ export const fr: Record<TranslationKey, string> = {
   'plans.saveAmount': 'Économisez {{amount}}',
   'plans.trial': 'Essai gratuit de {{days}} jours disponible',
   'plans.pendingHint': 'Changement prévu en fin de période',
+  'plans.action.activate': 'Activer',
   'plans.action.current': 'Offre actuelle',
   'plans.action.upgrade': 'Mettre à niveau',
   'plans.action.downgrade': 'Rétrograder',
@@ -123,6 +250,8 @@ export const fr: Record<TranslationKey, string> = {
     'Une connexion Internet est requise pour acheter ou modifier un abonnement. Votre offre en cache reste active hors ligne.',
   'plans.feedback.checkoutOpened':
     'Le paiement s’est ouvert dans votre navigateur. Revenez ici après le paiement — votre offre se mettra à jour automatiquement.',
+  'plans.feedback.guestCheckoutOpened':
+    'Le paiement s’est ouvert dans votre navigateur. Utilisez l’e-mail de cette offre. Après le paiement, connectez-vous avec cet e-mail et saisissez le code reçu.',
   'plans.feedback.updated': 'Votre abonnement est à jour.',
   'plans.feedback.downgradeScheduled':
     'Rétrogradation planifiée. Votre offre actuelle reste active jusqu’à la fin de la période.',
@@ -321,6 +450,12 @@ export const fr: Record<TranslationKey, string> = {
     'Vos jetons de session locaux seront effacés. L’historique de nettoyage sur ce PC est conservé.',
   'settings.account.logoutError':
     'Impossible de se déconnecter pour le moment. Veuillez réessayer.',
+  'settings.account.setPasswordTitle': 'Définir un mot de passe',
+  'settings.account.setPasswordBody':
+    'Vous vous êtes connecté avec un code e-mail après l’achat. Ajoutez un mot de passe pour les prochaines connexions.',
+  'settings.account.setPassword': 'Enregistrer le mot de passe',
+  'settings.account.passwordSet': 'Mot de passe enregistré. Vous pourrez l’utiliser à la prochaine connexion.',
+  'settings.account.passwordSetError': 'Impossible d’enregistrer le mot de passe. Réessayez.',
 
   'settings.about.title': 'À propos',
   'settings.about.description':
@@ -514,6 +649,8 @@ export const fr: Record<TranslationKey, string> = {
   'cleanup.confirm.title': 'Optimiser votre PC ?',
   'cleanup.confirm.body': 'Optimiser {{count}} catégories sélectionnées ?',
   'cleanup.confirm.bodyOne': 'Optimiser 1 catégorie sélectionnée ?',
+  'cleanup.confirm.detail':
+    'Nous libérerons en toute sécurité les fichiers indésirables, temporaires et caches. Vos documents personnels ne sont jamais touchés. Certains fichiers ouverts peuvent être laissés pour garder vos applis stables.',
   'cleanup.confirm.notNow': 'Pas maintenant',
   'cleanup.confirm.confirm': 'Optimiser maintenant',
 
@@ -535,6 +672,7 @@ export const fr: Record<TranslationKey, string> = {
   'smartScan.bootImpact': 'Impact au démarrage',
   'smartScan.goPerformance': 'Aller aux Performances',
   'smartScan.duration': 'Durée de l’analyse',
+  'smartScan.goReports': 'Aller aux Rapports',
   'smartScan.onTrack': 'Sur la bonne voie',
   'smartScan.status.scanningTitle': 'Analyse intelligente en cours…',
   'smartScan.status.scanningMsg':
@@ -561,16 +699,6 @@ export const fr: Record<TranslationKey, string> = {
   'smartScan.hero.healthScore': 'Score de santé',
   'smartScan.hero.reclaimHint':
     'Jusqu’à {{bytes}} peuvent être récupérés — ouvrez Nettoyage ou Stockage pour optimiser.',
-  'smartScan.history.lastScanned': 'Dernière analyse',
-  'smartScan.history.spaceReclaimed': 'Espace récupéré',
-  'smartScan.history.issuesResolved': 'Problèmes résolus',
-  'smartScan.history.filesScanned': 'Fichiers analysés',
-  'smartScan.history.healthScore': 'Score de santé',
-  'smartScan.history.noIssues': 'Aucun problème ouvert',
-  'smartScan.history.issuesFound': '{{count}} problèmes trouvés',
-  'smartScan.history.issueFound': '1 problème trouvé',
-  'smartScan.history.scansSaved': '{{count}} analyses enregistrées',
-  'smartScan.history.scanSaved': '1 analyse enregistrée',
   'smartScan.progress.fallback': 'Recherche d’optimisations faciles sur votre PC…',
   'smartScan.relative.justNow': 'À l’instant',
   'smartScan.relative.minAgo': 'Il y a {{count}} min',
@@ -580,8 +708,32 @@ export const fr: Record<TranslationKey, string> = {
 
   'storage.title': 'Stockage',
   'storage.description': 'Comprenez la capacité disque et libérez de l’espace en toute confiance.',
+  'storage.hero.overview': 'Aperçu stockage',
+  'storage.hero.badge': 'Analyseur d’utilisation disque',
+  'storage.hero.idleHeadline': 'Découvrez où va votre espace.',
+  'storage.hero.idleSub':
+    'Analysez les disques locaux pour cartographier l’usage des dossiers, repérer les gros fichiers et les doublons.',
+  'storage.hero.analyzingHeadline': 'Cartographie de l’utilisation disque…',
+  'storage.hero.analyzingSub':
+    'Indexation des dossiers et mesure de l’utilisation sur les volumes. Cela peut prendre une minute.',
+  'storage.hero.readyHeadline': '{{percent}}% utilisé — {{used}} sur {{total}}',
+  'storage.hero.readySub':
+    'Consultez la répartition des dossiers ci-dessous ou relancez l’analyse pour actualiser l’usage sur tous vos disques.',
+  'storage.hero.readySubNoAnalysis':
+    'Analysez un disque ci-dessous pour cartographier l’usage des dossiers et libérer de l’espace.',
   'storage.analyze': 'Analyser le disque',
   'storage.analyzing': 'Analyse…',
+  'storage.analyzing.title': 'Analyse du stockage…',
+  'storage.analyzing.message':
+    'Indexation des dossiers et mesure de l’utilisation disque sur vos volumes.',
+  'storage.analyzing.badge': 'Analyse stockage',
+  'storage.analyzing.scanning': 'Analyse des volumes et index de fichiers…',
+  'storage.analyzing.working': 'Indexation de {{path}}…',
+  'storage.analyzing.steps': 'Étapes d’analyse',
+  'storage.analyzing.step.drives': 'Disques',
+  'storage.analyzing.step.usage': 'Utilisation',
+  'storage.analyzing.step.largeFiles': 'Gros fichiers',
+  'storage.analyzing.step.duplicates': 'Doublons',
   'storage.drivesError': 'Impossible de charger les disques',
   'storage.localDisks': 'Disques locaux',
   'storage.localDisksHint':
@@ -630,6 +782,39 @@ export const fr: Record<TranslationKey, string> = {
   'storage.filter.path': 'Filtrer par chemin de dossier…',
   'storage.filter.sort': 'Trier',
   'storage.filter.allTypes': 'Tous les types',
+
+  'storage.largeFiles.hero.overview': 'Gros fichiers',
+  'storage.largeFiles.hero.badge': 'Fichiers volumineux',
+  'storage.largeFiles.hero.badgeScanning': 'Analyse',
+  'storage.largeFiles.hero.scanningHeadline': 'Recherche de fichiers volumineux…',
+  'storage.largeFiles.hero.scanningSub':
+    'Indexation des fichiers de plus de 100 Mo sur vos disques. Cela peut prendre un moment.',
+  'storage.largeFiles.hero.emptyHeadline': 'Aucun gros fichier trouvé.',
+  'storage.largeFiles.hero.emptySub':
+    'Rien de plus de 100 Mo détecté. Lancez une analyse depuis l’aperçu pour actualiser.',
+  'storage.largeFiles.hero.readyHeadline': '{{count}} gros fichiers — {{bytes}} au total',
+  'storage.largeFiles.hero.readySub':
+    'Sélectionnez des fichiers à supprimer, exportez une liste ou filtrez ci-dessous.',
+  'storage.largeFiles.hero.selectedHeadline': '{{count}} fichier(s) sélectionné(s)',
+  'storage.largeFiles.hero.selectedSub':
+    'Vérifiez votre sélection ci-dessous, puis supprimez ou exportez avant de retirer.',
+
+  'storage.duplicates.hero.overview': 'Fichiers en double',
+  'storage.duplicates.hero.badge': 'Détecteur de doublons',
+  'storage.duplicates.hero.badgeScanning': 'Analyse',
+  'storage.duplicates.hero.scanningHeadline': 'Recherche de copies en double…',
+  'storage.duplicates.hero.scanningSub':
+    'Comparaison des empreintes pour trouver les copies identiques qui gaspillent l’espace.',
+  'storage.duplicates.hero.emptyHeadline': 'Aucun doublon trouvé.',
+  'storage.duplicates.hero.emptySub':
+    'Aucun groupe identique détecté. Lancez une analyse depuis l’aperçu pour actualiser.',
+  'storage.duplicates.hero.readyHeadline': '{{count}} groupes de doublons — {{bytes}} récupérables',
+  'storage.duplicates.hero.readySub':
+    'Sélectionnez les copies en double à supprimer en gardant un original par groupe.',
+  'storage.duplicates.hero.selectedHeadline': '{{count}} copie(s) sélectionnée(s)',
+  'storage.duplicates.hero.selectedSub':
+    'Supprimez les doublons sélectionnés. Les originaux de chaque groupe restent intacts.',
+  'storage.duplicates.hero.selectDuplicates': 'Sélectionner les doublons',
 
   'largeFiles.title': 'Gros fichiers',
   'largeFiles.description': 'Trouvez les fichiers volumineux et libérez de l’espace en toute confiance.',
@@ -694,6 +879,8 @@ export const fr: Record<TranslationKey, string> = {
   'performance.quickStartupDesc': 'Contrôlez ce qui se lance à la connexion.',
   'performance.quickBg': 'Examiner les apps en arrière-plan',
   'performance.quickBgDesc': 'Arrêter les processus sûrs qui occupent la mémoire.',
+  'performance.hero.overview': 'Aperçu des performances',
+  'performance.hero.badge': 'Performances',
   'performance.hero.healthy': 'Sain',
   'performance.hero.attention': 'Attention requise',
   'performance.hero.pressure': 'Sous pression',
@@ -706,6 +893,12 @@ export const fr: Record<TranslationKey, string> = {
   'performance.hero.cancelBoost': 'Annuler le boost',
   'performance.hero.boostHint':
     'Vide en toute sécurité les temporaires, caches et fichiers inutiles récupérables.',
+  'performance.boosting.title': 'Optimisation des performances…',
+  'performance.boosting.message':
+    'Nettoyage des fichiers temporaires, caches et libération de la mémoire.',
+  'performance.boosting.badge': 'Boost performance',
+  'performance.boosting.scanning': 'Exécution des étapes d’optimisation sécurisées…',
+  'performance.boosting.working': 'Traitement de {{path}}…',
 
   'startupApps.title': 'Applications au démarrage',
   'startupApps.description': 'Contrôlez les apps qui se lancent au démarrage du PC.',

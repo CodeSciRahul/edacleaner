@@ -74,6 +74,21 @@ const appApi = {
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.APP.DEEP_LINK, listener)
     }
+  },
+  minimizeWindow: () => invoke<void>(IPC_CHANNELS.APP.WINDOW_MINIMIZE),
+  toggleMaximizeWindow: () => invoke<void>(IPC_CHANNELS.APP.WINDOW_TOGGLE_MAXIMIZE),
+  closeWindow: () => invoke<void>(IPC_CHANNELS.APP.WINDOW_CLOSE),
+  isWindowMaximized: () => invoke<boolean>(IPC_CHANNELS.APP.WINDOW_IS_MAXIMIZED),
+  setWindowLayout: (layout: 'onboarding' | 'app') =>
+    invoke<{ layout: 'onboarding' | 'app' }>(IPC_CHANNELS.APP.WINDOW_SET_LAYOUT, layout),
+  onWindowMaximizedChange: (callback: (maximized: boolean) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, maximized: unknown): void => {
+      callback(maximized === true)
+    }
+    ipcRenderer.on(IPC_CHANNELS.APP.WINDOW_MAXIMIZED_CHANGED, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.APP.WINDOW_MAXIMIZED_CHANGED, listener)
+    }
   }
 }
 
@@ -370,6 +385,12 @@ const authApi = {
     invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.LOGIN, credentials),
   register: (credentials: AuthCredentials) =>
     invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.REGISTER, credentials),
+  requestLoginOtp: (email: string) =>
+    invoke<{ requiresOtp: true }>(IPC_CHANNELS.AUTH.REQUEST_OTP, { email }),
+  verifyLoginOtp: (email: string, code: string) =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.VERIFY_OTP, { email, code }),
+  setPassword: (password: string) =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.SET_PASSWORD, { password }),
   logout: () => invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.LOGOUT),
   getSession: () =>
     invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.GET_SESSION),
@@ -389,6 +410,11 @@ const authApi = {
       features: string[]
       trial: { isTrialing: boolean; trialEnd: string | null }
     }>(IPC_CHANNELS.AUTH.GET_SUBSCRIPTION),
+  openWindow: (mode?: 'login' | 'register') =>
+    invoke<{ opened: true; mode: 'login' | 'register' }>(
+      IPC_CHANNELS.AUTH.OPEN_WINDOW,
+      mode ?? 'login'
+    ),
   onSessionChanged: (callback: (event: AuthSessionChangedEvent) => void) => {
     const listener = (
       _event: Electron.IpcRendererEvent,

@@ -1,19 +1,16 @@
 import { useNavigate } from 'react-router-dom'
-import {
-  HardDrive,
-  ScanSearch,
-  Sparkles,
-  Trash2,
-  Zap,
-  type LucideIcon
-} from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import iconScan from '@/assets/dashboard/icon-smart-scan.png'
+import iconCleanup from '@/assets/dashboard/icon-cleanup.png'
+import iconBoost from '@/assets/dashboard/icon-boost.png'
+import iconStorage from '@/assets/dashboard/icon-storage.png'
 
 interface ActionItem {
   id: string
-  icon: LucideIcon
+  iconSrc: string
   titleKey: TranslationKey
   descKey: TranslationKey
   actionKey: TranslationKey
@@ -24,39 +21,39 @@ interface ActionItem {
 const ACTIONS: ActionItem[] = [
   {
     id: 'scan',
-    icon: ScanSearch,
+    iconSrc: iconScan,
     titleKey: 'home.action.scanTitle',
     descKey: 'home.action.scanDesc',
     actionKey: 'home.scanNow',
     href: '/smart-scan',
-    wrap: 'bg-primary/10 text-primary'
+    wrap: 'bg-primary/10 ring-1 ring-primary/15'
   },
   {
     id: 'cleanup',
-    icon: Trash2,
+    iconSrc: iconCleanup,
     titleKey: 'home.junkTitle',
     descKey: 'home.junkDesc',
     actionKey: 'home.junkAction',
     href: '/cleanup',
-    wrap: 'bg-chart-disk/10 text-chart-disk'
+    wrap: 'bg-chart-disk/10 ring-1 ring-chart-disk/15'
   },
   {
     id: 'boost',
-    icon: Zap,
+    iconSrc: iconBoost,
     titleKey: 'home.ramTitle',
     descKey: 'home.ramDesc',
     actionKey: 'home.ramAction',
     href: '/performance',
-    wrap: 'bg-warning/10 text-warning'
+    wrap: 'bg-warning/10 ring-1 ring-warning/15'
   },
   {
     id: 'storage',
-    icon: HardDrive,
+    iconSrc: iconStorage,
     titleKey: 'home.action.storageTitle',
     descKey: 'home.action.storageDesc',
     actionKey: 'home.action.storageAction',
     href: '/storage',
-    wrap: 'bg-chart-ram/10 text-chart-ram'
+    wrap: 'bg-chart-ram/10 ring-1 ring-chart-ram/15'
   }
 ]
 
@@ -72,7 +69,7 @@ export function DashboardQuickActions(): React.ReactElement {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {ACTIONS.map(({ id, icon: Icon, titleKey, descKey, actionKey, href, wrap }) => (
+        {ACTIONS.map(({ id, iconSrc, titleKey, descKey, actionKey, href, wrap }) => (
           <button
             key={id}
             type="button"
@@ -86,11 +83,19 @@ export function DashboardQuickActions(): React.ReactElement {
           >
             <div
               className={cn(
-                'mb-4 flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105',
+                'mb-4 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:scale-105',
                 wrap
               )}
             >
-              <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+              <img
+                src={iconSrc}
+                alt=""
+                width={44}
+                height={44}
+                className="h-11 w-11 object-contain drop-shadow-sm"
+                draggable={false}
+                aria-hidden="true"
+              />
             </div>
             <p className="text-sm font-semibold text-foreground">{t(titleKey)}</p>
             <p className="mt-1 flex-1 text-xs leading-relaxed text-muted-foreground">

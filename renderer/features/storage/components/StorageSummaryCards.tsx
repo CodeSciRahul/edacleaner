@@ -1,4 +1,3 @@
-import { Database, HardDrive, HeartPulse, Disc3 } from 'lucide-react'
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import {
@@ -10,6 +9,8 @@ import {
 import type { DriveInfo } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import { StorageSummaryCard } from './StorageSummaryCard'
+import type { StorageSummaryCardId } from '../lib/summary-meta'
 
 interface StorageSummaryCardsProps {
   drives: DriveInfo[]
@@ -35,52 +36,47 @@ export function StorageSummaryCards({
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="h-[96px] animate-pulse rounded-xl border border-border bg-muted/40"
+            className="h-[88px] animate-pulse rounded-2xl border border-border bg-muted/40"
           />
         ))}
       </section>
     )
   }
 
-  const cards = [
+  const cards: Array<{
+    id: StorageSummaryCardId
+    label: string
+    value: string
+    badge?: React.ReactNode
+  }> = [
     {
       id: 'total',
       label: t('storage.summary.capacity'),
-      value: formatBytes(totals.totalBytes),
-      icon: Database,
-      accent: 'text-primary bg-primary/10'
+      value: formatBytes(totals.totalBytes)
     },
     {
       id: 'used',
       label: t('storage.summary.used'),
-      value: formatBytes(totals.usedBytes),
-      icon: Disc3,
-      accent: 'text-chart-disk bg-chart-disk/10'
+      value: formatBytes(totals.usedBytes)
     },
     {
       id: 'free',
       label: t('storage.summary.available'),
-      value: formatBytes(totals.freeBytes),
-      icon: HardDrive,
-      accent: 'text-success bg-success/10'
+      value: formatBytes(totals.freeBytes)
     },
     {
       id: 'percent',
       label: t('storage.summary.usage'),
-      value: `${totals.usedPercent}%`,
-      icon: Disc3,
-      accent: 'text-warning bg-warning/10'
+      value: `${totals.usedPercent}%`
     },
     {
       id: 'health',
       label: t('storage.summary.health'),
       value: t(HEALTH_LABEL_KEYS[totals.overallStatus]),
-      icon: HeartPulse,
-      accent: 'text-foreground bg-muted',
       badge: (
         <span
           className={cn(
-            'mt-2 inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium',
+            'mt-1.5 inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium',
             capacityStatusClass[totals.overallStatus]
           )}
         >
@@ -88,35 +84,19 @@ export function StorageSummaryCards({
         </span>
       )
     }
-  ] as const
+  ]
 
   return (
     <section aria-label={t('storage.summary.capacity')} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      {cards.map((card) => {
-        const Icon = card.icon
-        return (
-          <article
-            key={card.id}
-            className="rounded-xl border border-border bg-card p-4 shadow-card transition-all duration-150 hover:-translate-y-0.5 hover:shadow-card-hover"
-          >
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div
-                className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-lg',
-                  card.accent
-                )}
-              >
-                <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-              </div>
-            </div>
-            <p className="text-xs font-medium text-muted-foreground">{card.label}</p>
-            <p className="mt-1 truncate text-xl font-semibold tabular-nums tracking-tight text-foreground">
-              {drives.length === 0 && card.id !== 'health' ? '—' : card.value}
-            </p>
-            {'badge' in card ? card.badge : null}
-          </article>
-        )
-      })}
+      {cards.map((card) => (
+        <StorageSummaryCard
+          key={card.id}
+          cardId={card.id}
+          label={card.label}
+          value={drives.length === 0 && card.id !== 'health' ? '—' : card.value}
+          badge={card.badge}
+        />
+      ))}
     </section>
   )
 }

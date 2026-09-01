@@ -225,6 +225,7 @@ export const subscriptionService = {
   async listPlans(): Promise<PublicPlan[]> {
     const response = await apiClient.get<PublicPlan[]>('/plans', {
       skipOfflineQueue: true,
+      skipAuth: true,
       cache: { ttlMs: 5 * 60_000, key: 'plans:list' }
     })
     const plans = asPlanArray(response.data)
@@ -236,6 +237,20 @@ export const subscriptionService = {
       '/subscription/change-plan',
       { planId },
       {
+        skipOfflineQueue: true,
+        skipOfflineCache: true
+      }
+    )
+    return asChangePlanResult(response.data)
+  },
+
+  async guestCheckout(planId: string): Promise<ChangePlanResult> {
+    const response = await apiClient.post<unknown>(
+      '/subscription/guest-checkout',
+      { planId },
+      {
+        skipAuth: true,
+        skipAuthRefresh: true,
         skipOfflineQueue: true,
         skipOfflineCache: true
       }

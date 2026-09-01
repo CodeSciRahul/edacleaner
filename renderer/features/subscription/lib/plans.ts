@@ -50,7 +50,7 @@ export interface PlanChangeStatusPayload {
 
 export type ChangePlanResult = CheckoutSessionPayload | PlanChangeStatusPayload
 
-export type PlanActionKind = 'current' | 'upgrade' | 'downgrade'
+export type PlanActionKind = 'current' | 'upgrade' | 'downgrade' | 'activate'
 
 export function isPlanSlug(value: string): value is PlanSlug {
   return value === 'free' || value === 'pro' || value === 'premium'
@@ -68,13 +68,16 @@ export function normalizeBillingInterval(
 }
 
 export function resolvePlanAction(
-  current: PlanSlug,
+  current: PlanSlug | null,
   target: PlanSlug,
   options?: {
     currentInterval?: BillingInterval | null
     targetInterval?: BillingInterval | null
   }
 ): PlanActionKind {
+  if (current == null) {
+    return target === 'free' ? 'activate' : 'upgrade'
+  }
   if (current === target) {
     const currentInterval = options?.currentInterval ?? 'month'
     const targetInterval = options?.targetInterval ?? 'month'

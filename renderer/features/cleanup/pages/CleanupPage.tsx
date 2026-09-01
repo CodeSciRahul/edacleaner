@@ -2,14 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
-  Loader2,
   RefreshCw,
   Sparkles,
-  Square,
   CheckCheck
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Toolbar } from '@/components/desktop/Toolbar'
 import { StatusCard } from '@/components/desktop/StatusCard'
 import { formatBytes } from '@shared/utils'
 import type { CleanupCategoryId, CleanupResult, CleanupScanResult } from '@shared/interfaces'
@@ -24,9 +21,11 @@ import { CleanupHero } from '@/features/cleanup/components/CleanupHero'
 import { CleanupStatsBar } from '@/features/cleanup/components/CleanupStatsBar'
 import { CleanupCategoryCard } from '@/features/cleanup/components/CleanupCategoryCard'
 import { CleanupProgressPanel } from '@/features/cleanup/components/CleanupProgressPanel'
+import { CleanupLoaderModal } from '@/features/cleanup/components/CleanupLoaderModal'
 import { CleanupResultsCard } from '@/features/cleanup/components/CleanupResultsCard'
 import type { CleanupWorkflowPhase } from '@/features/cleanup/lib/category-meta'
 import { useSettingsStore } from '@/store/settings-store'
+import { electronService } from '@/services/electron-service'
 import { appendCleanupActivity } from '@/features/reports/lib/activity-history'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
@@ -40,6 +39,7 @@ export function CleanupPage(): React.ReactElement {
   const [selectionInitialized, setSelectionInitialized] = useState(false)
   const autoSelectSafeCategories = useSettingsStore((s) => s.autoSelectSafeCategories)
   const showCompletionFeedback = useSettingsStore((s) => s.showCompletionFeedback)
+  const confirmBeforeClean = useSettingsStore((s) => s.confirmBeforeClean)
 
   const scanMutation = useScanCleanup()
   const runCleanup = useRunCleanup()
@@ -119,6 +119,22 @@ export function CleanupPage(): React.ReactElement {
   async function handleClean(): Promise<void> {
     if (selected.size === 0 || busy) return
     if (selected.has('temp') && !tempAccess.guard()) return
+
+    // Confirm before mutate so the loader never stacks under the dialog
+    if (confirmBeforeClean) {
+      const confirmed = await electronService.dialog().message({
+        type: 'info',
+        title: t('cleanup.confirm.title'),
+        message:
+          summary.count === 1
+            ? t('cleanup.confirm.bodyOne')
+            : t('cleanup.confirm.body', { count: summary.count }),
+        detail: t('cleanup.confirm.detail'),
+        buttons: [t('cleanup.confirm.notNow'), t('cleanup.confirm.confirm')]
+      })
+      if (confirmed.response !== 1) return
+    }
+
     setLastResult(null)
     const payload = await runCleanup.mutateAsync({
       categories: [...selected]
@@ -247,50 +263,18 @@ export function CleanupPage(): React.ReactElement {
 
   return (
     <>
-      <Toolbar
-        title={t('cleanup.title')}
-        description={t('cleanup.description')}
-        actions={
-          <div className="flex items-center gap-2">
-            {busy ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-9 gap-2 rounded-lg px-3 text-[13px]"
-                onClick={() => void handleCancel()}
-                disabled={cancelCleanup.isPending}
-              >
-                <Square className="h-3.5 w-3.5" aria-hidden="true" />
-                {t('common.pause')}
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-9 gap-2 rounded-lg px-3 text-[13px]"
-                onClick={() => void handleScan()}
-              >
-                <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                {scan ? t('cleanup.rescan') : t('cleanup.scan')}
-              </Button>
-            )}
-            <Button
-              size="sm"
-              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
-              onClick={() => void handleClean()}
-              disabled={busy || summary.count === 0 || !scan}
-            >
-              {isCleaning ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-              )}
-              {summary.count > 0
-                ? t('cleanup.optimizeCount', { count: summary.count })
-                : t('cleanup.optimize')}
-            </Button>
-          </div>
-        }
+      <CleanupLoaderModal
+        open={isCleaning}
+        message={progress?.message}
+        percent={progress?.percent}
+        currentItem={progress?.currentItem}
+        bytesFreedSoFar={progress?.bytesFreedSoFar}
+        categoryId={progress?.categoryId}
+        categories={(scan?.categories ?? [])
+          .filter((c) => selected.has(c.id))
+          .map((c) => ({ id: c.id, label: c.label }))}
+        onCancel={() => void handleCancel()}
+        cancelPending={cancelCleanup.isPending}
       />
 
       <div className="space-y-6 p-content-pad">
@@ -300,6 +284,13 @@ export function CleanupPage(): React.ReactElement {
           selectedCount={summary.count}
           scanned={Boolean(scan)}
           lastBytesFreed={lastResult && !lastResult.cancelled ? lastResult.bytesFreed : undefined}
+          busy={busy}
+          isCleaning={isCleaning}
+          cancelPending={cancelCleanup.isPending}
+          optimizeDisabled={busy || summary.count === 0 || !scan}
+          onScan={() => void handleScan()}
+          onCancel={() => void handleCancel()}
+          onOptimize={() => void handleClean()}
         />
 
         <StatusCard
@@ -315,21 +306,13 @@ export function CleanupPage(): React.ReactElement {
           message={status.message}
         />
 
-        {progressActive && progress ? (
+        {/* Inline scan progress only — clean uses CleanupLoaderModal */}
+        {isScanning && progress ? (
           <CleanupProgressPanel
-            mode={isCleaning ? 'clean' : 'scan'}
+            mode="scan"
             message={progress.message}
             percent={progress.percent}
             currentItem={progress.currentItem}
-            bytesFreedSoFar={progress.bytesFreedSoFar}
-            categoryId={progress.categoryId}
-            categories={
-              isCleaning
-                ? (scan?.categories ?? [])
-                    .filter((c) => selected.has(c.id))
-                    .map((c) => ({ id: c.id, label: c.label }))
-                : undefined
-            }
           />
         ) : null}
 

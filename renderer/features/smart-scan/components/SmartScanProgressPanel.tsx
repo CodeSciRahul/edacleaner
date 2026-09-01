@@ -57,11 +57,7 @@ export function SmartScanProgressPanel({
 
       <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-6">
         <div className="relative mx-auto shrink-0 sm:mx-0">
-          <div
-            className="absolute inset-0 scale-110 rounded-full bg-primary/10 blur-xl"
-            aria-hidden="true"
-          />
-          <CircularProgress value={clamped} size={112} strokeWidth={9} color="cpu" label="scanned" />
+          <CircularProgress value={clamped} size={96} strokeWidth={8} color="cpu" label="scanned" />
         </div>
 
         <div className="min-w-0 flex-1 space-y-4">

@@ -1,4 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/plus-jakarta-sans-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/fonts/plus-jakarta-sans-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../assets/fonts/plus-jakarta-sans-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/plus-jakarta-sans-700.woff2') format('woff2');
+}
 
 @tailwind base;
 @tailwind components;
@@ -73,6 +103,51 @@
     border-color: hsl(var(--border));
   }
 
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+  }
+
+  /* Chromium / Electron */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.28);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.45);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  .dark *::-webkit-scrollbar-thumb {
+    background: hsl(215 16% 65% / 0.28);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .dark *::-webkit-scrollbar-thumb:hover {
+    background: hsl(215 16% 65% / 0.48);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
   html,
   body,
   #root {
@@ -80,9 +155,9 @@
   }
 
   body {
+    @apply font-sans;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: Inter, system-ui, -apple-system, sans-serif;
     font-size: 14px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -152,7 +227,8 @@
   }
 
   .sidebar-scroll::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
+    height: 6px;
   }
 
   .sidebar-scroll::-webkit-scrollbar-track {
@@ -163,14 +239,29 @@
   .sidebar-scroll::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 9999px;
+    border: 0;
   }
 
   .sidebar-scroll:hover::-webkit-scrollbar-thumb {
     background: hsl(var(--muted-foreground) / 0.28);
   }
 
-  .animate-sidebar-tooltip {
-    animation: sidebar-tooltip-in 150ms ease-out both;
+  .dark .sidebar-scroll:hover::-webkit-scrollbar-thumb {
+    background: hsl(215 16% 65% / 0.32);
+  }
+
+  .app-drag {
+    -webkit-app-region: drag;
+  }
+
+  .app-no-drag {
+    -webkit-app-region: no-drag;
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(36px) saturate(190%);
+    -webkit-backdrop-filter: blur(36px) saturate(190%);
   }
 }
 
@@ -195,9 +286,64 @@
   }
 }
 
+@keyframes boost-rocket-rise {
+  0% {
+    transform: translateY(96px) scale(0.92);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    transform: translateY(-104px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120px) scale(0.98);
+    opacity: 0;
+  }
+}
+
+@keyframes boost-rocket-flame {
+  0%,
+  100% {
+    transform: scaleY(0.85);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scaleY(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes boost-particle-fall {
+  0% {
+    transform: translateY(-8px) scale(0.6);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(72px) scale(1);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-sidebar-tooltip {
     animation: none;
+  }
+
+  .boost-rocket-rise,
+  .boost-rocket-flame,
+  .boost-particle-fall {
+    animation: none !important;
+  }
+
+  .boost-rocket-rise {
+    transform: translateY(-12px);
+    opacity: 1;
   }
 }
 

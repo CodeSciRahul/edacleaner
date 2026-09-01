@@ -1,4 +1,18 @@
 /**
+ * Developer ID + notarytool credentials. When these are missing, do not
+ * ad-hoc / hardened-runtime sign — Gatekeeper then reports the downloaded
+ * app as "damaged" instead of merely unsigned.
+ */
+const hasMacSigningCredentials = Boolean(process.env.CSC_LINK)
+const appleTeamId = process.env.APPLE_TEAM_ID || ''
+const canNotarize = Boolean(
+  hasMacSigningCredentials &&
+    process.env.APPLE_ID &&
+    (process.env.APPLE_APP_SPECIFIC_PASSWORD || process.env.APPLE_PASSWORD) &&
+    appleTeamId
+)
+
+/**
  * @type {import('electron-builder').Configuration}
  */
 module.exports = {
@@ -26,10 +40,8 @@ module.exports = {
   asarUnpack: ['**/node_modules/sql.js/**'],
   compression: 'maximum',
 
-  // Code signing placeholders — configure when certificates are available
-  // win: { sign: './build/sign-win.js' },
-  // mac: { identity: 'Developer ID Application: Your Name (TEAM_ID)' },
-  // afterSign: 'build/notarize.js',
+  // Windows signing stays disabled until a Windows cert is configured.
+  // macOS signing/notarization is enabled only when CSC_LINK + Apple notary env are set.
 
   win: {
     icon: 'resources/icons/icon.ico',
@@ -67,11 +79,25 @@ module.exports = {
     ],
     category: 'public.app-category.utilities',
     artifactName: '${productName}-${version}-mac-${arch}.${ext}',
-    hardenedRuntime: true,
-    gatekeeperAssess: false
+    type: 'distribution',
+    gatekeeperAssess: false,
+    ...(hasMacSigningCredentials
+      ? {
+          hardenedRuntime: true,
+          entitlements: 'build/entitlements.mac.plist',
+          entitlementsInherit: 'build/entitlements.mac.inherit.plist',
+          notarize: canNotarize ? { teamId: appleTeamId } : false
+        }
+      : {
+          identity: null,
+          hardenedRuntime: false,
+          notarize: false
+        })
   },
 
   dmg: {
+    format: 'UDZO',
+    sign: hasMacSigningCredentials,
     contents: [
       { x: 130, y: 220 },
       { x: 410, y: 220, type: 'link', path: '/Applications' }

@@ -61,69 +61,77 @@ export function CleanupCategoryCard({
         'disabled:cursor-not-allowed disabled:opacity-55',
         locked && 'ring-1 ring-primary/20',
         selected
-          ? 'border-primary/35 bg-primary/[0.06] shadow-md shadow-primary/5'
-          : 'border-border bg-card hover:border-border hover:bg-accent/40 hover:shadow-sm'
+          ? 'border-primary/45 shadow-md shadow-primary/10 ring-1 ring-primary/25'
+          : 'border-border hover:border-border/80 hover:shadow-sm'
       )}
     >
+      <img
+        src={visual.bgImage}
+        alt=""
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right"
+        draggable={false}
+        aria-hidden="true"
+      />
       <div
-        className={cn(
-          'pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-40 blur-2xl transition-opacity duration-300',
-          selected ? 'bg-primary/30 opacity-70' : 'bg-muted'
-        )}
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/95 via-card/70 to-card/20 dark:from-card/92 dark:via-card/75 dark:to-card/30"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/85 via-transparent to-transparent dark:from-card/80"
         aria-hidden="true"
       />
 
-      <div className="relative flex items-start justify-between gap-3">
+      <div
+        className={cn(
+          'absolute right-4 top-4 z-20 flex h-5 w-5 shrink-0 items-center justify-center rounded border shadow-sm transition-colors',
+          selected
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-border/80 bg-background/90 backdrop-blur-sm'
+        )}
+        aria-hidden="true"
+      >
+        {selected ? (
+          <svg viewBox="0 0 12 12" className="h-3 w-3" fill="currentColor">
+            <path d="M10.28 2.28a1 1 0 0 1 0 1.42l-5.5 5.5a1 1 0 0 1-1.42 0l-2.5-2.5a1 1 0 1 1 1.42-1.42L4.5 7.08l4.79-4.8a1 1 0 0 1 1.42 0z" />
+          </svg>
+        ) : null}
+      </div>
+
+      <div className="relative z-10 flex flex-col gap-4">
         <div
           className={cn(
-            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors duration-200',
-            selected ? visual.iconWrapClass : 'bg-muted text-muted-foreground'
+            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl backdrop-blur-sm transition-colors duration-200',
+            selected ? visual.iconWrapClass : 'bg-background/70 text-muted-foreground'
           )}
         >
           <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
         </div>
 
-        <div
-          className={cn(
-            'flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors',
-            selected
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-border bg-background'
-          )}
-          aria-hidden="true"
-        >
-          {selected ? (
-            <svg viewBox="0 0 12 12" className="h-3 w-3" fill="currentColor">
-              <path d="M10.28 2.28a1 1 0 0 1 0 1.42l-5.5 5.5a1 1 0 0 1-1.42 0l-2.5-2.5a1 1 0 1 1 1.42-1.42L4.5 7.08l4.79-4.8a1 1 0 0 1 1.42 0z" />
-            </svg>
-          ) : null}
+        <div className="min-w-0 space-y-1.5 pr-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-foreground">
+              {t(cleanupCategoryLabelKey(category.id))}
+            </p>
+            {locked ? <PremiumBadge plan="pro" /> : null}
+            <Badge variant={category.risk === 'safe' ? 'secondary' : 'outline'}>
+              {category.risk === 'safe' ? t('cleanup.risk.safe') : t('cleanup.risk.review')}
+            </Badge>
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
         </div>
-      </div>
 
-      <div className="relative min-w-0 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-semibold text-foreground">
-            {t(cleanupCategoryLabelKey(category.id))}
-          </p>
-          {locked ? <PremiumBadge plan="pro" /> : null}
-          <Badge variant={category.risk === 'safe' ? 'secondary' : 'outline'}>
-            {category.risk === 'safe' ? t('cleanup.risk.safe') : t('cleanup.risk.review')}
-          </Badge>
-        </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
-      </div>
-
-      <div className="relative mt-auto flex items-end justify-between gap-3 border-t border-border/60 pt-3">
-        <div>
-          <p
-            className={cn(
-              'text-base font-semibold tabular-nums tracking-tight',
-              selected ? 'text-primary' : 'text-foreground'
-            )}
-          >
-            {sizeLabel}
-          </p>
-          <p className="text-xs text-muted-foreground">{itemHint}</p>
+        <div className="mt-auto flex items-end justify-between gap-3 border-t border-border/50 pt-3">
+          <div>
+            <p
+              className={cn(
+                'text-base font-semibold tabular-nums tracking-tight',
+                selected ? 'text-primary' : 'text-foreground'
+              )}
+            >
+              {sizeLabel}
+            </p>
+            <p className="text-xs text-muted-foreground">{itemHint}</p>
+          </div>
         </div>
       </div>
     </button>

@@ -10,6 +10,10 @@ import { cn } from '@/utils/cn'
 interface PlansModalProps {
   open: boolean
   onClose: () => void
+  onUnauthorized?: () => void
+  onSubscriptionUpdated?: () => void
+  onGuestCheckoutReturn?: () => void
+  onActivateAccount?: () => void
 }
 
 function BillingToggle({
@@ -67,7 +71,14 @@ function BillingToggle({
   )
 }
 
-export function PlansModal({ open, onClose }: PlansModalProps): React.ReactElement | null {
+export function PlansModal({
+  open,
+  onClose,
+  onUnauthorized,
+  onSubscriptionUpdated,
+  onGuestCheckoutReturn,
+  onActivateAccount
+}: PlansModalProps): React.ReactElement | null {
   const { t } = useTranslation()
   const {
     plans,
@@ -80,10 +91,24 @@ export function PlansModal({ open, onClose }: PlansModalProps): React.ReactEleme
     actionPlanId,
     error,
     feedback,
+    guestMode,
     online,
     reload,
-    selectPlan
-  } = usePlansModal({ open })
+    selectPlan,
+    allPlans
+  } = usePlansModal({
+    open,
+    onUnauthorized,
+    onSubscriptionUpdated,
+    onGuestCheckoutReturn,
+    onActivateAccount
+  })
+
+  const currentPlanName =
+    currentPlan == null
+      ? null
+      : allPlans.find((plan) => normalizePlanSlug(plan.slug) === currentPlan)?.name ??
+        currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)
 
   useEffect(() => {
     if (feedback?.type !== 'upgraded') return
@@ -132,8 +157,13 @@ export function PlansModal({ open, onClose }: PlansModalProps): React.ReactEleme
             <h2 id="plans-modal-title" className="text-lg font-semibold tracking-tight text-foreground">
               {t('plans.title')}
             </h2>
+            {currentPlanName ? (
+              <p className="mt-1 text-xs font-medium text-foreground">
+                {t('plans.yourPlan', { plan: currentPlanName })}
+              </p>
+            ) : null}
             <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
-              {t('plans.description')}
+              {guestMode ? t('plans.guestNotice') : t('plans.description')}
             </p>
           </div>
 
@@ -170,12 +200,15 @@ export function PlansModal({ open, onClose }: PlansModalProps): React.ReactEleme
             </div>
           ) : null}
 
-          {feedback?.type === 'checkout-opened' ? (
+          {feedback?.type === 'checkout-opened' ||
+          feedback?.type === 'guest-checkout-opened' ? (
             <p
               role="status"
               className="mb-4 rounded-xl border border-primary/25 bg-primary/[0.05] px-3 py-2.5 text-xs text-foreground"
             >
-              {t('plans.feedback.checkoutOpened')}
+              {feedback.type === 'guest-checkout-opened'
+                ? t('plans.feedback.guestCheckoutOpened')
+                : t('plans.feedback.checkoutOpened')}
             </p>
           ) : null}
           {feedback?.type === 'upgraded' ? (

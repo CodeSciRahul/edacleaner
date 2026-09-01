@@ -11,7 +11,13 @@ export const IPC_CHANNELS = {
     RELAUNCH: 'app:relaunch',
     GET_PATH: 'app:get-path',
     OPEN_EXTERNAL: 'app:open-external',
-    DEEP_LINK: 'app:deep-link'
+    DEEP_LINK: 'app:deep-link',
+    WINDOW_MINIMIZE: 'app:window-minimize',
+    WINDOW_TOGGLE_MAXIMIZE: 'app:window-toggle-maximize',
+    WINDOW_CLOSE: 'app:window-close',
+    WINDOW_IS_MAXIMIZED: 'app:window-is-maximized',
+    WINDOW_MAXIMIZED_CHANGED: 'app:window-maximized-changed',
+    WINDOW_SET_LAYOUT: 'app:window-set-layout'
   },
   SYSTEM: {
     GET_INFO: 'system:get-info',
@@ -122,13 +128,17 @@ export const IPC_CHANNELS = {
   AUTH: {
     LOGIN: 'auth:login',
     REGISTER: 'auth:register',
+    REQUEST_OTP: 'auth:request-otp',
+    VERIFY_OTP: 'auth:verify-otp',
+    SET_PASSWORD: 'auth:set-password',
     LOGOUT: 'auth:logout',
     GET_SESSION: 'auth:get-session',
     SYNC: 'auth:sync',
     REFRESH: 'auth:refresh',
     HAS_PERMISSION: 'auth:has-permission',
     GET_SUBSCRIPTION: 'auth:get-subscription',
-    SESSION_CHANGED: 'auth:session-changed'
+    SESSION_CHANGED: 'auth:session-changed',
+    OPEN_WINDOW: 'auth:open-window'
   }
 } as const
 
@@ -136,5 +146,25 @@ export const WINDOW_DEFAULTS = {
   WIDTH: 1200,
   HEIGHT: 800,
   MIN_WIDTH: 900,
-  MIN_HEIGHT: 600
+  MIN_HEIGHT: 600,
+  /**
+   * Welcome / license window — 16:10, the usual production desktop splash ratio
+   * (more vertical room than locking to the illustration’s native pixels).
+   */
+  ONBOARDING_WIDTH: 1280,
+  ONBOARDING_HEIGHT: 800,
+  ONBOARDING_MIN_WIDTH: 1024,
+  ONBOARDING_MIN_HEIGHT: 640,
+  ONBOARDING_ASPECT_RATIO: 16 / 10,
+  AUTH_WIDTH: 1280,
+  AUTH_HEIGHT: 800,
+  AUTH_MIN_WIDTH: 1024,
+  AUTH_MIN_HEIGHT: 640,
+  AUTH_ASPECT_RATIO: 16 / 10,
+  /** Offset login/register from the onboarding window so both feel open. */
+  AUTH_OFFSET_X: 48,
+  AUTH_OFFSET_Y: 40
 } as const
+
+export type WindowLayout = 'onboarding' | 'app'
+export type AuthWindowMode = 'login' | 'register'

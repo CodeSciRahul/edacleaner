@@ -24,9 +24,12 @@ export const de: Record<TranslationKey, string> = {
   'common.refresh': 'Aktualisieren',
   'common.clear': 'Leeren',
   'common.close': 'Schließen',
+  'common.back': 'Zurück',
+  'common.continue': 'Weiter',
   'common.manage': 'Verwalten',
   'common.optimize': 'Optimieren',
   'common.scanning': 'Wird gescannt…',
+  'common.optimizing': 'Wird optimiert…',
   'common.analyzing': 'Wird analysiert…',
   'common.items': '{{count}} Elemente',
   'common.updates': '{{count}} Updates',
@@ -41,7 +44,9 @@ export const de: Record<TranslationKey, string> = {
   'auth.tab.login': 'Anmelden',
   'auth.tab.register': 'Konto erstellen',
   'auth.login.title': 'Willkommen zurück',
-  'auth.login.description': 'Melden Sie sich mit Ihrem EDA-Cleaner-Konto an.',
+  'auth.login.description': 'Geben Sie Ihre E-Mail ein, um fortzufahren.',
+  'auth.login.passwordStep': 'Geben Sie das Passwort für dieses Konto ein.',
+  'auth.login.continue': 'Weiter',
   'auth.register.title': 'Konto erstellen',
   'auth.register.description':
     'Starten Sie nach der Registrierung sofort mit dem Free-Tarif.',
@@ -53,6 +58,7 @@ export const de: Record<TranslationKey, string> = {
   'auth.placeholder.name': 'Ihr Name',
   'auth.placeholder.email': 'sie@beispiel.com',
   'auth.placeholder.password': 'Passwort eingeben',
+  'auth.placeholder.passwordOptional': 'Passwort (nach Tarifkauf leer lassen)',
   'auth.passwordHint': 'Mindestens 8 Zeichen verwenden.',
   'auth.showPassword': 'Passwort anzeigen',
   'auth.hidePassword': 'Passwort verbergen',
@@ -64,6 +70,8 @@ export const de: Record<TranslationKey, string> = {
   'auth.offlineBanner':
     'Sie scheinen offline zu sein. Stellen Sie eine Internetverbindung für die erste Anmeldung oder Kontoerstellung her.',
   'auth.error.required': 'E-Mail und Passwort sind erforderlich.',
+  'auth.error.emailRequired': 'E-Mail ist erforderlich.',
+  'auth.error.passwordRequired': 'Passwort ist erforderlich.',
   'auth.error.passwordLength': 'Das Passwort muss mindestens 8 Zeichen haben.',
   'auth.error.offlineFirst':
     'Für die erste Anmeldung oder Kontoerstellung ist eine Internetverbindung erforderlich.',
@@ -72,13 +80,128 @@ export const de: Record<TranslationKey, string> = {
   'auth.error.network':
     'Netzwerkfehler. Stellen Sie sicher, dass der Server erreichbar ist.',
   'auth.error.invalid': 'Ungültige E-Mail oder Passwort.',
+  'auth.error.setPasswordAfterPurchase':
+    'Geben Sie die Checkout-E-Mail ein. Wir senden einen Anmeldecode.',
   'auth.error.conflict':
     'Ein Konto mit dieser E-Mail existiert bereits. Bitte melden Sie sich an.',
   'auth.error.generic': 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
+  'auth.otp.heading': 'E-Mail prüfen',
+  'auth.otp.body':
+    'Wir haben einen 6-stelligen Code an die Checkout-E-Mail gesendet. Geben Sie ihn ein, um sich anzumelden. Ein Passwort können Sie später unter Einstellungen festlegen.',
+  'auth.otp.placeholder': '6-stelliger Code',
+  'auth.otp.submit': 'Code prüfen',
+  'auth.otp.resend': 'Code erneut senden',
+  'auth.otp.changeEmail': 'Andere E-Mail verwenden',
+  'auth.otp.sent': 'Ein Bestätigungscode wurde an Ihre E-Mail gesendet.',
+  'auth.otp.invalid': 'Geben Sie den 6-stelligen Code aus der E-Mail ein.',
+  'auth.otp.expired': 'Dieser Code ist abgelaufen. Fordern Sie einen neuen an.',
+  'auth.otp.wait': 'Warten Sie einen Moment, bevor Sie einen neuen Code anfordern.',
+  'auth.window.loginHeading': 'Bei edaCleaner anmelden',
+  'auth.window.registerHeading': 'edaCleaner-Konto erstellen',
+  'auth.window.productLine': 'PC-Optimierung',
+  'auth.window.emailPlaceholder': 'Benutzername oder E-Mail',
+  'auth.window.forgotPassword': 'Passwort vergessen?',
+  'auth.window.forgotPasswordHint':
+    'Passwortzurücksetzung ist in der Desktop-App noch nicht verfügbar. Verwenden Sie das Passwort dieses Kontos oder erstellen Sie ein neues.',
+  'auth.window.modeLabel': 'Kontooptionen',
+  'auth.window.needAccount': 'Noch kein Konto?',
+  'auth.window.haveAccount': 'Bereits ein Konto?',
+
+  'onboarding.progress': 'Schritt {{current}} von {{total}}',
+  'onboarding.progressNav': 'Einrichtungsfortschritt',
+  'onboarding.hero.titleLead': 'Ein schnellerer, sauberer',
+  'onboarding.hero.titleAccent': 'PC wartet auf Sie',
+  'onboarding.hero.body':
+    'EdaCleaner hilft Ihnen, Junk-Dateien zu entfernen, die Leistung zu steigern und Ihren PC zu schützen.',
+  'onboarding.hero.cleanTitle': 'Tiefenreinigung',
+  'onboarding.hero.cleanBody': 'Entfernen Sie Junk-Dateien und gewinnen Sie Speicherplatz.',
+  'onboarding.hero.boostTitle': 'Leistungsboost',
+  'onboarding.hero.boostBody': 'Optimieren Sie Systemeinstellungen und steigern Sie die Geschwindigkeit.',
+  'onboarding.hero.privacyTitle': 'Datenschutz',
+  'onboarding.hero.privacyBody': 'Schützen Sie Ihre Daten und halten Sie den PC sicher.',
+  'onboarding.hero.manageTitle': 'Intelligente Verwaltung',
+  'onboarding.hero.manageBody': 'Verwalten Sie Autostart und Systemressourcen.',
+  'onboarding.hero.trust': '30 Tage Geld-zurück-Garantie • Sicher und vertrauenswürdig',
+  'onboarding.hero.artAlt': 'EdaCleaner hilft beim Optimieren eines PCs, mit Bereinigungs- und Sicherheitstools',
+  'onboarding.ready.artAlt': 'EdaCleaner mit einem optimierten PC und aktivem Schutzplan',
+  'onboarding.welcome.eyebrow': 'EDA Cleaner',
+  'onboarding.welcome.title': 'Willkommen bei EDA Cleaner',
+  'onboarding.welcome.body':
+    'Ein professioneller Desktop-Optimizer für Bereinigung, Speicher und Leistung — damit dieser PC schnell bleibt, ohne Rätselraten.',
+  'onboarding.welcome.point1': 'Unnötige Dateien und wiedergewinnbaren Speicherplatz finden',
+  'onboarding.welcome.point2': 'Reaktivität mit geführten Performance-Tools verbessern',
+  'onboarding.welcome.point3': 'CPU, Speicher und Datenträger live überwachen',
+  'onboarding.value.eyebrow': 'Warum das zählt',
+  'onboarding.value.title': 'Sicher bereinigen',
+  'onboarding.value.body':
+    'EDA Cleaner zeigt, was gefunden wurde, wie viel Speicher Sie zurückholen können, und lässt Sie wählen, was entfernt wird — nichts wird ohne Bestätigung gelöscht.',
+  'onboarding.value.point1': 'Kategoriebasierte Bereinigung statt blinder Löschungen',
+  'onboarding.value.point2': 'Speicherübersicht für große Dateien und Duplikate',
+  'onboarding.value.point3': 'Scans, Ergebnisse und Verlauf an einem Ort',
+  'onboarding.features.eyebrow': 'Funktionen',
+  'onboarding.features.title': 'Alles in einer Desktop-App',
+  'onboarding.features.body':
+    'Starten Sie mit einem Smart-Scan und wechseln Sie bei Bedarf zu Bereinigung, Speicher oder Leistung.',
+  'onboarding.features.smartScan': 'Gesundheitscheck mit einem Klick für Junk, Speicher und Leistung.',
+  'onboarding.features.cleanup': 'Temp-Dateien, Caches und Ballast nach einer klaren Prüfung entfernen.',
+  'onboarding.features.performance': 'Autostart, Hintergrund-Apps und Systemlast verwalten.',
+  'onboarding.license.eyebrow': 'Tarif',
+  'onboarding.license.title': 'Aktivieren oder Tarif kaufen',
+  'onboarding.license.body':
+    'Melden Sie sich an, um Ihr EDA-Cleaner-Konto zu aktivieren, oder kaufen Sie einen Tarif und vergleichen Sie Free, Pro und Premium.',
+  'onboarding.license.accountNote':
+    'Sie können einen Tarif kaufen, ohne sich vorher anzumelden. Nach dem Checkout erstellen Sie mit derselben E-Mail ein Konto, um ihn auf diesem PC freizuschalten.',
+  'onboarding.license.choicesLabel': 'So geht es weiter',
+  'onboarding.license.alreadyPurchased': 'Bereits gekauft',
+  'onboarding.license.alreadyPurchasedHint': 'Anmelden, um diesen PC freizuschalten',
+  'onboarding.license.activate': 'Aktivieren',
+  'onboarding.license.activateHint': 'Neues Konto erstellen',
+  'onboarding.license.buy': 'Tarif kaufen',
+  'onboarding.license.buyHint': 'Free, Pro oder Premium wählen',
+  'onboarding.license.viewPlans': 'Tarife ansehen',
+  'onboarding.license.viewPlansHint': 'Free, Pro und Premium vergleichen',
+  'onboarding.account.activateEyebrow': 'Aktivieren',
+  'onboarding.account.activateTitle': 'Zum Aktivieren anmelden',
+  'onboarding.account.activateBody':
+    'Erstellen Sie ein Konto oder melden Sie sich an. Dadurch wird EDA Cleaner auf diesem PC aktiviert. Der Kauf eines bezahlten Tarifs ist ein eigener Schritt.',
+  'onboarding.account.purchaseEyebrow': 'Tarif kaufen',
+  'onboarding.account.purchaseTitle': 'Nach dem Kauf anmelden',
+  'onboarding.account.purchaseBody':
+    'Melden Sie sich mit derselben E-Mail wie beim Checkout an. Wir senden einen Einmalcode, um Ihren Tarif freizuschalten. Ein Passwort legen Sie später unter Einstellungen fest.',
+  'onboarding.account.backToLicense': 'Zurück zu den Tarifoptionen',
+  'onboarding.ready.title': 'Sie sind startklar',
+  'onboarding.ready.body':
+    'Ihr Konto ist auf diesem PC aktiv. Öffnen Sie EDA Cleaner zum Scannen, Bereinigen und Optimieren.',
+  'onboarding.ready.paidTitle': 'Alles bereit',
+  'onboarding.ready.paidBody':
+    '{{plan}} ist auf diesem PC aktiv. Öffnen Sie EDA Cleaner zum Scannen, Bereinigen und Optimieren.',
+  'onboarding.ready.plan': 'Aktueller Tarif: {{plan}}',
+  'onboarding.ready.start': 'Loslegen',
+  'onboarding.preview.alt': 'EDA-Cleaner-Produktvorschau',
+  'onboarding.preview.overview': 'Übersicht',
+  'onboarding.preview.health': 'PC-Gesundheit auf einen Blick',
+  'onboarding.preview.cpu': 'CPU',
+  'onboarding.preview.memory': 'Speicher',
+  'onboarding.preview.storage': 'Datenträger',
+  'onboarding.preview.scanReady': 'Smart-Scan bereit',
+  'onboarding.preview.cleanup': 'Bereinigung',
+  'onboarding.preview.reclaim': '2,4 GB zur Prüfung bereit',
+  'onboarding.preview.temp': 'Temporäre Dateien',
+  'onboarding.preview.browser': 'Browser-Cache',
+  'onboarding.preview.recycle': 'Papierkorb',
+  'onboarding.preview.smartScan': 'Geführte Prüfung von Junk, Speicher und Tempo.',
+  'onboarding.preview.monitor': 'Live-Diagramme für CPU, RAM und Datenträger.',
+  'onboarding.preview.storageHint': 'Sehen Sie, wohin der Speicherplatz geht — und geben Sie ihn gezielt frei.',
+  'onboarding.preview.license': 'Sichere Konto- und Tarifaktivierung',
 
   'sidebar.tagline': 'PC-Optimizer',
   'sidebar.collapse': 'Seitenleiste einklappen',
   'sidebar.expand': 'Seitenleiste ausklappen',
+  'window.minimize': 'Minimieren',
+  'window.maximize': 'Maximieren',
+  'window.restore': 'Wiederherstellen',
+  'window.close': 'Fenster schließen',
+  'window.controls': 'Fenstersteuerung',
   'sidebar.navMain': 'Hauptnavigation',
   'sidebar.navPrimary': 'Primär',
   'sidebar.status': 'Systemstatus',
@@ -100,8 +223,11 @@ export const de: Record<TranslationKey, string> = {
   'plans.title': 'Tarif wählen',
   'plans.description':
     'Vergleichen Sie Free, Pro und Premium. Zahlungen öffnen sicher in Ihrem Browser.',
+  'plans.guestNotice':
+    'Zahlen Sie im Browser mit Ihrer E-Mail. Nach der Zahlung melden Sie sich mit dieser E-Mail an — wir senden einen Code, danach können Sie unter Einstellungen ein Passwort festlegen.',
   'plans.loading': 'Tarife werden geladen…',
   'plans.recommended': 'Empfohlen',
+  'plans.yourPlan': 'Ihr aktueller Tarif: {{plan}}',
   'plans.currentBadge': 'Aktuell',
   'plans.price.free': 'Kostenlos',
   'plans.price.forever': 'Dauerhaft kostenlos',
@@ -115,6 +241,7 @@ export const de: Record<TranslationKey, string> = {
   'plans.saveAmount': '{{amount}} sparen',
   'plans.trial': '{{days}}-tägige kostenlose Testphase verfügbar',
   'plans.pendingHint': 'Wechsel zum Periodenende geplant',
+  'plans.action.activate': 'Aktivieren',
   'plans.action.current': 'Aktueller Tarif',
   'plans.action.upgrade': 'Upgrade',
   'plans.action.downgrade': 'Downgrade',
@@ -123,6 +250,8 @@ export const de: Record<TranslationKey, string> = {
     'Für Kauf oder Tarifwechsel ist eine Internetverbindung erforderlich. Ihr zwischengespeicherter Tarif bleibt offline aktiv.',
   'plans.feedback.checkoutOpened':
     'Checkout im Browser geöffnet. Kehren Sie nach der Zahlung zurück — Ihr Tarif wird automatisch aktualisiert.',
+  'plans.feedback.guestCheckoutOpened':
+    'Checkout im Browser geöffnet. Verwenden Sie die E-Mail für diesen Tarif. Nach der Zahlung melden Sie sich mit dieser E-Mail an und geben den zugesandten Code ein.',
   'plans.feedback.updated': 'Ihr Abonnement ist aktuell.',
   'plans.feedback.downgradeScheduled':
     'Downgrade geplant. Ihr aktueller Tarif bleibt bis Periodenende aktiv.',
@@ -322,6 +451,12 @@ export const de: Record<TranslationKey, string> = {
     'Ihre lokalen Sitzungstoken werden gelöscht. Der Bereinigungsverlauf auf diesem PC bleibt erhalten.',
   'settings.account.logoutError':
     'Abmelden ist gerade nicht möglich. Bitte erneut versuchen.',
+  'settings.account.setPasswordTitle': 'Passwort festlegen',
+  'settings.account.setPasswordBody':
+    'Sie haben sich nach dem Tarifkauf per E-Mail-Code angemeldet. Legen Sie ein Passwort für die nächste Anmeldung fest.',
+  'settings.account.setPassword': 'Passwort speichern',
+  'settings.account.passwordSet': 'Passwort gespeichert. Sie können es beim nächsten Login verwenden.',
+  'settings.account.passwordSetError': 'Passwort konnte nicht gespeichert werden. Erneut versuchen.',
 
   'settings.about.title': 'Info',
   'settings.about.description':
@@ -516,6 +651,8 @@ export const de: Record<TranslationKey, string> = {
   'cleanup.confirm.title': 'PC optimieren?',
   'cleanup.confirm.body': '{{count}} ausgewählte Kategorien optimieren?',
   'cleanup.confirm.bodyOne': '1 ausgewählte Kategorie optimieren?',
+  'cleanup.confirm.detail':
+    'Wir geben Junk-, Temp- und Cache-Dateien sicher frei. Persönliche Dokumente bleiben unberührt. Einige geöffnete Dateien können übersprungen werden, damit Ihre Apps stabil laufen.',
   'cleanup.confirm.notNow': 'Nicht jetzt',
   'cleanup.confirm.confirm': 'Jetzt optimieren',
 
@@ -537,6 +674,7 @@ export const de: Record<TranslationKey, string> = {
   'smartScan.bootImpact': 'Startauswirkung',
   'smartScan.goPerformance': 'Zur Leistung',
   'smartScan.duration': 'Scan-Dauer',
+  'smartScan.goReports': 'Zu Berichte',
   'smartScan.onTrack': 'Auf Kurs',
   'smartScan.status.scanningTitle': 'Smart-Scan läuft…',
   'smartScan.status.scanningMsg':
@@ -563,16 +701,6 @@ export const de: Record<TranslationKey, string> = {
   'smartScan.hero.healthScore': 'Gesundheitswert',
   'smartScan.hero.reclaimHint':
     'Bis zu {{bytes}} können freigegeben werden — öffnen Sie Bereinigung oder Speicher zum Optimieren.',
-  'smartScan.history.lastScanned': 'Zuletzt gescannt',
-  'smartScan.history.spaceReclaimed': 'Speicher freigegeben',
-  'smartScan.history.issuesResolved': 'Probleme behoben',
-  'smartScan.history.filesScanned': 'Gescannte Dateien',
-  'smartScan.history.healthScore': 'Gesundheitswert',
-  'smartScan.history.noIssues': 'Keine offenen Probleme',
-  'smartScan.history.issuesFound': '{{count}} Probleme gefunden',
-  'smartScan.history.issueFound': '1 Problem gefunden',
-  'smartScan.history.scansSaved': '{{count}} Scans gespeichert',
-  'smartScan.history.scanSaved': '1 Scan gespeichert',
   'smartScan.progress.fallback': 'PC wird auf einfache Optimierungen geprüft…',
   'smartScan.relative.justNow': 'Gerade eben',
   'smartScan.relative.minAgo': 'vor {{count}} Min.',
@@ -583,8 +711,32 @@ export const de: Record<TranslationKey, string> = {
   'storage.title': 'Speicher',
   'storage.description':
     'Festplattenkapazität verstehen und Speicher mit Zuversicht freigeben.',
+  'storage.hero.overview': 'Speicher-Übersicht',
+  'storage.hero.badge': 'Festplatten-Analyse',
+  'storage.hero.idleHeadline': 'Sehen Sie, wohin Ihr Speicher geht.',
+  'storage.hero.idleSub':
+    'Analysieren Sie lokale Laufwerke, um Ordnernutzung zu kartieren, große Dateien zu finden und doppelten Ballast zu erkennen.',
+  'storage.hero.analyzingHeadline': 'Festplattennutzung wird kartiert…',
+  'storage.hero.analyzingSub':
+    'Ordner werden indexiert und die Nutzung auf den Laufwerken gemessen. Dies kann eine Minute dauern.',
+  'storage.hero.readyHeadline': '{{percent}}% belegt — {{used}} von {{total}}',
+  'storage.hero.readySub':
+    'Prüfen Sie die Ordneraufteilung unten oder analysieren Sie erneut, um die Nutzung auf allen Laufwerken zu aktualisieren.',
+  'storage.hero.readySubNoAnalysis':
+    'Analysieren Sie unten ein Laufwerk, um Ordnernutzung zu kartieren und Speicher freizugeben.',
   'storage.analyze': 'Festplatte analysieren',
   'storage.analyzing': 'Wird analysiert…',
+  'storage.analyzing.title': 'Speicher wird analysiert…',
+  'storage.analyzing.message':
+    'Ordner werden indexiert und die Festplattennutzung auf Ihren Laufwerken gemessen.',
+  'storage.analyzing.badge': 'Speicher-Scan',
+  'storage.analyzing.scanning': 'Volumes und Dateiindizes werden gescannt…',
+  'storage.analyzing.working': '{{path}} wird indexiert…',
+  'storage.analyzing.steps': 'Analyseschritte',
+  'storage.analyzing.step.drives': 'Laufwerke',
+  'storage.analyzing.step.usage': 'Speichernutzung',
+  'storage.analyzing.step.largeFiles': 'Große Dateien',
+  'storage.analyzing.step.duplicates': 'Duplikate',
   'storage.drivesError': 'Laufwerke konnten nicht geladen werden',
   'storage.localDisks': 'Lokale Laufwerke',
   'storage.localDisksHint':
@@ -633,6 +785,39 @@ export const de: Record<TranslationKey, string> = {
   'storage.filter.path': 'Nach Ordnerpfad filtern…',
   'storage.filter.sort': 'Sortieren',
   'storage.filter.allTypes': 'Alle Typen',
+
+  'storage.largeFiles.hero.overview': 'Große Dateien',
+  'storage.largeFiles.hero.badge': 'Speicherfresser',
+  'storage.largeFiles.hero.badgeScanning': 'Suche läuft',
+  'storage.largeFiles.hero.scanningHeadline': 'Übergroße Dateien werden gesucht…',
+  'storage.largeFiles.hero.scanningSub':
+    'Dateien über 100 MB auf Ihren Laufwerken werden indexiert. Das kann einen Moment dauern.',
+  'storage.largeFiles.hero.emptyHeadline': 'Keine großen Dateien gefunden.',
+  'storage.largeFiles.hero.emptySub':
+    'Nichts über 100 MB erkannt. Führen Sie eine Speicheranalyse in der Übersicht aus, um zu aktualisieren.',
+  'storage.largeFiles.hero.readyHeadline': '{{count}} große Dateien — {{bytes}} gesamt',
+  'storage.largeFiles.hero.readySub':
+    'Dateien auswählen, in den Papierkorb verschieben, exportieren oder unten filtern.',
+  'storage.largeFiles.hero.selectedHeadline': '{{count}} Datei(en) ausgewählt',
+  'storage.largeFiles.hero.selectedSub':
+    'Auswahl unten prüfen, dann löschen oder vor dem Entfernen exportieren.',
+
+  'storage.duplicates.hero.overview': 'Doppelte Dateien',
+  'storage.duplicates.hero.badge': 'Duplikat-Finder',
+  'storage.duplicates.hero.badgeScanning': 'Suche läuft',
+  'storage.duplicates.hero.scanningHeadline': 'Doppelte Kopien werden gesucht…',
+  'storage.duplicates.hero.scanningSub':
+    'Datei-Hashes werden verglichen, um identische Kopien zu finden.',
+  'storage.duplicates.hero.emptyHeadline': 'Keine Duplikate gefunden.',
+  'storage.duplicates.hero.emptySub':
+    'Keine identischen Dateigruppen erkannt. Führen Sie eine Speicheranalyse in der Übersicht aus.',
+  'storage.duplicates.hero.readyHeadline': '{{count}} Duplikatgruppen — {{bytes}} freigebar',
+  'storage.duplicates.hero.readySub':
+    'Duplikat-Kopien auswählen und entfernen, ein Original pro Gruppe bleibt erhalten.',
+  'storage.duplicates.hero.selectedHeadline': '{{count}} Kopie(n) ausgewählt',
+  'storage.duplicates.hero.selectedSub':
+    'Ausgewählte Duplikate löschen. Originale in jeder Gruppe bleiben unberührt.',
+  'storage.duplicates.hero.selectDuplicates': 'Duplikate auswählen',
 
   'largeFiles.title': 'Große Dateien',
   'largeFiles.description':
@@ -698,6 +883,8 @@ export const de: Record<TranslationKey, string> = {
   'performance.quickStartupDesc': 'Steuern, was bei der Anmeldung startet.',
   'performance.quickBg': 'Hintergrund-Apps prüfen',
   'performance.quickBgDesc': 'Sichere Prozesse beenden, die Speicher halten.',
+  'performance.hero.overview': 'Leistungsübersicht',
+  'performance.hero.badge': 'Leistung',
   'performance.hero.healthy': 'Gesund',
   'performance.hero.attention': 'Aufmerksamkeit nötig',
   'performance.hero.pressure': 'Unter Druck',
@@ -710,6 +897,12 @@ export const de: Record<TranslationKey, string> = {
   'performance.hero.cancelBoost': 'Boost abbrechen',
   'performance.hero.boostHint':
     'Leert Temp-Dateien, Caches und freigebbaren Ballast sicher.',
+  'performance.boosting.title': 'Leistung wird gesteigert…',
+  'performance.boosting.message':
+    'Temp-Dateien und Caches werden bereinigt und Speicher freigegeben.',
+  'performance.boosting.badge': 'Leistungs-Boost',
+  'performance.boosting.scanning': 'Sichere Optimierungsschritte werden ausgeführt…',
+  'performance.boosting.working': 'Bearbeitung von {{path}}…',
 
   'startupApps.title': 'Autostart-Anwendungen',
   'startupApps.description': 'Steuern Sie Apps, die beim PC-Start laden.',

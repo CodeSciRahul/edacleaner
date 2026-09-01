@@ -61,7 +61,14 @@ module.exports = {
         xl: '16px'
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+        sans: [
+          'Plus Jakarta Sans',
+          'Segoe UI Variable',
+          'Segoe UI',
+          'system-ui',
+          '-apple-system',
+          'sans-serif'
+        ]
       },
       fontSize: {
         display: ['32px', { lineHeight: '1.2', letterSpacing: '-0.02em', fontWeight: '700' }],
@@ -79,7 +86,8 @@ module.exports = {
         'sidebar-collapsed': '68px'
       },
       height: {
-        toolbar: '64px'
+        toolbar: '64px',
+        titlebar: '44px'
       },
       boxShadow: {
         card: '0 1px 3px 0 rgb(0 0 0 / 0.05)',

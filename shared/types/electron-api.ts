@@ -57,6 +57,12 @@ export interface AppApi {
   getPath: (name: AppPath) => Promise<string>
   openExternal: (url: string) => Promise<{ opened: true }>
   onDeepLink: (callback: (event: DeepLinkEvent) => void) => () => void
+  minimizeWindow: () => Promise<void>
+  toggleMaximizeWindow: () => Promise<void>
+  closeWindow: () => Promise<void>
+  isWindowMaximized: () => Promise<boolean>
+  setWindowLayout: (layout: 'onboarding' | 'app') => Promise<{ layout: 'onboarding' | 'app' }>
+  onWindowMaximizedChange: (callback: (maximized: boolean) => void) => () => void
 }
 
 export interface SystemApi {
@@ -215,6 +221,9 @@ export interface SyncApi {
 export interface AuthApi {
   login: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
   register: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
+  requestLoginOtp: (email: string) => Promise<{ requiresOtp: true }>
+  verifyLoginOtp: (email: string, code: string) => Promise<AuthSessionSnapshot>
+  setPassword: (password: string) => Promise<AuthSessionSnapshot>
   logout: () => Promise<AuthSessionSnapshot>
   getSession: () => Promise<AuthSessionSnapshot>
   sync: (reason?: string) => Promise<AuthSessionSnapshot>
@@ -226,6 +235,10 @@ export interface AuthApi {
     expiry: string | null
     features: string[]
     trial: { isTrialing: boolean; trialEnd: string | null }
+  }>
+  openWindow: (mode?: 'login' | 'register') => Promise<{
+    opened: true
+    mode: 'login' | 'register'
   }>
   onSessionChanged: (callback: (event: AuthSessionChangedEvent) => void) => () => void
 }
