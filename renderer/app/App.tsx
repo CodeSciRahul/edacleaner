@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { AppProviders } from '@/providers/AppProviders'
 import { AppRouter } from '@/routes/AppRouter'
-import { AuthBootScreen } from '@/features/auth/components/AuthGate'
+import { SplashScreen } from '@/features/auth/components/AuthGate'
 import { AuthWindowPage } from '@/features/auth/components/AuthWindowPage'
 import { isAuthWindowHash, parseAuthWindowMode } from '@/features/auth/lib/auth-window'
 import { OnboardingFlow } from '@/features/onboarding/components/OnboardingFlow'
@@ -15,11 +15,7 @@ function AuthWindowApp(): React.ReactElement {
   const defaultMode = parseAuthWindowMode()
 
   if (status === 'loading') {
-    return (
-      <WindowFrame variant="overlay">
-        <AuthBootScreen />
-      </WindowFrame>
-    )
+    return <SplashScreen showMaximize={false} />
   }
 
   return (
@@ -55,11 +51,7 @@ function AuthenticatedApp(): React.ReactElement {
   }, [showOnboarding, status])
 
   if (status === 'loading') {
-    return (
-      <WindowFrame variant="simple">
-        <AuthBootScreen />
-      </WindowFrame>
-    )
+    return <SplashScreen />
   }
 
   if (showOnboarding) {

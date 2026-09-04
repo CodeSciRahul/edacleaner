@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src 'self' file: data:; style-src 'unsafe-inline'"
+    />
+    <title>EDA Cleaner</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #2563eb;
+        user-select: none;
+        -webkit-app-region: drag;
+      }
+      .frame {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        background: #2563eb;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+        -webkit-user-drag: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <img src="./splash-logo-loop.gif" alt="" width="512" height="512" />
+    </div>
+  </body>
+</html>

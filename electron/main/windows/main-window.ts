@@ -15,7 +15,7 @@ export function getMainWindowOptions(preloadPath: string): BrowserWindowConstruc
     frame: false,
     titleBarStyle: 'hidden',
     autoHideMenuBar: true,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#2563EB',
     ...(icon ? { icon } : {}),
     webPreferences: {
       preload: preloadPath,

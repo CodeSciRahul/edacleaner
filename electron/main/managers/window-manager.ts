@@ -7,12 +7,17 @@ import {
   getAuthWindowHash,
   getAuthWindowOptions,
   getMainWindowOptions,
-  getRendererPath
+  getRendererPath,
+  createSplashWindow,
+  closeSplashWindow,
+  SPLASH_MIN_VISIBLE_MS
 } from '@main/windows'
 
 export class WindowManager {
   private static instance: WindowManager
   private windows: Map<string, BrowserWindow> = new Map()
+  /** When true, main window waits for splash handoff instead of showing itself. */
+  private splashHandoffPending = false
 
   private constructor() {}
 
@@ -40,8 +45,12 @@ export class WindowManager {
     window.setMenuBarVisibility(false)
     window.removeMenu()
 
+    // Shown by bootstrap after the splash handoff (or immediately if no splash).
     window.on('ready-to-show', () => {
-      window.show()
+      if (window.isDestroyed()) return
+      if (!this.splashHandoffPending) {
+        window.show()
+      }
     })
 
     window.webContents.setWindowOpenHandler((details) => {
@@ -79,6 +88,67 @@ export class WindowManager {
     })
 
     return window
+  }
+
+  /**
+   * Show the animated brand splash, create the main window behind it, then
+   * hand off once the main UI is ready and the splash has been visible briefly.
+   */
+  async launchWithSplash(): Promise<BrowserWindow> {
+    this.splashHandoffPending = true
+    const splash = createSplashWindow()
+
+    const splashVisibleAt = await new Promise<number>((resolve) => {
+      if (!splash) {
+        resolve(Date.now())
+        return
+      }
+      if (splash.isVisible()) {
+        resolve(Date.now())
+        return
+      }
+      const done = (): void => resolve(Date.now())
+      splash.once('ready-to-show', done)
+      // Fallback if ready-to-show never fires
+      setTimeout(done, 3_000)
+    })
+
+    if (!splash) {
+      this.splashHandoffPending = false
+    }
+
+    const main = this.createMainWindow()
+
+    if (!splash) {
+      if (!main.isDestroyed() && !main.isVisible()) {
+        main.show()
+      }
+      return main
+    }
+
+    await new Promise<void>((resolve) => {
+      if (main.isDestroyed()) {
+        resolve()
+        return
+      }
+      const done = (): void => resolve()
+      main.once('ready-to-show', done)
+      // Safety: never block launch forever if ready-to-show is missed
+      setTimeout(done, 15_000)
+    })
+
+    const remaining = Math.max(0, SPLASH_MIN_VISIBLE_MS - (Date.now() - splashVisibleAt))
+    if (remaining > 0) {
+      await new Promise((r) => setTimeout(r, remaining))
+    }
+
+    this.splashHandoffPending = false
+    if (!main.isDestroyed()) {
+      main.show()
+      main.focus()
+    }
+    closeSplashWindow(splash)
+    return main
   }
 
   createAuthWindow(mode: AuthWindowMode = 'login'): BrowserWindow {

@@ -33,6 +33,11 @@ module.exports = {
       from: 'resources/icons',
       to: 'icons',
       filter: ['icon.ico', 'icon.png', '512.png']
+    },
+    {
+      from: 'resources/splash',
+      to: 'splash',
+      filter: ['index.html', 'splash-logo-loop.gif']
     }
   ],
   asar: true,

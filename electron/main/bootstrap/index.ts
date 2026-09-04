@@ -47,6 +47,6 @@ export async function bootstrap(): Promise<void> {
     // App can still run local PC tools; durable storage may be unavailable.
   }
 
-  windowManager.createMainWindow()
+  await windowManager.launchWithSplash()
   deepLinkService.flushPending()
 }
