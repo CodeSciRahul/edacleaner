@@ -100,6 +100,8 @@ export function StoragePage(): React.ReactElement {
       />
 
       <div className="space-y-6 p-content-pad">
+        <FeatureLockedCallout feature="storage_overview" />
+
         <StorageHero
           isAnalyzing={analyze.isPending}
           analyzeDisabled={isAnalyzing || !mountPath}
@@ -113,7 +115,6 @@ export function StoragePage(): React.ReactElement {
           onAnalyze={() => void analyze.mutateAsync(mountPath)}
         />
 
-        <FeatureLockedCallout feature="storage_overview" />
         <StorageSubnav />
 
         {drivesError ? (

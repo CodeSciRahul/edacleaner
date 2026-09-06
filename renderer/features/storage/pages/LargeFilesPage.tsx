@@ -189,6 +189,7 @@ export function LargeFilesPage(): React.ReactElement {
   return (
     <>
       <div className="space-y-4 p-content-pad">
+        <FeatureLockedCallout feature="large_files" compact />
         <LargeFilesHero
           isLoading={isLoading}
           isFetching={isFetching}
@@ -205,7 +206,6 @@ export function LargeFilesPage(): React.ReactElement {
           onExport={exportCsv}
           onDelete={() => void handleDeleteSelected()}
         />
-        <FeatureLockedCallout feature="large_files" compact />
         <PageBreadcrumb
           items={[
             { label: t('storage.title'), href: '/storage' },

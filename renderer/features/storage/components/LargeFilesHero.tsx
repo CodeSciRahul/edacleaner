@@ -106,13 +106,16 @@ export function LargeFilesHero({
 
       <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 max-w-xl space-y-3">
-          <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-600 backdrop-blur-sm dark:text-amber-400">
-            {isLoading ? (
-              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-            ) : (
-              <FileStack className="h-3 w-3" aria-hidden="true" />
-            )}
-            {isLoading ? t('storage.largeFiles.hero.badgeScanning') : t('storage.largeFiles.hero.badge')}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-600 backdrop-blur-sm dark:text-amber-400">
+              {isLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : (
+                <FileStack className="h-3 w-3" aria-hidden="true" />
+              )}
+              {isLoading ? t('storage.largeFiles.hero.badgeScanning') : t('storage.largeFiles.hero.badge')}
+            </div>
+            {!accessAllowed ? <PremiumBadge plan="pro" size="md" /> : null}
           </div>
 
           <div>
@@ -126,6 +129,41 @@ export function LargeFilesHero({
             <StatPill label={t('storage.largeFiles.hero.statFiles')} value={filesValue} />
             <StatPill label={t('storage.largeFiles.hero.statSize')} value={sizeValue} />
             <StatPill label={t('storage.largeFiles.hero.statSelected')} value={selectedValue} />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <FeatureLockButton
+              feature="large_files"
+              size="sm"
+              variant="outline"
+              className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+              forceDisabled={isFetching}
+              onClick={onRefresh}
+            >
+              <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} aria-hidden="true" />
+              {t('common.refresh')}
+            </FeatureLockButton>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+              disabled={exportDisabled}
+              onClick={onExport}
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              {t('largeFiles.export')}
+            </Button>
+            <FeatureLockButton
+              feature="large_files"
+              size="sm"
+              variant="destructive"
+              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+              forceDisabled={deleteDisabled}
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              {t('largeFiles.delete', { count: selectedCount })}
+            </FeatureLockButton>
           </div>
 
           <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -142,42 +180,6 @@ export function LargeFilesHero({
           </div>
 
           <p className="text-xs text-muted-foreground">{tip}</p>
-        </div>
-
-        <div className="relative z-10 flex flex-wrap items-center gap-2">
-          {!accessAllowed ? <PremiumBadge plan="pro" /> : null}
-          <FeatureLockButton
-            feature="large_files"
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
-            forceDisabled={isFetching}
-            onClick={onRefresh}
-          >
-            <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} aria-hidden="true" />
-            {t('common.refresh')}
-          </FeatureLockButton>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
-            disabled={exportDisabled}
-            onClick={onExport}
-          >
-            <Download className="h-4 w-4" aria-hidden="true" />
-            {t('largeFiles.export')}
-          </Button>
-          <FeatureLockButton
-            feature="large_files"
-            size="sm"
-            variant="destructive"
-            className="h-9 gap-2 rounded-lg px-4 text-[13px]"
-            forceDisabled={deleteDisabled}
-            onClick={onDelete}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            {t('largeFiles.delete', { count: selectedCount })}
-          </FeatureLockButton>
         </div>
       </div>
     </section>

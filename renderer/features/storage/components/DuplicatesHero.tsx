@@ -110,13 +110,16 @@ export function DuplicatesHero({
 
       <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 max-w-xl space-y-3">
-          <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-600 backdrop-blur-sm dark:text-violet-400">
-            {isLoading ? (
-              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-            ) : (
-              <Copy className="h-3 w-3" aria-hidden="true" />
-            )}
-            {isLoading ? t('storage.duplicates.hero.badgeScanning') : t('storage.duplicates.hero.badge')}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-600 backdrop-blur-sm dark:text-violet-400">
+              {isLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : (
+                <Copy className="h-3 w-3" aria-hidden="true" />
+              )}
+              {isLoading ? t('storage.duplicates.hero.badgeScanning') : t('storage.duplicates.hero.badge')}
+            </div>
+            {!accessAllowed ? <PremiumBadge plan="pro" size="md" /> : null}
           </div>
 
           <div>
@@ -130,6 +133,51 @@ export function DuplicatesHero({
             <StatPill label={t('storage.duplicates.hero.statGroups')} value={groupsValue} />
             <StatPill label={t('storage.duplicates.hero.statWaste')} value={wasteValue} />
             <StatPill label={t('storage.duplicates.hero.statSelected')} value={selectedValue} />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <FeatureLockButton
+              feature="duplicates"
+              size="sm"
+              variant="outline"
+              className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+              forceDisabled={isFetching}
+              onClick={onRefresh}
+            >
+              <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} aria-hidden="true" />
+              {t('common.refresh')}
+            </FeatureLockButton>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+              disabled={selectDisabled}
+              onClick={onSelectDuplicates}
+            >
+              <Check className="h-4 w-4" aria-hidden="true" />
+              {t('storage.duplicates.hero.selectDuplicates')}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+              disabled={clearDisabled}
+              onClick={onClear}
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+              {t('common.clear')}
+            </Button>
+            <FeatureLockButton
+              feature="duplicates"
+              size="sm"
+              variant="destructive"
+              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+              forceDisabled={deleteDisabled}
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              {t('duplicates.delete', { count: selectedCount })}
+            </FeatureLockButton>
           </div>
 
           <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -146,52 +194,6 @@ export function DuplicatesHero({
           </div>
 
           <p className="text-xs text-muted-foreground">{tip}</p>
-        </div>
-
-        <div className="relative z-10 flex flex-wrap items-center gap-2">
-          {!accessAllowed ? <PremiumBadge plan="pro" /> : null}
-          <FeatureLockButton
-            feature="duplicates"
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
-            forceDisabled={isFetching}
-            onClick={onRefresh}
-          >
-            <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} aria-hidden="true" />
-            {t('common.refresh')}
-          </FeatureLockButton>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
-            disabled={selectDisabled}
-            onClick={onSelectDuplicates}
-          >
-            <Check className="h-4 w-4" aria-hidden="true" />
-            {t('storage.duplicates.hero.selectDuplicates')}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
-            disabled={clearDisabled}
-            onClick={onClear}
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-            {t('common.clear')}
-          </Button>
-          <FeatureLockButton
-            feature="duplicates"
-            size="sm"
-            variant="destructive"
-            className="h-9 gap-2 rounded-lg px-4 text-[13px]"
-            forceDisabled={deleteDisabled}
-            onClick={onDelete}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            {t('duplicates.delete', { count: selectedCount })}
-          </FeatureLockButton>
         </div>
       </div>
     </section>

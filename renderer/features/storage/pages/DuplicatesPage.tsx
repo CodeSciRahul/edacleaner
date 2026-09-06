@@ -155,6 +155,7 @@ export function DuplicatesPage(): React.ReactElement {
   return (
     <>
       <div className="space-y-4 p-content-pad">
+        <FeatureLockedCallout feature="duplicates" compact />
         <DuplicatesHero
           isLoading={isLoading}
           isFetching={isFetching}
@@ -173,7 +174,6 @@ export function DuplicatesPage(): React.ReactElement {
           onClear={clearSelection}
           onDelete={() => void handleDeleteSelected()}
         />
-        <FeatureLockedCallout feature="duplicates" compact />
         <PageBreadcrumb
           items={[
             { label: t('storage.title'), href: '/storage' },
