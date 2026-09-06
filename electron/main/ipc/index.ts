@@ -991,6 +991,31 @@ export function registerAuthIpc(): void {
     }
   })
 
+  ipcMain.handle(IPC_CHANNELS.AUTH.FORGOT_PASSWORD, async (_event, raw?: unknown) => {
+    try {
+      if (raw == null || typeof raw !== 'object') throw new Error('Invalid email')
+      const email = assertString((raw as Record<string, unknown>).email, 'email')
+      const data = await authSessionService.forgotPassword(email)
+      return success(data)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Could not send reset code')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AUTH.RESET_PASSWORD, async (_event, raw?: unknown) => {
+    try {
+      if (raw == null || typeof raw !== 'object') throw new Error('Invalid reset payload')
+      const payload = raw as Record<string, unknown>
+      const email = assertString(payload.email, 'email')
+      const code = assertString(payload.code, 'code')
+      const password = assertString(payload.password, 'password')
+      const session = await authSessionService.resetPassword({ email, code, password })
+      return success(session)
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Could not reset password')
+    }
+  })
+
   ipcMain.handle(IPC_CHANNELS.AUTH.SET_PASSWORD, async (_event, raw?: unknown) => {
     try {
       if (raw == null || typeof raw !== 'object') throw new Error('Invalid password')

@@ -17,6 +17,9 @@ export const authService = {
   requestLoginOtp: (email: string) => electronService.auth().requestLoginOtp(email),
   verifyLoginOtp: (email: string, code: string) =>
     electronService.auth().verifyLoginOtp(email, code),
+  forgotPassword: (email: string) => electronService.auth().forgotPassword(email),
+  resetPassword: (input: { email: string; code: string; password: string }) =>
+    electronService.auth().resetPassword(input),
   setPassword: (password: string) => electronService.auth().setPassword(password),
   logout: () => electronService.auth().logout(),
   getSession: () => electronService.auth().getSession(),

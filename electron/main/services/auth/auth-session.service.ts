@@ -163,7 +163,11 @@ export class AuthSessionService {
     }
     try {
       const response = await apiClient.post<
-        ServerAuthPayload & { requiresOtp?: boolean; requiresPassword?: boolean }
+        ServerAuthPayload & {
+          requiresOtp?: boolean
+          requiresPassword?: boolean
+          purpose?: 'login' | 'register' | 'reset'
+        }
       >(
         '/auth/login',
         {
@@ -178,14 +182,15 @@ export class AuthSessionService {
         }
       )
       if (this.isOtpChallenge(response.data)) {
-        throw new Error('OTP_REQUIRED')
+        const purpose = response.data.purpose === 'register' ? 'register' : 'login'
+        throw new Error(`OTP_REQUIRED:${purpose}`)
       }
       if (this.isPasswordChallenge(response.data)) {
         throw new Error('PASSWORD_REQUIRED')
       }
       await this.persistAuthPayload(response.data)
     } catch (err) {
-      if (err instanceof Error && err.message === 'OTP_REQUIRED') throw err
+      if (err instanceof Error && err.message.startsWith('OTP_REQUIRED')) throw err
       if (err instanceof Error && err.message === 'PASSWORD_REQUIRED') throw err
       if (err instanceof ApiError && /password is required/i.test(err.message)) {
         throw new Error('PASSWORD_REQUIRED')
@@ -273,9 +278,65 @@ export class AuthSessionService {
     }
     if (credentials.name?.trim()) body.name = credentials.name.trim()
 
+    try {
+      const response = await apiClient.post<
+        ServerAuthPayload & { requiresOtp?: boolean; purpose?: 'login' | 'register' | 'reset' }
+      >('/auth/register', body, {
+        skipAuth: true,
+        skipAuthRefresh: true,
+        skipOfflineQueue: true,
+        skipOfflineCache: true
+      })
+      if (this.isOtpChallenge(response.data)) {
+        throw new Error('OTP_REQUIRED:register')
+      }
+      await this.persistAuthPayload(response.data)
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('OTP_REQUIRED')) throw err
+      throw err
+    }
+    await this.syncSubscriptionStatus().catch((err) => {
+      log.warn('Post-register subscription sync failed — using register payload cache', {
+        error: err instanceof Error ? err.message : String(err)
+      })
+    })
+    this.emitChanged('register')
+    return this.getSession()
+  }
+
+  async forgotPassword(email: string): Promise<{ requiresOtp: true }> {
+    const trimmed = normalizeEmailInput(email)
+    if (!trimmed) throw new Error('Email is required')
+    await apiClient.post(
+      '/auth/password/forgot',
+      { email: trimmed },
+      {
+        skipAuth: true,
+        skipAuthRefresh: true,
+        skipOfflineQueue: true,
+        skipOfflineCache: true
+      }
+    )
+    return { requiresOtp: true }
+  }
+
+  async resetPassword(input: {
+    email: string
+    code: string
+    password: string
+  }): Promise<AuthSessionSnapshot> {
+    const trimmed = normalizeEmailInput(input.email)
+    if (!trimmed) throw new Error('Email is required')
+    if (!input.password || input.password.length < 8) {
+      throw new Error('Password must be at least 8 characters')
+    }
     const response = await apiClient.post<ServerAuthPayload>(
-      '/auth/register',
-      body,
+      '/auth/password/reset',
+      {
+        email: trimmed,
+        code: input.code.trim(),
+        password: input.password
+      },
       {
         skipAuth: true,
         skipAuthRefresh: true,
@@ -285,11 +346,11 @@ export class AuthSessionService {
     )
     await this.persistAuthPayload(response.data)
     await this.syncSubscriptionStatus().catch((err) => {
-      log.warn('Post-register subscription sync failed — using register payload cache', {
+      log.warn('Post-reset subscription sync failed — using reset payload cache', {
         error: err instanceof Error ? err.message : String(err)
       })
     })
-    this.emitChanged('register')
+    this.emitChanged('reset-password')
     return this.getSession()
   }
 

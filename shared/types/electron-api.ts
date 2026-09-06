@@ -223,6 +223,12 @@ export interface AuthApi {
   register: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
   requestLoginOtp: (email: string) => Promise<{ requiresOtp: true }>
   verifyLoginOtp: (email: string, code: string) => Promise<AuthSessionSnapshot>
+  forgotPassword: (email: string) => Promise<{ requiresOtp: true }>
+  resetPassword: (input: {
+    email: string
+    code: string
+    password: string
+  }) => Promise<AuthSessionSnapshot>
   setPassword: (password: string) => Promise<AuthSessionSnapshot>
   logout: () => Promise<AuthSessionSnapshot>
   getSession: () => Promise<AuthSessionSnapshot>

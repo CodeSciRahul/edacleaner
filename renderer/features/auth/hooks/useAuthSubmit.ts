@@ -7,7 +7,10 @@ import type { TranslationKey } from '@/i18n/locales/en'
 import { isPlausibleEmail, normalizeEmailInput } from '@shared/utils'
 
 export type AuthMode = 'login' | 'register'
-export type AuthStep = 'email' | 'password' | 'otp'
+export type AuthStep = 'credentials' | 'password' | 'otp' | 'forgot' | 'reset'
+export type OtpContext = 'login' | 'register' | 'reset'
+
+const OTP_RESEND_SECONDS = 60
 
 function mapAuthError(message: string, t: (key: TranslationKey) => string): string {
   const lower = message.toLowerCase()
@@ -39,6 +42,12 @@ function isOtpChallenge(message: string): boolean {
   return message.includes('OTP_REQUIRED')
 }
 
+function otpContextFromMessage(message: string): OtpContext {
+  if (message.includes('OTP_REQUIRED:register')) return 'register'
+  if (message.includes('OTP_REQUIRED:reset')) return 'reset'
+  return 'login'
+}
+
 function isPasswordChallenge(message: string): boolean {
   return (
     message.includes('PASSWORD_REQUIRED') ||
@@ -61,7 +70,8 @@ export function useAuthSubmit({
 }: UseAuthSubmitOptions) {
   const { t } = useTranslation()
   const [mode, setMode] = useState<AuthMode>(defaultMode)
-  const [step, setStep] = useState<AuthStep>('email')
+  const [step, setStep] = useState<AuthStep>('credentials')
+  const [otpContext, setOtpContext] = useState<OtpContext>('login')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -71,15 +81,26 @@ export function useAuthSubmit({
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [online, setOnline] = useState(true)
+  const [resendSeconds, setResendSeconds] = useState(0)
 
   useEffect(() => {
     setMode(defaultMode)
-    setStep('email')
+    setStep('credentials')
+    setOtpContext(defaultMode === 'register' ? 'register' : 'login')
     setPassword('')
     setOtp('')
     setError(null)
     setNotice(null)
+    setResendSeconds(0)
   }, [defaultMode])
+
+  useEffect(() => {
+    if (resendSeconds <= 0) return
+    const timer = window.setTimeout(() => {
+      setResendSeconds((value) => Math.max(0, value - 1))
+    }, 1000)
+    return () => window.clearTimeout(timer)
+  }, [resendSeconds])
 
   useEffect(() => {
     let cancelled = false
@@ -97,6 +118,10 @@ export function useAuthSubmit({
       cancelled = true
     }
   }, [])
+
+  function startOtpCooldown(): void {
+    setResendSeconds(OTP_RESEND_SECONDS)
+  }
 
   async function ensureOnline(): Promise<boolean> {
     try {
@@ -127,7 +152,69 @@ export function useAuthSubmit({
       return
     }
 
-    if (mode === 'login' && step === 'otp') {
+    if (step === 'forgot') {
+      if (!(await ensureOnline())) return
+      setSubmitting(true)
+      try {
+        await authService.forgotPassword(trimmedEmail)
+        setOtpContext('reset')
+        setStep('otp')
+        setOtp('')
+        setPassword('')
+        setNotice(t('auth.otp.sent'))
+        startOtpCooldown()
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        setError(mapAuthError(message, t))
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
+    if (step === 'otp' && otpContext === 'reset') {
+      if (!/^\d{6}$/.test(otp.trim())) {
+        setError(t('auth.otp.invalid'))
+        return
+      }
+      setStep('reset')
+      setPassword('')
+      setNotice(t('auth.reset.codeAccepted'))
+      return
+    }
+
+    if (step === 'reset') {
+      if (!password) {
+        setError(t('auth.error.passwordRequired'))
+        return
+      }
+      if (password.length < 8) {
+        setError(t('auth.error.passwordLength'))
+        return
+      }
+      if (!/^\d{6}$/.test(otp.trim())) {
+        setError(t('auth.otp.invalid'))
+        return
+      }
+      if (!(await ensureOnline())) return
+      setSubmitting(true)
+      try {
+        const session = await authService.resetPassword({
+          email: trimmedEmail,
+          code: otp.trim(),
+          password
+        })
+        onAuthenticated?.(session)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        setError(mapAuthError(message, t))
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
+    if (step === 'otp') {
       if (!/^\d{6}$/.test(otp.trim())) {
         setError(t('auth.otp.invalid'))
         return
@@ -153,7 +240,7 @@ export function useAuthSubmit({
       }
     }
 
-    if (mode === 'register') {
+    if (mode === 'register' && step === 'credentials') {
       if (!password) {
         setError(t('auth.error.required'))
         return
@@ -178,9 +265,11 @@ export function useAuthSubmit({
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
           if (isOtpChallenge(message)) {
+            setOtpContext(otpContextFromMessage(message))
             setStep('otp')
             setOtp('')
             setNotice(t('auth.otp.sent'))
+            startOtpCooldown()
             return
           }
           if (isPasswordChallenge(message)) {
@@ -194,12 +283,25 @@ export function useAuthSubmit({
         return
       }
 
-      const session = await onRegister({
-        email: trimmedEmail,
-        password,
-        ...(name.trim() ? { name: name.trim() } : {})
-      })
-      onAuthenticated?.(session)
+      try {
+        const session = await onRegister({
+          email: trimmedEmail,
+          password,
+          ...(name.trim() ? { name: name.trim() } : {})
+        })
+        onAuthenticated?.(session)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        if (isOtpChallenge(message)) {
+          setOtpContext(otpContextFromMessage(message))
+          setStep('otp')
+          setOtp('')
+          setNotice(t('auth.otp.sent'))
+          startOtpCooldown()
+          return
+        }
+        setError(mapAuthError(message, t))
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       setError(mapAuthError(message, t))
@@ -209,12 +311,19 @@ export function useAuthSubmit({
   }
 
   async function resendOtp(): Promise<void> {
+    if (resendSeconds > 0) return
     setError(null)
     if (!(await ensureOnline())) return
     setSubmitting(true)
     try {
-      await authService.requestLoginOtp(normalizeEmailInput(email))
+      const trimmedEmail = normalizeEmailInput(email)
+      if (otpContext === 'reset') {
+        await authService.forgotPassword(trimmedEmail)
+      } else {
+        await authService.requestLoginOtp(trimmedEmail)
+      }
       setNotice(t('auth.otp.sent'))
+      startOtpCooldown()
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       setError(mapAuthError(message, t))
@@ -225,24 +334,40 @@ export function useAuthSubmit({
 
   function switchMode(next: AuthMode): void {
     setMode(next)
-    setStep('email')
+    setStep('credentials')
+    setOtpContext(next === 'register' ? 'register' : 'login')
     setError(null)
     setNotice(null)
     setPassword('')
     setOtp('')
+    setResendSeconds(0)
   }
 
-  function backToEmail(): void {
-    setStep('email')
+  function startForgotPassword(): void {
+    setMode('login')
+    setStep('forgot')
+    setOtpContext('reset')
     setPassword('')
     setOtp('')
     setError(null)
     setNotice(null)
+    setResendSeconds(0)
+  }
+
+  function backToCredentials(): void {
+    setStep('credentials')
+    setOtpContext(mode === 'register' ? 'register' : 'login')
+    setPassword('')
+    setOtp('')
+    setError(null)
+    setNotice(null)
+    setResendSeconds(0)
   }
 
   return {
     mode,
     step,
+    otpContext,
     name,
     setName,
     email,
@@ -257,9 +382,12 @@ export function useAuthSubmit({
     error,
     notice,
     online,
+    resendSeconds,
+    canResendOtp: resendSeconds <= 0,
     handleSubmit,
     switchMode,
     resendOtp,
-    backToCredentials: backToEmail
+    startForgotPassword,
+    backToCredentials
   }
 }
