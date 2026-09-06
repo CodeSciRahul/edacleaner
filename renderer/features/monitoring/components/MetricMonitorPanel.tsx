@@ -1,7 +1,8 @@
-import { Cpu, Maximize2, MemoryStick } from 'lucide-react'
+import { Maximize2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { LiveMetricChart } from './LiveMetricChart'
+import { getMonitoringSummaryVisual } from '../lib/summary-meta'
 import type { ChartPoint, HealthStatus, MetricDefinition, MetricStats } from '../types'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
@@ -35,24 +36,31 @@ export function MetricMonitorPanel({
 }: MetricMonitorPanelProps): React.ReactElement {
   const { t } = useTranslation()
   const label = t(definition.labelKey)
-  const Icon = definition.iconName === 'cpu' ? Cpu : MemoryStick
+  const visual = getMonitoringSummaryVisual(definition.id)
+  const Icon = visual.icon
   const status = stats?.status ?? 'normal'
 
   return (
     <section
       aria-label={label}
-      className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card"
+      className={cn(
+        'flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card',
+        'animate-in fade-in-0 slide-in-from-bottom-1 duration-300',
+        'transition-shadow duration-150 hover:shadow-card-hover'
+      )}
     >
       <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="flex items-start gap-3">
           <div
-            className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-            style={{ backgroundColor: `${definition.color}18`, color: definition.color }}
+            className={cn(
+              'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
+              visual.iconWrapClass
+            )}
           >
-            <Icon className="h-4.5 w-4.5 h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-sm font-medium text-foreground">{label}</h2>
+            <h2 className="text-sm font-semibold text-foreground">{label}</h2>
             <div className="mt-1 flex flex-wrap items-baseline gap-2">
               <span className="text-3xl font-semibold tabular-nums tracking-tight text-foreground">
                 {isLoading || !stats ? '…' : stats.current.toFixed(1)}
@@ -73,12 +81,12 @@ export function MetricMonitorPanel({
         <Button
           size="sm"
           variant="ghost"
-          className="h-8 gap-1.5 text-muted-foreground"
+          className="h-8 gap-1.5 rounded-lg text-muted-foreground"
           onClick={onExpand}
-          aria-label={`Expand ${label}`}
+          aria-label={t('monitoring.expandMetric', { metric: label })}
         >
-          <Maximize2 className="h-3.5 w-3.5" />
-          Expand
+          <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+          {t('monitoring.expand')}
         </Button>
       </div>
 

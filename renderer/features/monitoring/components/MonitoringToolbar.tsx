@@ -1,98 +1,46 @@
-import { Pause, Play, RefreshCw, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/utils/cn'
-import type { MetricId, TimeRangeId, TimeRangeOption } from '../types'
-import type { MetricDefinition } from '../types'
+import type { MetricDefinition, MetricId, TimeRangeId, TimeRangeOption } from '../types'
 import { useTranslation } from '@/i18n/useTranslation'
 
 interface MonitoringToolbarProps {
-  paused: boolean
-  isLive: boolean
-  isRefreshing: boolean
   timeRange: TimeRangeId
   timeRangeOptions: TimeRangeOption[]
   visibleMetrics: MetricId[]
   metricDefinitions: MetricDefinition[]
-  onPause: () => void
-  onResume: () => void
-  onRefresh: () => void
   onTimeRangeChange: (id: TimeRangeId) => void
   onToggleMetric: (id: MetricId) => void
+  disabled?: boolean
 }
 
 export function MonitoringToolbar({
-  paused,
-  isLive,
-  isRefreshing,
   timeRange,
   timeRangeOptions,
   visibleMetrics,
   metricDefinitions,
-  onPause,
-  onResume,
-  onRefresh,
   onTimeRangeChange,
-  onToggleMetric
+  onToggleMetric,
+  disabled = false
 }: MonitoringToolbarProps): React.ReactElement {
   const { t } = useTranslation()
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Badge
-        variant="outline"
+      <label
         className={cn(
-          'h-8 gap-1.5 rounded-lg px-2.5 font-medium',
-          paused
-            ? 'border-warning/30 bg-warning/10 text-warning'
-            : isLive
-              ? 'border-success/30 bg-success/10 text-success'
-              : 'border-border bg-muted text-muted-foreground'
+          'flex h-8 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-xs text-muted-foreground',
+          'shadow-sm',
+          disabled && 'opacity-60'
         )}
       >
-        <span
-          className={cn(
-            'h-1.5 w-1.5 rounded-full',
-            paused ? 'bg-warning' : isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground'
-          )}
-        />
-        {paused
-          ? t('monitoring.paused')
-          : isLive
-            ? t('monitoring.live')
-            : t('monitoring.offline')}
-      </Badge>
-
-      {paused ? (
-        <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onResume}>
-          <Play className="h-3.5 w-3.5" />
-          {t('monitoring.resume')}
-        </Button>
-      ) : (
-        <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onPause}>
-          <Pause className="h-3.5 w-3.5" />
-          {t('monitoring.pause')}
-        </Button>
-      )}
-
-      <Button
-        size="sm"
-        variant="outline"
-        className="h-8 gap-1.5"
-        disabled={isRefreshing}
-        onClick={onRefresh}
-      >
-        <RefreshCw className={cn('h-3.5 w-3.5', isRefreshing && 'animate-spin')} />
-        {t('common.refresh')}
-      </Button>
-
-      <label className="flex h-8 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-xs text-muted-foreground">
-        <span className="sr-only">Time range</span>
+        <span className="hidden sm:inline">{t('monitoring.controls.range')}</span>
         <select
-          className="bg-transparent text-foreground outline-none"
+          className="bg-transparent font-medium text-foreground outline-none"
           value={timeRange}
+          disabled={disabled}
           onChange={(e) => onTimeRangeChange(e.target.value as TimeRangeId)}
-          aria-label="Graph time range"
+          aria-label={t('monitoring.controls.range')}
         >
           {timeRangeOptions.map((opt) => (
             <option key={opt.id} value={opt.id}>
@@ -102,7 +50,7 @@ export function MonitoringToolbar({
         </select>
       </label>
 
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-0.5">
+      <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 shadow-sm">
         {metricDefinitions.map((metric) => {
           const visible = visibleMetrics.includes(metric.id)
           const shortLabel = t(metric.shortLabelKey)
@@ -111,15 +59,26 @@ export function MonitoringToolbar({
               key={metric.id}
               size="sm"
               variant="ghost"
+              disabled={disabled}
               className={cn(
-                'h-7 gap-1.5 px-2 text-xs',
-                visible ? 'text-foreground' : 'text-muted-foreground'
+                'h-7 gap-1.5 rounded-md px-2 text-xs',
+                visible
+                  ? 'bg-primary/10 text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
               aria-pressed={visible}
-              aria-label={`${visible ? 'Hide' : 'Show'} ${shortLabel}`}
+              aria-label={
+                visible
+                  ? t('monitoring.controls.hideMetric', { metric: shortLabel })
+                  : t('monitoring.controls.showMetric', { metric: shortLabel })
+              }
               onClick={() => onToggleMetric(metric.id)}
             >
-              {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              {visible ? (
+                <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
               {shortLabel}
             </Button>
           )
