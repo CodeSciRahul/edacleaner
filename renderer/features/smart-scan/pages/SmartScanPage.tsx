@@ -156,6 +156,7 @@ export function SmartScanPage(): React.ReactElement {
           isScanning={isScanning}
           cancelPending={cancelScan.isPending}
           progressMessage={progress?.message}
+          progressPercent={progress?.percent ?? null}
           onScan={() => void handleScan()}
           onCancel={() => void handleCancel()}
         />

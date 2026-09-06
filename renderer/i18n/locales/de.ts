@@ -559,6 +559,10 @@ export const de: Record<TranslationKey, string> = {
     'CPU oder Speicher sind hoch. Boosten Sie die Leistung oder prüfen Sie laufende Prozesse.',
   'home.hero.lastActivity': 'Letzte Optimierung {{when}}',
   'home.hero.firstRun': 'Tipp: Ihr erster Scan schaltet den Gesundheitswert in Berichten frei.',
+  'home.hero.statHealth': 'Gesundheit',
+  'home.hero.statIssues': 'Offene Probleme',
+  'home.hero.statReclaimed': 'Freigegebener Speicher',
+  'home.hero.statDiskFree': 'Freier Speicher',
   'home.action.scanTitle': 'Smart-Scan',
   'home.action.scanDesc': 'Ein-Klick-Check für Junk, Speicher und Leistung',
   'home.action.storageTitle': 'Speicher',
@@ -637,6 +641,18 @@ export const de: Record<TranslationKey, string> = {
   'cleanup.hero.badgeSuccess': 'Optimierung erfolgreich',
   'cleanup.hero.badgeSafe': 'Sicher standardmäßig bereinigen',
   'cleanup.hero.overview': 'Bereinigungsübersicht',
+  'cleanup.hero.statReclaimable': 'Freigebar',
+  'cleanup.hero.statFreed': 'Freigegeben',
+  'cleanup.hero.statSelected': 'Ausgewählt',
+  'cleanup.hero.statCategories': 'Kategorien',
+  'cleanup.hero.statFiles': 'Elemente',
+  'cleanup.hero.statRemoved': 'Entfernt',
+  'cleanup.hero.tipIdle': 'Tipp: zuerst scannen, dann nur sichere Kategorien Ihrer Wahl optimieren.',
+  'cleanup.hero.tipScanning': 'Junk, Caches und Papierkorb werden geprüft — persönliche Dateien bleiben unberührt.',
+  'cleanup.hero.tipCleaning': 'Ausgewählte Elemente werden sicher entfernt. Pause ist möglich.',
+  'cleanup.hero.tipReview': 'Unten Kategorien auswählen, die bereinigt werden sollen.',
+  'cleanup.hero.tipSelected': '{{count}} ausgewählt · {{bytes}} werden bei Optimierung freigegeben.',
+  'cleanup.hero.tipDone': 'Tipp: Smart-Scan oder Berichte prüfen, um langfristige Gewinne zu sehen.',
   'cleanup.cat.junk': 'Junk-Dateien',
   'cleanup.cat.junkDesc': 'Übrige Installer, Absturzspeicher und App-Überreste',
   'cleanup.cat.temp': 'Temporäre Dateien',
@@ -728,8 +744,19 @@ export const de: Record<TranslationKey, string> = {
   'smartScan.statusLabel.issue': 'Optimieren',
   'smartScan.hero.complete': 'Smart-Scan abgeschlossen',
   'smartScan.hero.healthScore': 'Gesundheitswert',
+  'smartScan.hero.statHealth': 'Gesundheit',
+  'smartScan.hero.statIssues': 'Offene Probleme',
+  'smartScan.hero.statReclaimable': 'Freigebar',
+  'smartScan.hero.statProgress': 'Fortschritt',
   'smartScan.hero.reclaimHint':
     'Bis zu {{bytes}} können freigegeben werden — öffnen Sie Bereinigung oder Speicher zum Optimieren.',
+  'smartScan.hero.lastScanned': 'Zuletzt gescannt {{when}}',
+  'smartScan.hero.tipEmpty':
+    'Tipp: Ihr erster Scan schaltet die Gesundheitsbewertung in Bereinigung und Berichten frei.',
+  'smartScan.hero.tipReady':
+    'Tipp: Ein Scan prüft Junk, Speicherdruck und Leistungsauswirkungen.',
+  'smartScan.hero.tipScanning':
+    'Bereinigung, Speicher, Leistung und Sicherheit werden geprüft…',
   'smartScan.progress.fallback': 'PC wird auf einfache Optimierungen geprüft…',
   'smartScan.relative.justNow': 'Gerade eben',
   'smartScan.relative.minAgo': 'vor {{count}} Min.',
@@ -753,6 +780,18 @@ export const de: Record<TranslationKey, string> = {
     'Prüfen Sie die Ordneraufteilung unten oder analysieren Sie erneut, um die Nutzung auf allen Laufwerken zu aktualisieren.',
   'storage.hero.readySubNoAnalysis':
     'Analysieren Sie unten ein Laufwerk, um Ordnernutzung zu kartieren und Speicher freizugeben.',
+  'storage.hero.statFree': 'Frei',
+  'storage.hero.statUsed': 'Belegt',
+  'storage.hero.statDrives': 'Laufwerke',
+  'storage.hero.statLarge': 'Große Dateien',
+  'storage.hero.statDuplicates': 'Duplikate',
+  'storage.hero.tipIdle':
+    'Tipp: Analysieren Sie ein Laufwerk, um Ordner zu kartieren und freigebbaren Speicher zu finden.',
+  'storage.hero.tipAnalyzing':
+    'Ordner werden indexiert und die Nutzung gemessen — das kann eine Minute dauern.',
+  'storage.hero.tipDrivesOnly':
+    'Tipp: Analysieren Sie erneut, um Ordnernutzung und freigebbare Einblicke zu aktualisieren.',
+  'storage.hero.tipReady': 'Große Dateien {{large}} · Duplikat-Ballast {{dupes}}',
   'storage.analyze': 'Festplatte analysieren',
   'storage.analyzing': 'Wird analysiert…',
   'storage.analyzing.title': 'Speicher wird analysiert…',
@@ -830,6 +869,16 @@ export const de: Record<TranslationKey, string> = {
   'storage.largeFiles.hero.selectedHeadline': '{{count}} Datei(en) ausgewählt',
   'storage.largeFiles.hero.selectedSub':
     'Auswahl unten prüfen, dann löschen oder vor dem Entfernen exportieren.',
+  'storage.largeFiles.hero.statFiles': 'Dateien',
+  'storage.largeFiles.hero.statSize': 'Gesamtgröße',
+  'storage.largeFiles.hero.statSelected': 'Ausgewählt',
+  'storage.largeFiles.hero.tipScanning': 'Dateien über 100 MB auf Ihren Laufwerken werden indexiert…',
+  'storage.largeFiles.hero.tipEmpty':
+    'Tipp: Analysieren Sie erneut in der Speicher-Übersicht, falls Ergebnisse veraltet wirken.',
+  'storage.largeFiles.hero.tipReady':
+    'Tipp: Dateien auswählen zum Löschen oder zuerst eine Liste exportieren.',
+  'storage.largeFiles.hero.tipSelected':
+    '{{count}} ausgewählt — löschen zum Freigeben oder zuerst exportieren.',
 
   'storage.duplicates.hero.overview': 'Doppelte Dateien',
   'storage.duplicates.hero.badge': 'Duplikat-Finder',
@@ -847,6 +896,16 @@ export const de: Record<TranslationKey, string> = {
   'storage.duplicates.hero.selectedSub':
     'Ausgewählte Duplikate löschen. Originale in jeder Gruppe bleiben unberührt.',
   'storage.duplicates.hero.selectDuplicates': 'Duplikate auswählen',
+  'storage.duplicates.hero.statGroups': 'Gruppen',
+  'storage.duplicates.hero.statWaste': 'Ballast',
+  'storage.duplicates.hero.statSelected': 'Ausgewählt',
+  'storage.duplicates.hero.tipScanning': 'Hashes werden verglichen, um identische Kopien zu finden…',
+  'storage.duplicates.hero.tipEmpty':
+    'Tipp: Analysieren Sie erneut in der Speicher-Übersicht, falls Ergebnisse veraltet wirken.',
+  'storage.duplicates.hero.tipReady':
+    'Tipp: Zusatzkopien auswählen und entfernen — ein Original pro Gruppe bleibt.',
+  'storage.duplicates.hero.tipSelected':
+    '{{count}} ausgewählt — löschen, um Duplikat-Ballast freizugeben.',
 
   'largeFiles.title': 'Große Dateien',
   'largeFiles.description':

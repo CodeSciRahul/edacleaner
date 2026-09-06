@@ -282,8 +282,16 @@ export function CleanupPage(): React.ReactElement {
           phase={phase}
           reclaimableBytes={scan?.totalBytes ?? 0}
           selectedCount={summary.count}
+          selectedBytes={summary.bytes}
+          fileCount={summary.files > 0 ? summary.files : scan?.totalFiles ?? 0}
+          categoryCount={
+            summary.count > 0 ? summary.count : availableCategories.length
+          }
           scanned={Boolean(scan)}
           lastBytesFreed={lastResult && !lastResult.cancelled ? lastResult.bytesFreed : undefined}
+          lastFilesRemoved={
+            lastResult && !lastResult.cancelled ? lastResult.filesRemoved : undefined
+          }
           busy={busy}
           isCleaning={isCleaning}
           cancelPending={cancelCleanup.isPending}

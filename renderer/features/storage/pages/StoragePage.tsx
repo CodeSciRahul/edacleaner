@@ -106,6 +106,10 @@ export function StoragePage(): React.ReactElement {
           storageAllowed={storageAccess.allowed}
           hasUsage={Boolean(usage)}
           storageTotals={drives.length > 0 ? storageTotals : undefined}
+          largeFileCount={largeFiles.length}
+          largeTotalBytes={largeTotalBytes}
+          duplicateGroupCount={duplicates.length}
+          duplicateWasteBytes={duplicateWasteBytes}
           onAnalyze={() => void analyze.mutateAsync(mountPath)}
         />
 

@@ -1,10 +1,12 @@
-import { Check, Copy, Loader2, RefreshCw, Trash2, X } from 'lucide-react'
+import { Check, Copy, FileStack, HardDrive, Loader2, RefreshCw, Trash2, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { formatBytes } from '@shared/utils'
 import { useTranslation } from '@/i18n/useTranslation'
 import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
+import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import duplicatesHeroBgDark from '@/assets/storage/duplicates-hero-bg-dark.png'
 import duplicatesHeroBgLight from '@/assets/storage/duplicates-hero-bg-light.png'
 
@@ -40,6 +42,7 @@ export function DuplicatesHero({
   onDelete
 }: DuplicatesHeroProps): React.ReactElement {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   let headline: string
   let subtext: string
@@ -61,11 +64,27 @@ export function DuplicatesHero({
     subtext = t('storage.duplicates.hero.readySub')
   }
 
+  const groupsValue = isLoading ? '…' : String(groupCount)
+  const wasteValue = isLoading ? '…' : groupCount > 0 ? formatBytes(wasteBytes) : '—'
+  const selectedValue = isLoading ? '…' : String(selectedCount)
+
+  let tip: string
+  if (isLoading) {
+    tip = t('storage.duplicates.hero.tipScanning')
+  } else if (groupCount === 0) {
+    tip = t('storage.duplicates.hero.tipEmpty')
+  } else if (selectedCount > 0) {
+    tip = t('storage.duplicates.hero.tipSelected', { count: selectedCount })
+  } else {
+    tip = t('storage.duplicates.hero.tipReady')
+  }
+
   return (
     <section
       aria-label={t('storage.duplicates.hero.overview')}
       className={cn(
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
+        featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
         'border-border'
       )}
@@ -89,24 +108,47 @@ export function DuplicatesHero({
         aria-hidden="true"
       />
 
-      <div className="relative z-10 flex max-w-2xl flex-col gap-3">
-        <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-600 backdrop-blur-sm dark:text-violet-400">
-          {isLoading ? (
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-          ) : (
-            <Copy className="h-3 w-3" aria-hidden="true" />
-          )}
-          {isLoading ? t('storage.duplicates.hero.badgeScanning') : t('storage.duplicates.hero.badge')}
+      <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 max-w-xl space-y-3">
+          <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-600 backdrop-blur-sm dark:text-violet-400">
+            {isLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+            ) : (
+              <Copy className="h-3 w-3" aria-hidden="true" />
+            )}
+            {isLoading ? t('storage.duplicates.hero.badgeScanning') : t('storage.duplicates.hero.badge')}
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              {headline}
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{subtext}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <StatPill label={t('storage.duplicates.hero.statGroups')} value={groupsValue} />
+            <StatPill label={t('storage.duplicates.hero.statWaste')} value={wasteValue} />
+            <StatPill label={t('storage.duplicates.hero.statSelected')} value={selectedValue} />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            <JumpChip
+              icon={HardDrive}
+              label={t('storage.subnav.overview')}
+              onClick={() => navigate('/storage')}
+            />
+            <JumpChip
+              icon={FileStack}
+              label={t('storage.subnav.largeFiles')}
+              onClick={() => navigate('/storage/large-files')}
+            />
+          </div>
+
+          <p className="text-xs text-muted-foreground">{tip}</p>
         </div>
 
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {headline}
-          </h2>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{subtext}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+        <div className="relative z-10 flex flex-wrap items-center gap-2">
           {!accessAllowed ? <PremiumBadge plan="pro" /> : null}
           <FeatureLockButton
             feature="duplicates"
@@ -153,5 +195,42 @@ export function DuplicatesHero({
         </div>
       </div>
     </section>
+  )
+}
+
+function StatPill({ label, value }: { label: string; value: string }): React.ReactElement {
+  return (
+    <div className="rounded-xl border border-border/80 bg-background/60 px-3 py-2 backdrop-blur-sm">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+    </div>
+  )
+}
+
+function JumpChip({
+  icon: Icon,
+  label,
+  onClick
+}: {
+  icon: typeof HardDrive
+  label: string
+  onClick: () => void
+}): React.ReactElement {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/55 px-2.5 py-1',
+        'text-[11px] font-medium text-muted-foreground backdrop-blur-sm',
+        'transition-colors hover:border-primary/25 hover:bg-background/80 hover:text-foreground',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+      )}
+    >
+      <Icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden="true" />
+      {label}
+    </button>
   )
 }

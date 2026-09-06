@@ -6,6 +6,7 @@ import { formatBytes } from '@shared/utils'
 import type { MemoryInfo } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 import performanceHeroBgDark from '@/assets/performance/performance-hero-bg-dark.png'
 import performanceHeroBgLight from '@/assets/performance/performance-hero-bg-light.png'
@@ -73,6 +74,7 @@ export function PerformanceHero({
       aria-label={t('performance.hero.overview')}
       className={cn(
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
+        featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
         health === 'good' ? 'border-success/25' : health === 'warning' ? 'border-warning/25' : 'border-border'
       )}
@@ -96,7 +98,7 @@ export function PerformanceHero({
         aria-hidden="true"
       />
 
-      <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 max-w-xl space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <div

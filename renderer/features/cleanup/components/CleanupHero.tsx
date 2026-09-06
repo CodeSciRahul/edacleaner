@@ -1,17 +1,21 @@
 import {
   CheckCircle2,
+  FileBarChart2,
+  HardDrive,
   Loader2,
   RefreshCw,
-  Search,
+  ScanSearch,
   ShieldCheck,
   Sparkles,
   Square
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { formatBytes } from '@shared/utils'
 import type { CleanupWorkflowPhase } from '@/features/cleanup/lib/category-meta'
 import { useTranslation } from '@/i18n/useTranslation'
+import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import cleanupHeroBgDark from '@/assets/cleanup/cleanup-hero-bg-dark.png'
 import cleanupHeroBgLight from '@/assets/cleanup/cleanup-hero-bg-light.png'
 
@@ -19,8 +23,12 @@ interface CleanupHeroProps {
   phase: CleanupWorkflowPhase
   reclaimableBytes: number
   selectedCount: number
+  selectedBytes: number
+  fileCount: number
+  categoryCount: number
   scanned: boolean
   lastBytesFreed?: number
+  lastFilesRemoved?: number
   busy: boolean
   isCleaning: boolean
   cancelPending: boolean
@@ -30,23 +38,16 @@ interface CleanupHeroProps {
   onOptimize: () => void
 }
 
-const STEP_IDS: CleanupWorkflowPhase[] = ['scan', 'review', 'clean']
-
-function stepIndex(phase: CleanupWorkflowPhase): number {
-  if (phase === 'idle') return -1
-  if (phase === 'scan') return 0
-  if (phase === 'review') return 1
-  if (phase === 'clean') return 2
-  if (phase === 'done') return 2
-  return 0
-}
-
 export function CleanupHero({
   phase,
   reclaimableBytes,
   selectedCount,
+  selectedBytes,
+  fileCount,
+  categoryCount,
   scanned,
   lastBytesFreed,
+  lastFilesRemoved,
   busy,
   isCleaning,
   cancelPending,
@@ -56,14 +57,8 @@ export function CleanupHero({
   onOptimize
 }: CleanupHeroProps): React.ReactElement {
   const { t } = useTranslation()
-  const active = stepIndex(phase)
+  const navigate = useNavigate()
   const optimized = phase === 'done'
-
-  const steps = [
-    { id: STEP_IDS[0], label: t('cleanup.hero.scan') },
-    { id: STEP_IDS[1], label: t('cleanup.hero.review') },
-    { id: STEP_IDS[2], label: t('cleanup.hero.optimize') }
-  ]
 
   let headline: string
   let subtext: string
@@ -90,15 +85,68 @@ export function CleanupHero({
     subtext = t('cleanup.hero.tidySub')
   }
 
+  const pillPlaceholder = busy ? '…' : '—'
+
+  const reclaimLabel = optimized
+    ? t('cleanup.hero.statFreed')
+    : t('cleanup.hero.statReclaimable')
+  const reclaimValue = optimized
+    ? typeof lastBytesFreed === 'number'
+      ? formatBytes(lastBytesFreed)
+      : '—'
+    : scanned
+      ? formatBytes(selectedCount > 0 ? selectedBytes : reclaimableBytes)
+      : pillPlaceholder
+
+  const middleLabel = optimized
+    ? t('cleanup.hero.statRemoved')
+    : selectedCount > 0
+      ? t('cleanup.hero.statSelected')
+      : t('cleanup.hero.statCategories')
+  const middleValue = optimized
+    ? typeof lastFilesRemoved === 'number'
+      ? String(lastFilesRemoved)
+      : '—'
+    : scanned
+      ? String(selectedCount > 0 ? selectedCount : categoryCount)
+      : pillPlaceholder
+
+  const rightLabel = optimized
+    ? t('cleanup.hero.statCategories')
+    : t('cleanup.hero.statFiles')
+  const rightValue = optimized
+    ? selectedCount > 0
+      ? String(selectedCount)
+      : '—'
+    : scanned
+      ? String(fileCount)
+      : pillPlaceholder
+
+  let tip: string
+  if (optimized) {
+    tip = t('cleanup.hero.tipDone')
+  } else if (busy) {
+    tip = isCleaning ? t('cleanup.hero.tipCleaning') : t('cleanup.hero.tipScanning')
+  } else if (!scanned) {
+    tip = t('cleanup.hero.tipIdle')
+  } else if (selectedCount > 0) {
+    tip = t('cleanup.hero.tipSelected', {
+      bytes: formatBytes(selectedBytes),
+      count: selectedCount
+    })
+  } else {
+    tip = t('cleanup.hero.tipReview')
+  }
+
   return (
     <section
       aria-label={t('cleanup.hero.overview')}
       className={cn(
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
+        featureHeroMinHeightClass,
         optimized ? 'border-success/25' : 'border-border'
       )}
     >
-      {/* Full-card cleanup art — `.light` / `.dark` on <html> */}
       <img
         src={cleanupHeroBgLight}
         alt=""
@@ -113,14 +161,13 @@ export function CleanupHero({
         draggable={false}
         aria-hidden="true"
       />
-      {/* Soft left scrim keeps headline/steps readable over calm left of art */}
       <div
         className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/90 via-card/55 to-transparent sm:via-card/40"
         aria-hidden="true"
       />
 
-      <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-xl space-y-3">
+      <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 max-w-xl space-y-3">
           <div className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-background/60 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm">
             {optimized ? (
               <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
@@ -129,11 +176,20 @@ export function CleanupHero({
             )}
             {optimized ? t('cleanup.hero.badgeSuccess') : t('cleanup.hero.badgeSafe')}
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.65rem]">
-            {headline}
-          </h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">{subtext}</p>
-          <div className="flex flex-wrap items-center gap-2 pt-1">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.65rem]">
+              {headline}
+            </h2>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{subtext}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <StatPill label={reclaimLabel} value={reclaimValue} />
+            <StatPill label={middleLabel} value={middleValue} />
+            <StatPill label={rightLabel} value={rightValue} />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
             {busy ? (
               <Button
                 size="sm"
@@ -172,43 +228,65 @@ export function CleanupHero({
                 : t('cleanup.optimize')}
             </Button>
           </div>
+
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            <JumpChip
+              icon={ScanSearch}
+              label={t('nav.smartScan')}
+              onClick={() => navigate('/smart-scan')}
+            />
+            <JumpChip
+              icon={HardDrive}
+              label={t('nav.storage')}
+              onClick={() => navigate('/storage')}
+            />
+            <JumpChip
+              icon={FileBarChart2}
+              label={t('nav.reports')}
+              onClick={() => navigate('/reports')}
+            />
+          </div>
+
+          <p className="text-xs text-muted-foreground">{tip}</p>
         </div>
-
-        <ol className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label={t('cleanup.hero.overview')}>
-          {steps.map((step, index) => {
-            const isActive = index === active && !optimized
-            const isDone = index < active || optimized
-            const Icon =
-              index === 0 ? Search : index === 1 ? Sparkles : optimized ? CheckCircle2 : ShieldCheck
-
-            return (
-              <li key={step.id} className="flex items-center gap-2 sm:gap-3">
-                {index > 0 ? (
-                  <div
-                    className={cn(
-                      'h-px w-4 sm:w-8',
-                      isDone || isActive ? 'bg-primary/50' : 'bg-border',
-                      optimized && 'bg-success/40'
-                    )}
-                    aria-hidden="true"
-                  />
-                ) : null}
-                <div
-                  className={cn(
-                    'flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors duration-200',
-                    isActive && 'border-primary/40 bg-primary/10 text-primary',
-                    isDone && !isActive && 'border-success/30 bg-success/10 text-success',
-                    !isActive && !isDone && 'border-border bg-muted/40 text-muted-foreground'
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
-                  <span>{step.label}</span>
-                </div>
-              </li>
-            )
-          })}
-        </ol>
       </div>
     </section>
+  )
+}
+
+function StatPill({ label, value }: { label: string; value: string }): React.ReactElement {
+  return (
+    <div className="rounded-xl border border-border/80 bg-background/60 px-3 py-2 backdrop-blur-sm">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+    </div>
+  )
+}
+
+function JumpChip({
+  icon: Icon,
+  label,
+  onClick
+}: {
+  icon: typeof ScanSearch
+  label: string
+  onClick: () => void
+}): React.ReactElement {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/55 px-2.5 py-1',
+        'text-[11px] font-medium text-muted-foreground backdrop-blur-sm',
+        'transition-colors hover:border-primary/25 hover:bg-background/80 hover:text-foreground',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+      )}
+    >
+      <Icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden="true" />
+      {label}
+    </button>
   )
 }

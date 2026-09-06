@@ -18,6 +18,7 @@ export function HomePage(): React.ReactElement {
           hasHistory={hasHistory}
           cpu={metrics?.cpu ?? null}
           ram={metrics?.ram ?? null}
+          diskFreeLabel={metrics?.diskFreeLabel ?? null}
         />
 
         <DashboardLiveSnapshot metrics={metrics} isLoading={isLoading} />

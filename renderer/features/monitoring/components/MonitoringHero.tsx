@@ -14,6 +14,7 @@ import { cn } from '@/utils/cn'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
+import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import type { HealthStatus } from '../types'
 import monitoringHeroBgDark from '@/assets/monitoring/monitoring-hero-bg-dark.png'
 import monitoringHeroBgLight from '@/assets/monitoring/monitoring-hero-bg-light.png'
@@ -102,6 +103,7 @@ export function MonitoringHero({
       aria-label={t('monitoring.hero.overview')}
       className={cn(
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
+        featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
         borderClass
       )}
@@ -125,7 +127,7 @@ export function MonitoringHero({
         aria-hidden="true"
       />
 
-      <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 max-w-xl space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <div

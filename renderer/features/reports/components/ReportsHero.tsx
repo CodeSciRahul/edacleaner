@@ -15,6 +15,7 @@ import { CircularProgress } from '@/components/desktop/CircularProgress'
 import { cn } from '@/utils/cn'
 import { useTranslation } from '@/i18n/useTranslation'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
+import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import type { HealthBand } from '@/features/reports/lib/reports-analytics'
 import type { ReportExportFormat } from '@/features/reports/lib/export-report'
 import reportsHeroBgDark from '@/assets/reports/reports-hero-bg-dark.png'
@@ -118,6 +119,7 @@ export function ReportsHero({
       aria-label={t('reports.hero.overview')}
       className={cn(
         'relative rounded-2xl border bg-card p-6 shadow-card sm:p-7',
+        featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
         borderClass
       )}
@@ -141,7 +143,7 @@ export function ReportsHero({
         <div className="absolute inset-0 bg-gradient-to-r from-card/92 via-card/60 to-transparent sm:via-card/42" />
       </div>
 
-      <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 max-w-xl space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <div

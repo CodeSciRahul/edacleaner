@@ -2,6 +2,7 @@ import { RotateCcw, Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { useTranslation } from '@/i18n/useTranslation'
+import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import settingsHeroBgDark from '@/assets/settings/settings-hero-bg-dark.png'
 import settingsHeroBgLight from '@/assets/settings/settings-hero-bg-light.png'
 
@@ -25,7 +26,11 @@ export function SettingsHero({
   return (
     <section
       aria-label={t('settings.hero.overview')}
-      className="relative min-h-[15.5rem] overflow-hidden rounded-2xl border border-border bg-[#d7ebf8] p-6 shadow-card sm:min-h-[17.5rem] sm:p-7 animate-in fade-in-0 duration-300 dark:bg-[#0f1a2c]"
+      className={cn(
+        'relative overflow-hidden rounded-2xl border border-border bg-[#d7ebf8] p-6 shadow-card sm:p-7',
+        featureHeroMinHeightClass,
+        'animate-in fade-in-0 duration-300 dark:bg-[#0f1a2c]'
+      )}
     >
       <div className="pointer-events-none absolute inset-0 rounded-2xl" aria-hidden="true">
         <img

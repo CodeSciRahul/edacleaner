@@ -29,6 +29,7 @@ export const fr: Record<TranslationKey, string> = {
   'common.manage': 'Gérer',
   'common.optimize': 'Optimiser',
   'common.scanning': 'Analyse…',
+  'common.optimizing': 'Optimisation…',
   'common.analyzing': 'Analyse en cours…',
   'common.items': '{{count}} éléments',
   'common.updates': '{{count}} mises à jour',
@@ -54,6 +55,7 @@ export const fr: Record<TranslationKey, string> = {
   'auth.field.name': 'Nom (optionnel)',
   'auth.field.email': 'E-mail',
   'auth.field.password': 'Mot de passe',
+  'auth.field.newPassword': 'Nouveau mot de passe',
   'auth.placeholder.name': 'Votre nom',
   'auth.placeholder.email': 'vous@exemple.com',
   'auth.placeholder.password': 'Entrez votre mot de passe',
@@ -87,14 +89,30 @@ export const fr: Record<TranslationKey, string> = {
   'auth.otp.heading': 'Vérifiez votre e-mail',
   'auth.otp.body':
     'Nous avons envoyé un code à 6 chiffres à l’e-mail du paiement. Saisissez-le pour vous connecter, puis définissez un mot de passe plus tard dans Paramètres.',
+  'auth.otp.registerBody':
+    'Nous avons envoyé un code à 6 chiffres à votre e-mail. Saisissez-le pour vérifier votre compte.',
+  'auth.otp.resetBody':
+    'Nous avons envoyé un code de réinitialisation à votre e-mail. Saisissez-le pour continuer.',
   'auth.otp.placeholder': 'Code à 6 chiffres',
   'auth.otp.submit': 'Vérifier le code',
+  'auth.otp.continue': 'Continuer',
   'auth.otp.resend': 'Renvoyer le code',
+  'auth.otp.resendIn': 'Renvoyer dans {{seconds}} s',
   'auth.otp.changeEmail': 'Utiliser un autre e-mail',
   'auth.otp.sent': 'Un code de vérification a été envoyé à votre e-mail.',
   'auth.otp.invalid': 'Saisissez le code à 6 chiffres reçu par e-mail.',
   'auth.otp.expired': 'Ce code a expiré. Demandez-en un nouveau.',
   'auth.otp.wait': 'Attendez un instant avant de demander un autre code.',
+  'auth.forgot.heading': 'Mot de passe oublié',
+  'auth.forgot.body':
+    'Saisissez l’e-mail de votre compte et nous enverrons un code de réinitialisation.',
+  'auth.forgot.submit': 'Envoyer le code',
+  'auth.forgot.back': 'Retour à la connexion',
+  'auth.reset.heading': 'Choisissez un nouveau mot de passe',
+  'auth.reset.body': 'Saisissez un nouveau mot de passe pour votre compte.',
+  'auth.reset.submit': 'Mettre à jour le mot de passe',
+  'auth.reset.codeAccepted':
+    'Code accepté. Choisissez un nouveau mot de passe pour continuer.',
   'auth.window.loginHeading': 'Connexion à edaCleaner',
   'auth.window.registerHeading': 'Créer un compte edaCleaner',
   'auth.window.productLine': 'Optimisation PC',
@@ -542,6 +560,10 @@ export const fr: Record<TranslationKey, string> = {
     'CPU ou mémoire élevés. Boostez les performances ou vérifiez ce qui tourne.',
   'home.hero.lastActivity': 'Dernière optimisation {{when}}',
   'home.hero.firstRun': 'Astuce : votre première analyse débloque le score dans Rapports.',
+  'home.hero.statHealth': 'Santé',
+  'home.hero.statIssues': 'Problèmes ouverts',
+  'home.hero.statReclaimed': 'Espace récupéré',
+  'home.hero.statDiskFree': 'Disque libre',
   'home.action.scanTitle': 'Analyse intelligente',
   'home.action.scanDesc': 'Contrôle en un clic : junk, stockage et performances',
   'home.action.storageTitle': 'Stockage',
@@ -620,6 +642,23 @@ export const fr: Record<TranslationKey, string> = {
   'cleanup.hero.badgeSuccess': 'Optimisation réussie',
   'cleanup.hero.badgeSafe': 'Nettoyage sûr par défaut',
   'cleanup.hero.overview': 'Aperçu du nettoyage',
+  'cleanup.hero.statReclaimable': 'Récupérable',
+  'cleanup.hero.statFreed': 'Espace libéré',
+  'cleanup.hero.statSelected': 'Sélectionnées',
+  'cleanup.hero.statCategories': 'Catégories',
+  'cleanup.hero.statFiles': 'Éléments',
+  'cleanup.hero.statRemoved': 'Supprimés',
+  'cleanup.hero.tipIdle':
+    'Astuce : analysez d’abord, puis optimisez uniquement les catégories sûres que vous choisissez.',
+  'cleanup.hero.tipScanning':
+    'Analyse des fichiers inutiles, caches et Corbeille — vos fichiers personnels restent intacts.',
+  'cleanup.hero.tipCleaning':
+    'Suppression sécurisée des éléments sélectionnés. Vous pouvez mettre en pause si besoin.',
+  'cleanup.hero.tipReview': 'Sélectionnez ci-dessous les catégories à nettoyer.',
+  'cleanup.hero.tipSelected':
+    '{{count}} sélectionnées · {{bytes}} seront récupérés à l’optimisation.',
+  'cleanup.hero.tipDone':
+    'Astuce : lancez une analyse intelligente ou consultez Rapports pour suivre les gains.',
   'cleanup.cat.junk': 'Fichiers inutiles',
   'cleanup.cat.junkDesc': 'Installateurs restants, dumps de plantage et débris d’apps',
   'cleanup.cat.temp': 'Fichiers temporaires',
@@ -662,6 +701,8 @@ export const fr: Record<TranslationKey, string> = {
   'cleanup.confirm.title': 'Optimiser votre PC ?',
   'cleanup.confirm.body': 'Optimiser {{count}} catégories sélectionnées ?',
   'cleanup.confirm.bodyOne': 'Optimiser 1 catégorie sélectionnée ?',
+  'cleanup.confirm.detail':
+    'Seules les catégories sélectionnées seront nettoyées. Les fichiers personnels restent intacts.',
   'cleanup.confirm.notNow': 'Pas maintenant',
   'cleanup.confirm.confirm': 'Optimiser maintenant',
 
@@ -683,6 +724,7 @@ export const fr: Record<TranslationKey, string> = {
   'smartScan.bootImpact': 'Impact au démarrage',
   'smartScan.goPerformance': 'Aller aux Performances',
   'smartScan.duration': 'Durée de l’analyse',
+  'smartScan.goReports': 'Aller aux Rapports',
   'smartScan.onTrack': 'Sur la bonne voie',
   'smartScan.status.scanningTitle': 'Analyse intelligente en cours…',
   'smartScan.status.scanningMsg':
@@ -707,8 +749,19 @@ export const fr: Record<TranslationKey, string> = {
   'smartScan.statusLabel.issue': 'Optimiser',
   'smartScan.hero.complete': 'Analyse intelligente terminée',
   'smartScan.hero.healthScore': 'Score de santé',
+  'smartScan.hero.statHealth': 'Santé',
+  'smartScan.hero.statIssues': 'Problèmes ouverts',
+  'smartScan.hero.statReclaimable': 'Récupérable',
+  'smartScan.hero.statProgress': 'Progression',
   'smartScan.hero.reclaimHint':
     'Jusqu’à {{bytes}} peuvent être récupérés — ouvrez Nettoyage ou Stockage pour optimiser.',
+  'smartScan.hero.lastScanned': 'Dernière analyse {{when}}',
+  'smartScan.hero.tipEmpty':
+    'Astuce : votre première analyse débloque le score de santé dans Nettoyage et Rapports.',
+  'smartScan.hero.tipReady':
+    'Astuce : une analyse vérifie les fichiers inutiles, la pression disque et l’impact performances.',
+  'smartScan.hero.tipScanning':
+    'Vérification du nettoyage, du stockage, des performances et de la sécurité…',
   'smartScan.progress.fallback': 'Recherche d’optimisations faciles sur votre PC…',
   'smartScan.relative.justNow': 'À l’instant',
   'smartScan.relative.minAgo': 'Il y a {{count}} min',
@@ -718,8 +771,44 @@ export const fr: Record<TranslationKey, string> = {
 
   'storage.title': 'Stockage',
   'storage.description': 'Comprenez la capacité disque et libérez de l’espace en toute confiance.',
+  'storage.hero.overview': 'Aperçu du stockage',
+  'storage.hero.badge': 'Analyseur d’utilisation disque',
+  'storage.hero.idleHeadline': 'Voyez où va votre espace.',
+  'storage.hero.idleSub':
+    'Analysez les disques locaux pour cartographier les dossiers, trouver les gros fichiers et repérer les doublons.',
+  'storage.hero.analyzingHeadline': 'Cartographie de l’utilisation disque…',
+  'storage.hero.analyzingSub':
+    'Indexation des dossiers et mesure de l’usage sur les disques. Cela peut prendre une minute.',
+  'storage.hero.readyHeadline': '{{percent}} % utilisés — {{used}} sur {{total}}',
+  'storage.hero.readySub':
+    'Examinez la répartition des dossiers ci-dessous ou relancez l’analyse pour actualiser tous les disques.',
+  'storage.hero.readySubNoAnalysis':
+    'Analysez un disque ci-dessous pour cartographier les dossiers et trouver de l’espace à récupérer.',
+  'storage.hero.statFree': 'Libre',
+  'storage.hero.statUsed': 'Utilisé',
+  'storage.hero.statDrives': 'Disques',
+  'storage.hero.statLarge': 'Gros fichiers',
+  'storage.hero.statDuplicates': 'Doublons',
+  'storage.hero.tipIdle':
+    'Astuce : analysez un disque pour cartographier les dossiers et trouver de l’espace récupérable.',
+  'storage.hero.tipAnalyzing':
+    'Indexation des dossiers et mesure de l’usage — cela peut prendre une minute.',
+  'storage.hero.tipDrivesOnly':
+    'Astuce : lancez Analyser pour actualiser l’usage des dossiers et les insights récupérables.',
+  'storage.hero.tipReady': 'Gros fichiers {{large}} · gaspillage doublons {{dupes}}',
   'storage.analyze': 'Analyser le disque',
   'storage.analyzing': 'Analyse…',
+  'storage.analyzing.title': 'Analyse du stockage…',
+  'storage.analyzing.message':
+    'Indexation des dossiers et mesure de l’utilisation disque sur vos volumes.',
+  'storage.analyzing.badge': 'Scan stockage',
+  'storage.analyzing.scanning': 'Scan des volumes et index de fichiers…',
+  'storage.analyzing.working': 'Indexation de {{path}}…',
+  'storage.analyzing.steps': 'Étapes d’analyse',
+  'storage.analyzing.step.drives': 'Disques',
+  'storage.analyzing.step.usage': 'Utilisation disque',
+  'storage.analyzing.step.largeFiles': 'Gros fichiers',
+  'storage.analyzing.step.duplicates': 'Doublons',
   'storage.drivesError': 'Impossible de charger les disques',
   'storage.localDisks': 'Disques locaux',
   'storage.localDisksHint':
@@ -768,6 +857,61 @@ export const fr: Record<TranslationKey, string> = {
   'storage.filter.path': 'Filtrer par chemin de dossier…',
   'storage.filter.sort': 'Trier',
   'storage.filter.allTypes': 'Tous les types',
+
+  'storage.largeFiles.hero.overview': 'Gros fichiers',
+  'storage.largeFiles.hero.badge': 'Gros consommateurs',
+  'storage.largeFiles.hero.badgeScanning': 'Scan en cours',
+  'storage.largeFiles.hero.scanningHeadline': 'Recherche de fichiers volumineux…',
+  'storage.largeFiles.hero.scanningSub':
+    'Indexation des fichiers de plus de 100 Mo sur vos disques. Cela peut prendre un moment.',
+  'storage.largeFiles.hero.emptyHeadline': 'Aucun gros fichier trouvé.',
+  'storage.largeFiles.hero.emptySub':
+    'Rien de plus de 100 Mo détecté. Lancez une analyse depuis l’aperçu Stockage pour actualiser.',
+  'storage.largeFiles.hero.readyHeadline': '{{count}} gros fichiers — {{bytes}} au total',
+  'storage.largeFiles.hero.readySub':
+    'Sélectionnez des fichiers à mettre à la corbeille, exportez une liste, ou filtrez ci-dessous.',
+  'storage.largeFiles.hero.selectedHeadline': '{{count}} fichier(s) sélectionné(s)',
+  'storage.largeFiles.hero.selectedSub':
+    'Vérifiez la sélection ci-dessous, puis supprimez pour libérer de l’espace ou exportez avant.',
+  'storage.largeFiles.hero.statFiles': 'Fichiers',
+  'storage.largeFiles.hero.statSize': 'Taille totale',
+  'storage.largeFiles.hero.statSelected': 'Sélectionnés',
+  'storage.largeFiles.hero.tipScanning':
+    'Indexation des fichiers de plus de 100 Mo sur vos disques…',
+  'storage.largeFiles.hero.tipEmpty':
+    'Astuce : relancez l’analyse depuis l’aperçu Stockage si les résultats semblent obsolètes.',
+  'storage.largeFiles.hero.tipReady':
+    'Astuce : sélectionnez des fichiers à supprimer, ou exportez une liste avant.',
+  'storage.largeFiles.hero.tipSelected':
+    '{{count}} sélectionnés — supprimez pour récupérer, ou exportez d’abord.',
+
+  'storage.duplicates.hero.overview': 'Fichiers en double',
+  'storage.duplicates.hero.badge': 'Détecteur de doublons',
+  'storage.duplicates.hero.badgeScanning': 'Scan en cours',
+  'storage.duplicates.hero.scanningHeadline': 'Recherche de copies en double…',
+  'storage.duplicates.hero.scanningSub':
+    'Comparaison des empreintes pour trouver des copies identiques qui gaspillent de l’espace.',
+  'storage.duplicates.hero.emptyHeadline': 'Aucun doublon trouvé.',
+  'storage.duplicates.hero.emptySub':
+    'Aucun groupe de fichiers identiques détecté. Lancez une analyse depuis l’aperçu Stockage.',
+  'storage.duplicates.hero.readyHeadline': '{{count}} groupes de doublons — {{bytes}} récupérables',
+  'storage.duplicates.hero.readySub':
+    'Sélectionnez les copies en trop à supprimer tout en gardant un original par groupe.',
+  'storage.duplicates.hero.selectedHeadline': '{{count}} copie(s) sélectionnée(s)',
+  'storage.duplicates.hero.selectedSub':
+    'Supprimez les doublons sélectionnés pour récupérer de l’espace. Les originaux restent intacts.',
+  'storage.duplicates.hero.selectDuplicates': 'Sélectionner les doublons',
+  'storage.duplicates.hero.statGroups': 'Groupes',
+  'storage.duplicates.hero.statWaste': 'Gaspillage',
+  'storage.duplicates.hero.statSelected': 'Sélectionnés',
+  'storage.duplicates.hero.tipScanning':
+    'Comparaison des empreintes pour trouver des copies identiques…',
+  'storage.duplicates.hero.tipEmpty':
+    'Astuce : relancez l’analyse depuis l’aperçu Stockage si les résultats semblent obsolètes.',
+  'storage.duplicates.hero.tipReady':
+    'Astuce : sélectionnez les copies en trop tout en gardant un original par groupe.',
+  'storage.duplicates.hero.tipSelected':
+    '{{count}} sélectionnés — supprimez pour récupérer le gaspillage des doublons.',
 
   'largeFiles.title': 'Gros fichiers',
   'largeFiles.description': 'Trouvez les fichiers volumineux et libérez de l’espace en toute confiance.',
@@ -835,6 +979,8 @@ export const fr: Record<TranslationKey, string> = {
   'performance.hero.healthy': 'Sain',
   'performance.hero.attention': 'Attention requise',
   'performance.hero.pressure': 'Sous pression',
+  'performance.hero.overview': 'Aperçu des performances',
+  'performance.hero.badge': 'Performances',
   'performance.hero.score': 'Score',
   'performance.hero.health': 'Santé des performances',
   'performance.hero.memory': 'Mémoire',
@@ -844,6 +990,12 @@ export const fr: Record<TranslationKey, string> = {
   'performance.hero.cancelBoost': 'Annuler le boost',
   'performance.hero.boostHint':
     'Vide en toute sécurité les temporaires, caches et fichiers inutiles récupérables.',
+  'performance.boosting.title': 'Boost des performances…',
+  'performance.boosting.message':
+    'Nettoyage des fichiers temporaires, caches et récupération de mémoire pour un PC plus rapide.',
+  'performance.boosting.badge': 'Boost performances',
+  'performance.boosting.scanning': 'Exécution d’étapes d’optimisation sûres…',
+  'performance.boosting.working': 'Traitement de {{path}}…',
 
   'startupApps.title': 'Applications au démarrage',
   'startupApps.description': 'Contrôlez les apps qui se lancent au démarrage du PC.',
