@@ -1,8 +1,9 @@
-import { Check, Monitor, Moon, Sun } from 'lucide-react'
+import { Monitor, Moon, Sun } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useThemeStore, type ThemePreference } from '@/store/theme-store'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import { SelectedIndicator } from './SelectedIndicator'
 
 interface ThemeOption {
   value: ThemePreference
@@ -67,6 +68,8 @@ export function ThemePicker(): React.ReactElement {
                 : 'border-border bg-card hover:border-primary/25 hover:shadow-sm'
             )}
           >
+            <SelectedIndicator selected={selected} />
+
             <div
               className={cn(
                 'relative h-20 border-b border-border/60 bg-gradient-to-br',
@@ -81,30 +84,15 @@ export function ThemePicker(): React.ReactElement {
             </div>
 
             <div className="flex flex-1 flex-col gap-3 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div
-                  className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-lg transition-colors',
-                    selected
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground group-hover:text-foreground'
-                  )}
-                >
-                  <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                </div>
-                <span
-                  className={cn(
-                    'flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200',
-                    selected
-                      ? 'border-primary bg-primary text-primary-foreground scale-100'
-                      : 'border-border bg-background scale-90 opacity-0 group-hover:opacity-40'
-                  )}
-                  aria-hidden="true"
-                >
-                  {selected ? (
-                    <Check className="h-3 w-3" strokeWidth={2.5} />
-                  ) : null}
-                </span>
+              <div
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-lg transition-colors',
+                  selected
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground group-hover:text-foreground'
+                )}
+              >
+                <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">{t(option.labelKey)}</p>

@@ -4,6 +4,7 @@ import { StatusCard } from '@/components/desktop/StatusCard'
 import { formatBytes } from '@shared/utils'
 import { electronService } from '@/services/electron-service'
 import { useReportsHistory } from '@/features/reports/hooks/useReportsHistory'
+import { useExportReports } from '@/features/reports/hooks/useExportReports'
 import { ReportsHero, type ReportsHeroPhase } from '@/features/reports/components/ReportsHero'
 import { ReportsInsightGrid } from '@/features/reports/components/ReportsInsightGrid'
 import { ReportsChartsSection } from '@/features/reports/components/ReportsChartsSection'
@@ -44,6 +45,10 @@ export function ReportsPage(): React.ReactElement {
   const access = useFeatureAccess('cleanup_reports')
   const { history, hydrated, animateKey, hasHistory, analytics, clearHistory } =
     useReportsHistory()
+  const { exporting, exportReport } = useExportReports(
+    hasHistory ? history : null,
+    analytics
+  )
 
   async function handleClear(): Promise<void> {
     if (!access.guard()) return
@@ -139,6 +144,9 @@ export function ReportsPage(): React.ReactElement {
             activityHint={activityHint}
             showClear={access.allowed && hasHistory}
             onClear={() => void handleClear()}
+            showExport={access.allowed && hasHistory}
+            exporting={exporting}
+            onExport={(format) => void exportReport(format)}
             animateKey={animateKey}
           />
 

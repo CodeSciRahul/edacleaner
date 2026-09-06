@@ -116,6 +116,8 @@ const fileApi = {
   read: (filePath: string) => invoke<string>(IPC_CHANNELS.FILE.READ, filePath),
   write: (filePath: string, content: string) =>
     invoke<void>(IPC_CHANNELS.FILE.WRITE, filePath, content),
+  writeBinary: (filePath: string, base64: string) =>
+    invoke<void>(IPC_CHANNELS.FILE.WRITE_BINARY, filePath, base64),
   exists: (filePath: string) => invoke<boolean>(IPC_CHANNELS.FILE.EXISTS, filePath)
 }
 

@@ -36,8 +36,8 @@ export function SettingsNav({
               'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               'lg:min-w-0 lg:w-full',
               active
-                ? 'border-primary/30 bg-primary/[0.07] shadow-sm shadow-primary/5'
-                : 'border-border/80 bg-card/60 hover:border-border hover:bg-accent/40'
+                ? 'border-primary/30 bg-primary/[0.08] shadow-sm shadow-primary/5'
+                : 'border-transparent bg-transparent hover:border-border/70 hover:bg-accent/40'
             )}
           >
             <div

@@ -77,6 +77,8 @@ export interface SystemApi {
 export interface FileApi {
   read: (filePath: string) => Promise<string>
   write: (filePath: string, content: string) => Promise<void>
+  /** Write raw bytes (e.g. PDF). Pass base64-encoded content from the renderer. */
+  writeBinary: (filePath: string, base64: string) => Promise<void>
   exists: (filePath: string) => Promise<boolean>
 }
 

@@ -217,6 +217,28 @@ export function registerFileIpc(): void {
     }
   })
 
+  ipcMain.handle(
+    IPC_CHANNELS.FILE.WRITE_BINARY,
+    async (_event, filePath: string, base64: string) => {
+      try {
+        if (typeof filePath !== 'string' || !filePath.trim()) {
+          return failure('Invalid file path')
+        }
+        if (typeof base64 !== 'string' || !base64.trim()) {
+          return failure('Empty binary payload')
+        }
+        const buffer = Buffer.from(base64, 'base64')
+        if (buffer.byteLength === 0) {
+          return failure('Empty binary payload')
+        }
+        await writeFile(filePath, buffer)
+        return success(null)
+      } catch (err) {
+        return failure(err instanceof Error ? err.message : 'Failed to write binary file')
+      }
+    }
+  )
+
   ipcMain.handle(IPC_CHANNELS.FILE.EXISTS, async (_event, filePath: string) => {
     try {
       await access(filePath, constants.F_OK)

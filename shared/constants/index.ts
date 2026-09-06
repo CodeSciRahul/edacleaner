@@ -32,6 +32,7 @@ export const IPC_CHANNELS = {
     SAVE: 'file:save',
     READ: 'file:read',
     WRITE: 'file:write',
+    WRITE_BINARY: 'file:write-binary',
     EXISTS: 'file:exists'
   },
   DIALOG: {
