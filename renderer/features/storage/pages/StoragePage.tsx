@@ -21,6 +21,7 @@ import {
 } from '@/features/storage/components/FolderBreakdownPanel'
 import { aggregateDriveTotals } from '@/features/storage/lib/storage-health'
 import { StorageInsightsSection } from '@/features/storage/components/StorageInsightsSection'
+import { StoragePremiumUpsell } from '@/features/storage/components/StoragePremiumUpsell'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
 import { StorageLoaderModal } from '@/features/storage/components/StorageLoaderModal'
@@ -114,97 +115,103 @@ export function StoragePage(): React.ReactElement {
 
         <StorageSubnav />
 
-        {drivesError ? (
-          <div
-            role="alert"
-            className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="font-medium">{t('storage.drivesError')}</p>
-              <p className="mt-0.5 opacity-90">
-                {drivesErr instanceof Error ? drivesErr.message : 'Unknown error'}
-              </p>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => void refetchDrives()}>
-              {t('common.retry')}
-            </Button>
-          </div>
-        ) : null}
+        {!storageAccess.allowed ? (
+          <StoragePremiumUpsell feature="storage_overview" variant="overview" />
+        ) : (
+          <>
+            {drivesError ? (
+              <div
+                role="alert"
+                className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{t('storage.drivesError')}</p>
+                  <p className="mt-0.5 opacity-90">
+                    {drivesErr instanceof Error ? drivesErr.message : 'Unknown error'}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => void refetchDrives()}>
+                  {t('common.retry')}
+                </Button>
+              </div>
+            ) : null}
 
-        <StorageSummaryCards drives={drives} isLoading={drivesLoading} />
+            <StorageSummaryCards drives={drives} isLoading={drivesLoading} />
 
-        <section aria-label={t('storage.localDisks')}>
-          <div className="mb-4">
-            <h2 className="text-section-title text-foreground">{t('storage.localDisks')}</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">{t('storage.localDisksHint')}</p>
-          </div>
+            <section aria-label={t('storage.localDisks')}>
+              <div className="mb-4">
+                <h2 className="text-section-title text-foreground">{t('storage.localDisks')}</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t('storage.localDisksHint')}</p>
+              </div>
 
-          {drivesLoading ? (
-            <div className="grid gap-grid-gap sm:grid-cols-2">
-              {[0, 1].map((i) => (
+              {drivesLoading ? (
+                <div className="grid gap-grid-gap sm:grid-cols-2">
+                  {[0, 1].map((i) => (
+                    <div
+                      key={i}
+                      className="h-[280px] animate-pulse rounded-xl border border-border bg-muted/40"
+                    />
+                  ))}
+                </div>
+              ) : drives.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
+                  <HardDrive className="mb-3 h-8 w-8 text-muted-foreground" />
+                  <p className="text-sm font-medium text-foreground">{t('storage.noDrives')}</p>
+                  <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                    {t('storage.noDrivesHint')}
+                  </p>
+                  <Button size="sm" className="mt-4" onClick={() => void refetchDrives()}>
+                    {t('common.retry')}
+                  </Button>
+                </div>
+              ) : (
                 <div
-                  key={i}
-                  className="h-[280px] animate-pulse rounded-xl border border-border bg-muted/40"
-                />
-              ))}
-            </div>
-          ) : drives.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
-              <HardDrive className="mb-3 h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium text-foreground">{t('storage.noDrives')}</p>
-              <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-                {t('storage.noDrivesHint')}
-              </p>
-              <Button size="sm" className="mt-4" onClick={() => void refetchDrives()}>
-                {t('common.retry')}
-              </Button>
-            </div>
-          ) : (
-            <div
-              className={
-                drives.length === 1
-                  ? 'grid gap-grid-gap'
-                  : 'grid gap-grid-gap sm:grid-cols-2'
-              }
-            >
-              {drives.map((drive) => (
-                <DriveStorageCard
-                  key={drive.mountPath}
-                  drive={drive}
-                  selected={drive.mountPath === mountPath}
-                  analyzing={analyze.isPending && drive.mountPath === mountPath}
-                  onSelect={() => setSelectedMount(drive.mountPath)}
-                  onAnalyze={() => handleAnalyzeDrive(drive.mountPath)}
-                  onOpenLargeFiles={() => navigate('/storage/large-files')}
-                  onOpenDuplicates={() => navigate('/storage/duplicates')}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+                  className={
+                    drives.length === 1
+                      ? 'grid gap-grid-gap'
+                      : 'grid gap-grid-gap sm:grid-cols-2'
+                  }
+                >
+                  {drives.map((drive) => (
+                    <DriveStorageCard
+                      key={drive.mountPath}
+                      drive={drive}
+                      selected={drive.mountPath === mountPath}
+                      analyzing={analyze.isPending && drive.mountPath === mountPath}
+                      onSelect={() => setSelectedMount(drive.mountPath)}
+                      onAnalyze={() => handleAnalyzeDrive(drive.mountPath)}
+                      onOpenLargeFiles={() => navigate('/storage/large-files')}
+                      onOpenDuplicates={() => navigate('/storage/duplicates')}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
 
-        <FolderBreakdownPanel
-          driveLabel={activeDrive?.label}
-          mountPath={activeDrive?.mountPath}
-          segments={segments}
-          isLoading={Boolean(mountPath) && (usageLoading || usageFetching)}
-          onOpenCategory={(segment) => {
-            if (segment.path) reveal.mutate(segment.path)
-          }}
-        />
+            <FolderBreakdownPanel
+              driveLabel={activeDrive?.label}
+              mountPath={activeDrive?.mountPath}
+              segments={segments}
+              isLoading={Boolean(mountPath) && (usageLoading || usageFetching)}
+              onOpenCategory={(segment) => {
+                if (segment.path) reveal.mutate(segment.path)
+              }}
+            />
 
-        <StorageInsightsSection
-          largeTotalBytes={largeTotalBytes}
-          duplicateWasteBytes={duplicateWasteBytes}
-          largeLoading={largeLoading}
-          duplicatesLoading={duplicatesLoading}
-          analyzing={isAnalyzing}
-          hasDuplicates={duplicates.length > 0}
-          onOpenLargeFiles={() => navigate('/storage/large-files')}
-          onOpenDuplicates={() => navigate('/storage/duplicates')}
-          onCleanup={() => navigate('/cleanup')}
-        />
+            <StorageInsightsSection
+              largeTotalBytes={largeTotalBytes}
+              duplicateWasteBytes={duplicateWasteBytes}
+              largeLoading={largeLoading}
+              duplicatesLoading={duplicatesLoading}
+              analyzing={isAnalyzing}
+              hasDuplicates={duplicates.length > 0}
+              onOpenLargeFiles={() => navigate('/storage/large-files')}
+              onOpenDuplicates={() => navigate('/storage/duplicates')}
+              onCleanup={() => navigate('/cleanup')}
+            />
+          </>
+        )}
       </div>
     </>
   )

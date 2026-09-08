@@ -24,6 +24,7 @@ import type { DuplicateGroup } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
+import { StoragePremiumUpsell } from '@/features/storage/components/StoragePremiumUpsell'
 
 type SortKey = 'size' | 'copies' | 'name'
 type SizeFilter = 'all' | '10mb' | '50mb' | '100mb' | '500mb'
@@ -180,109 +181,115 @@ export function DuplicatesPage(): React.ReactElement {
         />
         <StorageSubnav />
 
-        {notice ? (
-          <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-            {notice}
-          </p>
-        ) : null}
+        {!access.allowed ? (
+          <StoragePremiumUpsell feature="duplicates" variant="duplicates" />
+        ) : (
+          <>
+            {notice ? (
+              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                {notice}
+              </p>
+            ) : null}
 
-        <StorageFilterBar
-          query={query}
-          onQueryChange={setQuery}
-          pathFilter={pathFilter}
-          onPathFilterChange={setPathFilter}
-          category={category}
-          onCategoryChange={setCategory}
-          sortKey={sortKey}
-          sortOptions={SORT_OPTIONS}
-          onSortKeyChange={(v) => setSortKey(v as SortKey)}
-        >
-          <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-            <span className="shrink-0">{t('duplicates.sortSize')}</span>
-            <select
-              className="bg-transparent text-sm text-foreground outline-none"
-              value={sizeFilter}
-              onChange={(e) => setSizeFilter(e.target.value as SizeFilter)}
-              aria-label="Minimum file size"
+            <StorageFilterBar
+              query={query}
+              onQueryChange={setQuery}
+              pathFilter={pathFilter}
+              onPathFilterChange={setPathFilter}
+              category={category}
+              onCategoryChange={setCategory}
+              sortKey={sortKey}
+              sortOptions={SORT_OPTIONS}
+              onSortKeyChange={(v) => setSortKey(v as SortKey)}
             >
-              {SIZE_FILTERS.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-            <span className="shrink-0">{t('duplicates.sortCopies')}</span>
-            <select
-              className="bg-transparent text-sm text-foreground outline-none"
-              value={String(minCopies)}
-              onChange={(e) => setMinCopies(Number(e.target.value))}
-              aria-label="Minimum duplicate copies"
-            >
-              {[2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  ≥ {n}
-                </option>
-              ))}
-            </select>
-          </label>
-        </StorageFilterBar>
+              <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
+                <span className="shrink-0">{t('duplicates.sortSize')}</span>
+                <select
+                  className="bg-transparent text-sm text-foreground outline-none"
+                  value={sizeFilter}
+                  onChange={(e) => setSizeFilter(e.target.value as SizeFilter)}
+                  aria-label="Minimum file size"
+                >
+                  {SIZE_FILTERS.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
+                <span className="shrink-0">{t('duplicates.sortCopies')}</span>
+                <select
+                  className="bg-transparent text-sm text-foreground outline-none"
+                  value={String(minCopies)}
+                  onChange={(e) => setMinCopies(Number(e.target.value))}
+                  aria-label="Minimum duplicate copies"
+                >
+                  {[2, 3, 4, 5].map((n) => (
+                    <option key={n} value={n}>
+                      ≥ {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </StorageFilterBar>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span>
-            <strong className="text-foreground">{filtered.length}</strong> groups
-          </span>
-          <span>·</span>
-          <span>
-            Waste <strong className="text-foreground">{formatBytes(wasteBytes)}</strong>
-          </span>
-          {selected.length > 0 ? (
-            <>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span>
+                <strong className="text-foreground">{filtered.length}</strong> groups
+              </span>
               <span>·</span>
               <span>
-                <strong className="text-foreground">{selected.length}</strong> selected
+                Waste <strong className="text-foreground">{formatBytes(wasteBytes)}</strong>
               </span>
-            </>
-          ) : null}
-        </div>
+              {selected.length > 0 ? (
+                <>
+                  <span>·</span>
+                  <span>
+                    <strong className="text-foreground">{selected.length}</strong> selected
+                  </span>
+                </>
+              ) : null}
+            </div>
 
-        {isLoading ? (
-          <EmptyCard message={t('duplicates.emptyScanning')} />
-        ) : isError ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-16 text-center shadow-card">
-            <AlertCircle className="h-8 w-8 text-destructive" />
-            <p className="text-sm text-destructive">
-              {error instanceof Error ? error.message : 'Failed to load duplicates'}
-            </p>
-            <Button size="sm" variant="outline" onClick={() => void refetch()}>
-              {t('common.retry')}
-            </Button>
-          </div>
-        ) : filtered.length === 0 ? (
-          <EmptyCard
-            icon
-            message={
-              groups.length === 0
-                ? t('duplicates.emptyNone')
-                : t('duplicates.emptyFilter')
-            }
-          />
-        ) : (
-          <div className="space-y-3">
-            {filtered.map((group) => (
-              <DuplicateGroupCard
-                key={`${group.name}-${group.paths[0]}`}
-                group={group}
-                selected={selected}
-                busy={deleteFiles.isPending}
-                onToggle={togglePath}
-                onReveal={(path) => reveal.mutate(path)}
-                onCopy={(path) => void copyPath(path)}
-                keepLabel={t('duplicates.keep')}
+            {isLoading ? (
+              <EmptyCard message={t('duplicates.emptyScanning')} />
+            ) : isError ? (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-16 text-center shadow-card">
+                <AlertCircle className="h-8 w-8 text-destructive" />
+                <p className="text-sm text-destructive">
+                  {error instanceof Error ? error.message : 'Failed to load duplicates'}
+                </p>
+                <Button size="sm" variant="outline" onClick={() => void refetch()}>
+                  {t('common.retry')}
+                </Button>
+              </div>
+            ) : filtered.length === 0 ? (
+              <EmptyCard
+                icon
+                message={
+                  groups.length === 0
+                    ? t('duplicates.emptyNone')
+                    : t('duplicates.emptyFilter')
+                }
               />
-            ))}
-          </div>
+            ) : (
+              <div className="space-y-3">
+                {filtered.map((group) => (
+                  <DuplicateGroupCard
+                    key={`${group.name}-${group.paths[0]}`}
+                    group={group}
+                    selected={selected}
+                    busy={deleteFiles.isPending}
+                    onToggle={togglePath}
+                    onReveal={(path) => reveal.mutate(path)}
+                    onCopy={(path) => void copyPath(path)}
+                    keepLabel={t('duplicates.keep')}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </>
