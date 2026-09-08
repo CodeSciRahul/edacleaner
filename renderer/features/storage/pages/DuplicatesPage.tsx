@@ -24,7 +24,6 @@ import type { DuplicateGroup } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
 
 type SortKey = 'size' | 'copies' | 'name'
 type SizeFilter = 'all' | '10mb' | '50mb' | '100mb' | '500mb'
@@ -155,7 +154,6 @@ export function DuplicatesPage(): React.ReactElement {
   return (
     <>
       <div className="space-y-4 p-content-pad">
-        <FeatureLockedCallout feature="duplicates" compact />
         <DuplicatesHero
           isLoading={isLoading}
           isFetching={isFetching}

@@ -68,6 +68,7 @@ export function PerformanceHero({
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (Math.min(100, Math.max(0, pct)) / 100) * circumference
   const stroke = healthStroke[health]
+  const locked = boostLocked
 
   return (
     <section
@@ -76,7 +77,13 @@ export function PerformanceHero({
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
         featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
-        health === 'good' ? 'border-success/25' : health === 'warning' ? 'border-warning/25' : 'border-border'
+        locked
+          ? 'border-primary/20'
+          : health === 'good'
+            ? 'border-success/25'
+            : health === 'warning'
+              ? 'border-warning/25'
+              : 'border-border'
       )}
     >
       <img
@@ -104,19 +111,28 @@ export function PerformanceHero({
             <div
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide backdrop-blur-sm',
-                healthChip[health]
+                locked
+                  ? 'border-primary/25 bg-primary/10 text-primary'
+                  : healthChip[health]
               )}
             >
-              {isBoosting ? (
+              {locked ? (
+                <Lock className="h-3 w-3" aria-hidden="true" />
+              ) : isBoosting ? (
                 <Sparkles className="h-3 w-3 animate-pulse" aria-hidden="true" />
               ) : (
                 <Gauge className="h-3 w-3" aria-hidden="true" />
               )}
-              {isBoosting ? t('performance.hero.boosting') : t(healthLabelKey[health])}
+              {locked
+                ? t('performance.hero.badge')
+                : isBoosting
+                  ? t('performance.hero.boosting')
+                  : t(healthLabelKey[health])}
             </div>
             <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               {t('performance.hero.badge')}
             </span>
+            {locked ? <PremiumBadge plan="premium" size="md" /> : null}
           </div>
 
           <div>

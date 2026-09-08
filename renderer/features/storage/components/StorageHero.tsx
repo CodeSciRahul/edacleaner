@@ -1,4 +1,4 @@
-import { Copy, FileStack, HardDrive, Loader2, PieChart, ShieldCheck } from 'lucide-react'
+import { Copy, FileStack, HardDrive, Loader2, Lock, PieChart, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
@@ -39,11 +39,15 @@ export function StorageHero({
   const navigate = useNavigate()
 
   const hasStorageData = Boolean(storageTotals && storageTotals.totalBytes > 0)
+  const locked = !storageAllowed
 
   let headline: string
   let subtext: string
 
-  if (isAnalyzing) {
+  if (locked) {
+    headline = t('storage.hero.lockedTitle')
+    subtext = t('storage.hero.lockedMsg')
+  } else if (isAnalyzing) {
     headline = t('storage.hero.analyzingHeadline')
     subtext = t('storage.hero.analyzingSub')
   } else if (hasStorageData && storageTotals) {
@@ -60,26 +64,35 @@ export function StorageHero({
     subtext = t('storage.hero.idleSub')
   }
 
-  const freeValue = hasStorageData && storageTotals
-    ? formatBytes(storageTotals.freeBytes)
-    : isAnalyzing
-      ? '…'
-      : '—'
-  const usedValue = hasStorageData && storageTotals
-    ? `${storageTotals.usedPercent}%`
-    : isAnalyzing
-      ? '…'
-      : '—'
-  const drivesValue = hasStorageData && storageTotals
-    ? String(storageTotals.driveCount)
-    : isAnalyzing
-      ? '…'
-      : '—'
+  const freeValue = locked
+    ? '—'
+    : hasStorageData && storageTotals
+      ? formatBytes(storageTotals.freeBytes)
+      : isAnalyzing
+        ? '…'
+        : '—'
+  const usedValue = locked
+    ? '—'
+    : hasStorageData && storageTotals
+      ? `${storageTotals.usedPercent}%`
+      : isAnalyzing
+        ? '…'
+        : '—'
+  const drivesValue = locked
+    ? '—'
+    : hasStorageData && storageTotals
+      ? String(storageTotals.driveCount)
+      : isAnalyzing
+        ? '…'
+        : '—'
 
-  const showInsightPills = hasStorageData && (hasUsage || largeFileCount > 0 || duplicateGroupCount > 0)
+  const showInsightPills =
+    !locked && hasStorageData && (hasUsage || largeFileCount > 0 || duplicateGroupCount > 0)
 
   let tip: string
-  if (isAnalyzing) {
+  if (locked) {
+    tip = t('storage.hero.lockedMsg')
+  } else if (isAnalyzing) {
     tip = t('storage.hero.tipAnalyzing')
   } else if (hasStorageData && hasUsage) {
     tip = t('storage.hero.tipReady', {
@@ -99,7 +112,7 @@ export function StorageHero({
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
         featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
-        'border-border'
+        locked ? 'border-primary/20' : 'border-border'
       )}
     >
       <img
@@ -125,14 +138,18 @@ export function StorageHero({
         <div className="min-w-0 max-w-xl space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary backdrop-blur-sm">
-              {isAnalyzing ? (
+              {locked ? (
+                <Lock className="h-3 w-3" aria-hidden="true" />
+              ) : isAnalyzing ? (
                 <PieChart className="h-3 w-3" aria-hidden="true" />
               ) : (
                 <ShieldCheck className="h-3 w-3" aria-hidden="true" />
               )}
-              {isAnalyzing ? t('storage.analyzing.badge') : t('storage.hero.badge')}
+              {isAnalyzing && !locked
+                ? t('storage.analyzing.badge')
+                : t('storage.hero.badge')}
             </div>
-            {!storageAllowed ? <PremiumBadge plan="pro" size="md" /> : null}
+            {locked ? <PremiumBadge plan="pro" size="md" /> : null}
           </div>
 
           <div>
@@ -180,12 +197,12 @@ export function StorageHero({
               forceDisabled={analyzeDisabled}
               onClick={onAnalyze}
             >
-              {isAnalyzing ? (
+              {locked ? null : isAnalyzing ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
                 <HardDrive className="h-4 w-4" aria-hidden="true" />
               )}
-              {isAnalyzing ? t('storage.analyzing') : t('storage.analyze')}
+              {isAnalyzing && !locked ? t('storage.analyzing') : t('storage.analyze')}
             </FeatureLockButton>
           </div>
 

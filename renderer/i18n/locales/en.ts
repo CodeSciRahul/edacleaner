@@ -762,6 +762,42 @@ export const en = {
   'storage.hero.tipAnalyzing': 'Indexing folders and measuring usage — this may take a minute.',
   'storage.hero.tipDrivesOnly': 'Tip: run Analyze to refresh folder usage and reclaimable insights.',
   'storage.hero.tipReady': 'Large files {{large}} · duplicate waste {{dupes}}',
+  'storage.hero.lockedTitle': 'Unlock storage analysis',
+  'storage.hero.lockedMsg':
+    'Pro unlocks disk mapping, large files, and duplicate insights across your drives.',
+  'storage.upsell.eyebrow': 'Premium insights',
+  'storage.upsell.title': "You're Missing Powerful Storage Insights",
+  'storage.upsell.largeFiles.title': 'Unlock Hidden Space on Your Device',
+  'storage.upsell.duplicates.title': "You're Missing Duplicate Waste Insights",
+  'storage.upsell.description':
+    'Pro users discover duplicates, large files, and a detailed breakdown of where your disk space goes — then reclaim it with confidence.',
+  'storage.upsell.cta': 'Upgrade to Pro',
+  'storage.locked.disksHint':
+    'Drive cards and capacity bars unlock with Pro — preview what analysis looks like below.',
+  'storage.locked.breakdownHint':
+    'Folder maps show where space goes on each drive once storage analysis is unlocked.',
+  'storage.locked.largeFilesHint':
+    'Large file lists stay locked until Pro — here’s a sample of what you’ll unlock.',
+  'storage.locked.duplicatesHint':
+    'Duplicate groups and waste totals unlock with Pro — preview the cleanup list below.',
+  'storage.locked.listPreview': 'Sample preview',
+  'storage.locked.driveSampleA': 'System (C:)',
+  'storage.locked.driveSampleB': 'Data (D:)',
+  'storage.locked.folderUsers': 'Users',
+  'storage.locked.folderApps': 'Applications',
+  'storage.locked.folderMedia': 'Media & downloads',
+  'storage.locked.folderOther': 'Other',
+  'storage.locked.insightLarge': '12.4 GB',
+  'storage.locked.insightDupes': '3.1 GB',
+  'storage.locked.insightReclaim': '3.1 GB',
+  'storage.locked.fileSampleA': 'vacation-4k-reel.mp4',
+  'storage.locked.fileSampleB': 'project-archive.zip',
+  'storage.locked.fileSampleC': 'installer-bundle.exe',
+  'storage.locked.fileSampleD': 'design-assets.psd',
+  'storage.locked.dupeSampleA': 'IMG_2048.JPG',
+  'storage.locked.dupeSampleB': 'report-final.docx',
+  'storage.locked.dupeSampleC': 'sample-track.mp3',
+  'storage.locked.dupeSampleD': 'screenshot-export.png',
   'storage.analyze': 'Analyze Disk',
   'storage.analyzing': 'Analyzing…',
   'storage.analyzing.title': 'Analyzing storage…',
@@ -826,6 +862,9 @@ export const en = {
   'storage.largeFiles.hero.overview': 'Large files',
   'storage.largeFiles.hero.badge': 'Space hogs',
   'storage.largeFiles.hero.badgeScanning': 'Scanning',
+  'storage.largeFiles.hero.lockedTitle': 'Unlock large file discovery',
+  'storage.largeFiles.hero.lockedMsg':
+    'Pro finds oversized files eating your disk so you can reclaim space fast.',
   'storage.largeFiles.hero.scanningHeadline': 'Finding oversized files…',
   'storage.largeFiles.hero.scanningSub':
     'Indexing files over 100 MB across your drives. This may take a moment.',
@@ -849,6 +888,9 @@ export const en = {
   'storage.duplicates.hero.overview': 'Duplicate files',
   'storage.duplicates.hero.badge': 'Dedup finder',
   'storage.duplicates.hero.badgeScanning': 'Scanning',
+  'storage.duplicates.hero.lockedTitle': 'Unlock duplicate detection',
+  'storage.duplicates.hero.lockedMsg':
+    'Pro finds identical copies wasting space across your drives.',
   'storage.duplicates.hero.scanningHeadline': 'Looking for duplicate copies…',
   'storage.duplicates.hero.scanningSub':
     'Comparing file hashes to find identical copies wasting disk space.',
@@ -945,6 +987,9 @@ export const en = {
   'performance.hero.boosting': 'Boosting…',
   'performance.hero.cancelBoost': 'Cancel Boost',
   'performance.hero.boostHint': 'Clears temps, caches, and reclaimable clutter safely.',
+  'performance.hero.lockedTitle': 'Unlock performance boost',
+  'performance.hero.lockedMsg':
+    'Premium unlocks one-click Boost to clear temps, caches, and reclaim memory.',
   'performance.boosting.title': 'Boosting performance…',
   'performance.boosting.message':
     'Clearing temp files, caches, and reclaiming memory for a faster PC.',

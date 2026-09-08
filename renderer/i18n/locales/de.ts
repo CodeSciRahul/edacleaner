@@ -792,6 +792,42 @@ export const de: Record<TranslationKey, string> = {
   'storage.hero.tipDrivesOnly':
     'Tipp: Analysieren Sie erneut, um Ordnernutzung und freigebbare Einblicke zu aktualisieren.',
   'storage.hero.tipReady': 'Große Dateien {{large}} · Duplikat-Ballast {{dupes}}',
+  'storage.hero.lockedTitle': 'Speicheranalyse freischalten',
+  'storage.hero.lockedMsg':
+    'Pro schaltet Festplatten-Mapping, große Dateien und Duplikat-Einblicke frei.',
+  'storage.upsell.eyebrow': 'Premium-Einblicke',
+  'storage.upsell.title': 'Dir fehlen leistungsstarke Speichereinsichten',
+  'storage.upsell.largeFiles.title': 'Verborgenen Speicherplatz freischalten',
+  'storage.upsell.duplicates.title': 'Dir fehlen Einblicke in Duplikat-Verschwendung',
+  'storage.upsell.description':
+    'Pro-Nutzer entdecken Duplikate, große Dateien und eine detaillierte Aufschlüsselung, wohin der Speicher geht — und geben ihn gezielt frei.',
+  'storage.upsell.cta': 'Auf Pro upgraden',
+  'storage.locked.disksHint':
+    'Laufwerkskarten und Kapazitätsbalken schalten sich mit Pro frei — unten eine Vorschau der Analyse.',
+  'storage.locked.breakdownHint':
+    'Ordnerkarten zeigen, wohin der Speicher geht, sobald die Speicheranalyse freigeschaltet ist.',
+  'storage.locked.largeFilesHint':
+    'Listen großer Dateien bleiben bis Pro gesperrt — hier eine Beispielvorschau.',
+  'storage.locked.duplicatesHint':
+    'Duplikatgruppen und Verschwendungswerte schalten sich mit Pro frei — unten eine Bereinigungsvorschau.',
+  'storage.locked.listPreview': 'Beispielvorschau',
+  'storage.locked.driveSampleA': 'System (C:)',
+  'storage.locked.driveSampleB': 'Daten (D:)',
+  'storage.locked.folderUsers': 'Benutzer',
+  'storage.locked.folderApps': 'Anwendungen',
+  'storage.locked.folderMedia': 'Medien & Downloads',
+  'storage.locked.folderOther': 'Sonstiges',
+  'storage.locked.insightLarge': '12,4 GB',
+  'storage.locked.insightDupes': '3,1 GB',
+  'storage.locked.insightReclaim': '3,1 GB',
+  'storage.locked.fileSampleA': 'urlaub-4k-reel.mp4',
+  'storage.locked.fileSampleB': 'projekt-archiv.zip',
+  'storage.locked.fileSampleC': 'installer-paket.exe',
+  'storage.locked.fileSampleD': 'design-assets.psd',
+  'storage.locked.dupeSampleA': 'IMG_2048.JPG',
+  'storage.locked.dupeSampleB': 'bericht-final.docx',
+  'storage.locked.dupeSampleC': 'sample-track.mp3',
+  'storage.locked.dupeSampleD': 'screenshot-export.png',
   'storage.analyze': 'Festplatte analysieren',
   'storage.analyzing': 'Wird analysiert…',
   'storage.analyzing.title': 'Speicher wird analysiert…',
@@ -857,6 +893,9 @@ export const de: Record<TranslationKey, string> = {
   'storage.largeFiles.hero.overview': 'Große Dateien',
   'storage.largeFiles.hero.badge': 'Speicherfresser',
   'storage.largeFiles.hero.badgeScanning': 'Suche läuft',
+  'storage.largeFiles.hero.lockedTitle': 'Erkennung großer Dateien freischalten',
+  'storage.largeFiles.hero.lockedMsg':
+    'Pro findet übergroße Dateien, die Ihre Festplatte belasten — und gibt Platz frei.',
   'storage.largeFiles.hero.scanningHeadline': 'Übergroße Dateien werden gesucht…',
   'storage.largeFiles.hero.scanningSub':
     'Dateien über 100 MB auf Ihren Laufwerken werden indexiert. Das kann einen Moment dauern.',
@@ -883,6 +922,9 @@ export const de: Record<TranslationKey, string> = {
   'storage.duplicates.hero.overview': 'Doppelte Dateien',
   'storage.duplicates.hero.badge': 'Duplikat-Finder',
   'storage.duplicates.hero.badgeScanning': 'Suche läuft',
+  'storage.duplicates.hero.lockedTitle': 'Duplikaterkennung freischalten',
+  'storage.duplicates.hero.lockedMsg':
+    'Pro findet identische Kopien, die auf Ihren Laufwerken Speicher verschwenden.',
   'storage.duplicates.hero.scanningHeadline': 'Doppelte Kopien werden gesucht…',
   'storage.duplicates.hero.scanningSub':
     'Datei-Hashes werden verglichen, um identische Kopien zu finden.',
@@ -985,6 +1027,9 @@ export const de: Record<TranslationKey, string> = {
   'performance.hero.cancelBoost': 'Boost abbrechen',
   'performance.hero.boostHint':
     'Leert Temp-Dateien, Caches und freigebbaren Ballast sicher.',
+  'performance.hero.lockedTitle': 'Leistungs-Boost freischalten',
+  'performance.hero.lockedMsg':
+    'Premium schaltet den Ein-Klick-Boost frei, um Temp-Dateien, Caches und Speicher freizugeben.',
   'performance.boosting.title': 'Leistung wird gesteigert…',
   'performance.boosting.message':
     'Temp-Dateien und Caches werden bereinigt und Speicher freigegeben.',

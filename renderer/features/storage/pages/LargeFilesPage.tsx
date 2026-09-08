@@ -24,7 +24,6 @@ import type { LargeFile } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
 
 type SortKey = 'size' | 'name' | 'path'
 type SizeFilter = 'all' | '100mb' | '500mb' | '1gb' | '5gb'
@@ -189,7 +188,6 @@ export function LargeFilesPage(): React.ReactElement {
   return (
     <>
       <div className="space-y-4 p-content-pad">
-        <FeatureLockedCallout feature="large_files" compact />
         <LargeFilesHero
           isLoading={isLoading}
           isFetching={isFetching}

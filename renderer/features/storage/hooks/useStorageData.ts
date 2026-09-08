@@ -11,10 +11,11 @@ export const storageKeys = {
     ['storage', 'duplicates', options ?? {}] as const
 }
 
-export function useStorageDrives() {
+export function useStorageDrives(enabled = true) {
   return useQuery({
     queryKey: storageKeys.drives,
-    queryFn: () => electronService.storage().getDrives()
+    queryFn: () => electronService.storage().getDrives(),
+    enabled
   })
 }
 

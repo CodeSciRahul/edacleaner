@@ -796,6 +796,42 @@ export const fr: Record<TranslationKey, string> = {
   'storage.hero.tipDrivesOnly':
     'Astuce : lancez Analyser pour actualiser l’usage des dossiers et les insights récupérables.',
   'storage.hero.tipReady': 'Gros fichiers {{large}} · gaspillage doublons {{dupes}}',
+  'storage.hero.lockedTitle': 'Débloquer l’analyse du stockage',
+  'storage.hero.lockedMsg':
+    'Pro débloque la cartographie disque, les gros fichiers et les insights doublons.',
+  'storage.upsell.eyebrow': 'Insights Premium',
+  'storage.upsell.title': 'Vous manquez d’insights de stockage puissants',
+  'storage.upsell.largeFiles.title': 'Débloquez l’espace caché sur votre appareil',
+  'storage.upsell.duplicates.title': 'Vous manquez les insights sur les doublons inutiles',
+  'storage.upsell.description':
+    'Les utilisateurs Pro découvrent les doublons, les gros fichiers et une analyse détaillée de l’espace disque — puis le récupèrent en toute confiance.',
+  'storage.upsell.cta': 'Passer à Pro',
+  'storage.locked.disksHint':
+    'Les cartes de disque et barres de capacité se débloquent avec Pro — aperçu de l’analyse ci-dessous.',
+  'storage.locked.breakdownHint':
+    'Les cartes de dossiers montrent où va l’espace une fois l’analyse de stockage débloquée.',
+  'storage.locked.largeFilesHint':
+    'Les listes de gros fichiers restent verrouillées jusqu’à Pro — voici un aperçu.',
+  'storage.locked.duplicatesHint':
+    'Les groupes de doublons et totaux gaspillés se débloquent avec Pro — aperçu du nettoyage ci-dessous.',
+  'storage.locked.listPreview': 'Aperçu d’exemple',
+  'storage.locked.driveSampleA': 'Système (C:)',
+  'storage.locked.driveSampleB': 'Données (D:)',
+  'storage.locked.folderUsers': 'Utilisateurs',
+  'storage.locked.folderApps': 'Applications',
+  'storage.locked.folderMedia': 'Médias et téléchargements',
+  'storage.locked.folderOther': 'Autre',
+  'storage.locked.insightLarge': '12,4 Go',
+  'storage.locked.insightDupes': '3,1 Go',
+  'storage.locked.insightReclaim': '3,1 Go',
+  'storage.locked.fileSampleA': 'vacances-4k-reel.mp4',
+  'storage.locked.fileSampleB': 'archive-projet.zip',
+  'storage.locked.fileSampleC': 'installeur-bundle.exe',
+  'storage.locked.fileSampleD': 'design-assets.psd',
+  'storage.locked.dupeSampleA': 'IMG_2048.JPG',
+  'storage.locked.dupeSampleB': 'rapport-final.docx',
+  'storage.locked.dupeSampleC': 'sample-track.mp3',
+  'storage.locked.dupeSampleD': 'screenshot-export.png',
   'storage.analyze': 'Analyser le disque',
   'storage.analyzing': 'Analyse…',
   'storage.analyzing.title': 'Analyse du stockage…',
@@ -861,6 +897,9 @@ export const fr: Record<TranslationKey, string> = {
   'storage.largeFiles.hero.overview': 'Gros fichiers',
   'storage.largeFiles.hero.badge': 'Gros consommateurs',
   'storage.largeFiles.hero.badgeScanning': 'Scan en cours',
+  'storage.largeFiles.hero.lockedTitle': 'Débloquer la découverte des gros fichiers',
+  'storage.largeFiles.hero.lockedMsg':
+    'Pro trouve les fichiers volumineux qui saturent votre disque pour libérer de l’espace rapidement.',
   'storage.largeFiles.hero.scanningHeadline': 'Recherche de fichiers volumineux…',
   'storage.largeFiles.hero.scanningSub':
     'Indexation des fichiers de plus de 100 Mo sur vos disques. Cela peut prendre un moment.',
@@ -888,6 +927,9 @@ export const fr: Record<TranslationKey, string> = {
   'storage.duplicates.hero.overview': 'Fichiers en double',
   'storage.duplicates.hero.badge': 'Détecteur de doublons',
   'storage.duplicates.hero.badgeScanning': 'Scan en cours',
+  'storage.duplicates.hero.lockedTitle': 'Débloquer la détection des doublons',
+  'storage.duplicates.hero.lockedMsg':
+    'Pro trouve les copies identiques qui gaspillent de l’espace sur vos disques.',
   'storage.duplicates.hero.scanningHeadline': 'Recherche de copies en double…',
   'storage.duplicates.hero.scanningSub':
     'Comparaison des empreintes pour trouver des copies identiques qui gaspillent de l’espace.',
@@ -990,6 +1032,9 @@ export const fr: Record<TranslationKey, string> = {
   'performance.hero.cancelBoost': 'Annuler le boost',
   'performance.hero.boostHint':
     'Vide en toute sécurité les temporaires, caches et fichiers inutiles récupérables.',
+  'performance.hero.lockedTitle': 'Débloquer le boost des performances',
+  'performance.hero.lockedMsg':
+    'Premium débloque le Boost en un clic pour vider temporaires, caches et récupérer de la mémoire.',
   'performance.boosting.title': 'Boost des performances…',
   'performance.boosting.message':
     'Nettoyage des fichiers temporaires, caches et récupération de mémoire pour un PC plus rapide.',

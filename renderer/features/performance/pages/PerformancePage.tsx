@@ -63,6 +63,13 @@ export function PerformancePage(): React.ReactElement {
   }, [analysis])
 
   const status = useMemo(() => {
+    if (!boostAccess.allowed) {
+      return {
+        health: 'warning' as const,
+        title: t('performance.hero.lockedTitle'),
+        message: t('performance.hero.lockedMsg')
+      }
+    }
     if (!performanceScore) {
       return {
         health: 'warning' as const,
@@ -89,7 +96,7 @@ export function PerformancePage(): React.ReactElement {
       title: t('performance.needsTitle', { score: performanceScore }),
       message: analysis?.warnings[0] ?? t('performance.needsMsg')
     }
-  }, [performanceScore, analysis?.warnings, t])
+  }, [boostAccess.allowed, performanceScore, analysis?.warnings, t])
 
   const actionItems: PerformanceActionItem[] = [
     {

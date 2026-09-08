@@ -43,11 +43,15 @@ export function DuplicatesHero({
 }: DuplicatesHeroProps): React.ReactElement {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const locked = !accessAllowed
 
   let headline: string
   let subtext: string
 
-  if (isLoading) {
+  if (locked) {
+    headline = t('storage.duplicates.hero.lockedTitle')
+    subtext = t('storage.duplicates.hero.lockedMsg')
+  } else if (isLoading) {
     headline = t('storage.duplicates.hero.scanningHeadline')
     subtext = t('storage.duplicates.hero.scanningSub')
   } else if (groupCount === 0) {
@@ -64,12 +68,20 @@ export function DuplicatesHero({
     subtext = t('storage.duplicates.hero.readySub')
   }
 
-  const groupsValue = isLoading ? '…' : String(groupCount)
-  const wasteValue = isLoading ? '…' : groupCount > 0 ? formatBytes(wasteBytes) : '—'
-  const selectedValue = isLoading ? '…' : String(selectedCount)
+  const groupsValue = locked ? '—' : isLoading ? '…' : String(groupCount)
+  const wasteValue = locked
+    ? '—'
+    : isLoading
+      ? '…'
+      : groupCount > 0
+        ? formatBytes(wasteBytes)
+        : '—'
+  const selectedValue = locked ? '—' : isLoading ? '…' : String(selectedCount)
 
   let tip: string
-  if (isLoading) {
+  if (locked) {
+    tip = t('storage.duplicates.hero.lockedMsg')
+  } else if (isLoading) {
     tip = t('storage.duplicates.hero.tipScanning')
   } else if (groupCount === 0) {
     tip = t('storage.duplicates.hero.tipEmpty')
@@ -86,7 +98,7 @@ export function DuplicatesHero({
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
         featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
-        'border-border'
+        locked ? 'border-primary/20' : 'border-border'
       )}
     >
       <img
@@ -112,14 +124,16 @@ export function DuplicatesHero({
         <div className="min-w-0 max-w-xl space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-600 backdrop-blur-sm dark:text-violet-400">
-              {isLoading ? (
+              {isLoading && !locked ? (
                 <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
               ) : (
                 <Copy className="h-3 w-3" aria-hidden="true" />
               )}
-              {isLoading ? t('storage.duplicates.hero.badgeScanning') : t('storage.duplicates.hero.badge')}
+              {isLoading && !locked
+                ? t('storage.duplicates.hero.badgeScanning')
+                : t('storage.duplicates.hero.badge')}
             </div>
-            {!accessAllowed ? <PremiumBadge plan="pro" size="md" /> : null}
+            {locked ? <PremiumBadge plan="pro" size="md" /> : null}
           </div>
 
           <div>

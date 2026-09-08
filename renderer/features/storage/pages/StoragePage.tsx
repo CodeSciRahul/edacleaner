@@ -23,7 +23,6 @@ import { aggregateDriveTotals } from '@/features/storage/lib/storage-health'
 import { StorageInsightsSection } from '@/features/storage/components/StorageInsightsSection'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
 import { StorageLoaderModal } from '@/features/storage/components/StorageLoaderModal'
 import { useStorageAnalyzeProgress } from '@/features/storage/hooks/useStorageAnalyzeProgress'
 
@@ -39,7 +38,7 @@ export function StoragePage(): React.ReactElement {
     isError: drivesError,
     error: drivesErr,
     refetch: refetchDrives
-  } = useStorageDrives()
+  } = useStorageDrives(storageAccess.allowed)
   const [selectedMount, setSelectedMount] = useState<string | undefined>(undefined)
 
   const activeDrive = useMemo(() => {
@@ -100,18 +99,16 @@ export function StoragePage(): React.ReactElement {
       />
 
       <div className="space-y-6 p-content-pad">
-        <FeatureLockedCallout feature="storage_overview" />
-
         <StorageHero
           isAnalyzing={analyze.isPending}
           analyzeDisabled={isAnalyzing || !mountPath}
           storageAllowed={storageAccess.allowed}
           hasUsage={Boolean(usage)}
-          storageTotals={drives.length > 0 ? storageTotals : undefined}
-          largeFileCount={largeFiles.length}
-          largeTotalBytes={largeTotalBytes}
-          duplicateGroupCount={duplicates.length}
-          duplicateWasteBytes={duplicateWasteBytes}
+          storageTotals={storageAccess.allowed && drives.length > 0 ? storageTotals : undefined}
+          largeFileCount={storageAccess.allowed ? largeFiles.length : 0}
+          largeTotalBytes={storageAccess.allowed ? largeTotalBytes : 0}
+          duplicateGroupCount={storageAccess.allowed ? duplicates.length : 0}
+          duplicateWasteBytes={storageAccess.allowed ? duplicateWasteBytes : 0}
           onAnalyze={() => void analyze.mutateAsync(mountPath)}
         />
 
