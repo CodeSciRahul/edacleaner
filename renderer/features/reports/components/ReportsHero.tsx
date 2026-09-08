@@ -15,6 +15,7 @@ import { CircularProgress } from '@/components/desktop/CircularProgress'
 import { cn } from '@/utils/cn'
 import { useTranslation } from '@/i18n/useTranslation'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
+import { useEntitlementsStore } from '@/store/entitlements-store'
 import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import type { HealthBand } from '@/features/reports/lib/reports-analytics'
 import type { ReportExportFormat } from '@/features/reports/lib/export-report'
@@ -81,7 +82,12 @@ export function ReportsHero({
 }: ReportsHeroProps): React.ReactElement {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
   const locked = phase === 'locked'
+  const displayScore = locked ? null : healthScore
+  const displaySpace = locked ? '—' : spaceLabel
+  const displayOptimizations = locked ? '—' : optimizationsLabel
+  const displayScans = locked ? '—' : scansLabel
   const borderClass =
     phase === 'ready' ? bandBorder[healthBand] : locked ? 'border-primary/20' : 'border-border'
   const [exportOpen, setExportOpen] = useState(false)
@@ -183,9 +189,9 @@ export function ReportsHero({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <StatPill label={t('reports.spaceRecovered')} value={spaceLabel} />
-            <StatPill label={t('reports.optimizations')} value={optimizationsLabel} />
-            <StatPill label={t('reports.smartScans')} value={scansLabel} />
+            <StatPill label={t('reports.spaceRecovered')} value={displaySpace} />
+            <StatPill label={t('reports.optimizations')} value={displayOptimizations} />
+            <StatPill label={t('reports.smartScans')} value={displayScans} />
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-0.5">
@@ -193,10 +199,10 @@ export function ReportsHero({
               <Button
                 size="sm"
                 className="h-9 gap-2 rounded-lg px-4 text-[13px] ring-1 ring-primary/20"
-                disabled
+                onClick={openPlansModal}
               >
                 <Lock className="h-4 w-4" aria-hidden="true" />
-                {t('reports.insights')}
+                {t('reports.upsell.cta')}
                 <PremiumBadge plan="premium" />
               </Button>
             ) : (
@@ -209,16 +215,17 @@ export function ReportsHero({
                 {t('reports.hero.openScan')}
               </Button>
             )}
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
-              onClick={() => navigate('/cleanup')}
-              disabled={locked}
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-              {t('reports.empty.ctaCleanup')}
-            </Button>
+            {!locked ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+                onClick={() => navigate('/cleanup')}
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                {t('reports.empty.ctaCleanup')}
+              </Button>
+            ) : null}
             {showExport && onExport ? (
               <div className="relative z-40" ref={exportMenuRef}>
                 <Button
@@ -282,11 +289,11 @@ export function ReportsHero({
             className="inline-flex flex-col items-center rounded-2xl border border-border/60 bg-background/50 px-5 py-4 backdrop-blur-sm animate-in zoom-in-95 duration-500"
           >
             <CircularProgress
-              value={healthScore ?? 0}
+              value={displayScore ?? 0}
               color={bandColor[healthBand]}
               size={112}
               strokeWidth={9}
-              className={cn(healthScore == null && 'opacity-40')}
+              className={cn(displayScore == null && 'opacity-40')}
               label={t('reports.health.score')}
             />
           </div>

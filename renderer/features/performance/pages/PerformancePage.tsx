@@ -37,9 +37,9 @@ export function PerformancePage(): React.ReactElement {
   const navigate = useNavigate()
   const boostAccess = useFeatureAccess('performance_boost')
   const { data: analysis, isLoading: analysisLoading, refetch: refetchAnalysis } =
-    useBoostAnalysis()
-  const { data: snapshot, isLoading: snapshotLoading } = useBoostSnapshot()
-  const { data: startupList, isLoading: startupLoading } = useStartupApps()
+    useBoostAnalysis(boostAccess.allowed)
+  const { data: snapshot, isLoading: snapshotLoading } = useBoostSnapshot(boostAccess.allowed)
+  const { data: startupList, isLoading: startupLoading } = useStartupApps(boostAccess.allowed)
   const runBoost = useRunBoost()
   const cancelBoost = useCancelBoost()
   const isBoosting = runBoost.isPending
@@ -198,26 +198,25 @@ export function PerformancePage(): React.ReactElement {
     }
   }
 
-  const diskFreeLabel = analysis?.diskPressure
-    ? formatBytes(analysis.diskPressure.freeBytes)
-    : undefined
-
   return (
     <>
       <div className="space-y-6 p-content-pad">
         <PerformanceHero
-          score={performanceScore}
+          score={boostAccess.allowed ? performanceScore : null}
           health={status.health}
           title={status.title}
           message={status.message}
-          memory={memory}
-          diskFreeLabel={diskFreeLabel}
+          memory={boostAccess.allowed ? memory : undefined}
+          startupCount={
+            boostAccess.allowed ? (startupLoading ? null : startupEnabledCount) : null
+          }
+          recoverableBytes={boostAccess.allowed ? recoverableEstimate : 0}
           isBoosting={isBoosting}
-          isLoading={analysisLoading && !memory}
+          isLoading={boostAccess.allowed && analysisLoading && !memory}
           boostLocked={!boostAccess.allowed}
           onBoost={() => void handleBoost()}
           onCancel={() => cancelBoost.mutate()}
-          onOpenMonitoring={() => navigate('/monitoring')}
+          onOpenStartup={() => navigate('/startup-apps')}
         />
 
         {!boostAccess.allowed ? (

@@ -1023,18 +1023,33 @@ export const fr: Record<TranslationKey, string> = {
   'performance.hero.pressure': 'Sous pression',
   'performance.hero.overview': 'Aperçu des performances',
   'performance.hero.badge': 'Performances',
+  'performance.hero.boostBadge': 'Boost',
   'performance.hero.score': 'Score',
+  'performance.hero.systemScore': 'Score système',
+  'performance.hero.scoreHint':
+    'Le Boost vide en toute sécurité les temporaires et la mémoire récupérable.',
   'performance.hero.health': 'Santé des performances',
   'performance.hero.memory': 'Mémoire',
+  'performance.hero.startup': 'Apps au démarrage',
+  'performance.hero.recoverable': 'Récupérable',
+  'performance.hero.reclaimableHint':
+    'Environ {{size}} peuvent être récupérés depuis les apps en arrière-plan.',
   'performance.hero.diskFree': 'Disque libre',
   'performance.hero.boost': 'Booster maintenant',
   'performance.hero.boosting': 'Boost en cours…',
   'performance.hero.cancelBoost': 'Annuler le boost',
+  'performance.hero.manageStartup': 'Gérer le démarrage',
   'performance.hero.boostHint':
     'Vide en toute sécurité les temporaires, caches et fichiers inutiles récupérables.',
-  'performance.hero.lockedTitle': 'Débloquer le boost des performances',
+  'performance.hero.lockedHint':
+    'Comparez les offres pour débloquer Boost, le contrôle au démarrage et les infos RAM.',
+  'performance.hero.lockedTitle': 'Débloquer le Boost en un clic',
   'performance.hero.lockedMsg':
-    'Premium débloque le Boost en un clic pour vider temporaires, caches et récupérer de la mémoire.',
+    'Premium débloque Boost, le contrôle des apps au démarrage et la RAM récupérable pour garder un PC rapide.',
+  'performance.hero.lockedPanelTitle': 'Outils Premium',
+  'performance.hero.featureBoost': 'Boost en un clic',
+  'performance.hero.featureStartup': 'Contrôle au démarrage',
+  'performance.hero.featureRam': 'Infos RAM récupérable',
   'performance.upsell.eyebrow': 'Performances Premium',
   'performance.upsell.title': 'Vous manquez d’outils de performance puissants',
   'performance.upsell.description':
@@ -1213,6 +1228,7 @@ export const fr: Record<TranslationKey, string> = {
   'reports.hero.lockedTitle': 'Débloquer les rapports de nettoyage',
   'reports.hero.lockedMsg':
     'Premium débloque les insights à vie, les tendances et votre historique d’optimisation complet.',
+  'reports.upsell.cta': 'Passer à Premium',
   'reports.summary': 'Résumé',
   'reports.spaceRecovered': 'Espace récupéré',
   'reports.totalCleanups': 'Nettoyages',

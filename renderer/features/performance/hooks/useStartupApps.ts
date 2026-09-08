@@ -7,10 +7,11 @@ export const startupKeys = {
   details: (id: string) => ['startup', 'details', id] as const
 }
 
-export function useStartupApps() {
+export function useStartupApps(enabled = true) {
   return useQuery({
     queryKey: startupKeys.list,
     queryFn: () => electronService.startup().list(true),
+    enabled,
     staleTime: 10_000
   })
 }

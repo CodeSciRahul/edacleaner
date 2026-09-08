@@ -90,13 +90,12 @@ export function ReportsPage(): React.ReactElement {
     }
   }, [access.allowed, hasHistory, analytics, t])
 
-  const spaceLabel = analytics
-    ? formatBytes(analytics.lifetimeBytesFreed)
-    : access.allowed
-      ? '—'
-      : '—'
-  const optimizationsLabel = analytics ? String(analytics.optimizations) : '—'
-  const scansLabel = analytics ? String(analytics.totals.scanCount) : '—'
+  const spaceLabel =
+    !access.allowed || !analytics ? '—' : formatBytes(analytics.lifetimeBytesFreed)
+  const optimizationsLabel =
+    !access.allowed || !analytics ? '—' : String(analytics.optimizations)
+  const scansLabel =
+    !access.allowed || !analytics ? '—' : String(analytics.totals.scanCount)
 
   const activityHint = useMemo(() => {
     if (!access.allowed) return t('reports.hero.hint')
@@ -137,7 +136,7 @@ export function ReportsPage(): React.ReactElement {
             healthBand={healthBand}
             title={heroTitle}
             message={heroMessage}
-            healthScore={analytics?.healthScore ?? null}
+            healthScore={access.allowed ? (analytics?.healthScore ?? null) : null}
             spaceLabel={spaceLabel}
             optimizationsLabel={optimizationsLabel}
             scansLabel={scansLabel}
