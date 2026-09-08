@@ -990,6 +990,11 @@ export const en = {
   'performance.hero.lockedTitle': 'Unlock performance boost',
   'performance.hero.lockedMsg':
     'Premium unlocks one-click Boost to clear temps, caches, and reclaim memory.',
+  'performance.upsell.eyebrow': 'Premium performance',
+  'performance.upsell.title': "You're Missing Powerful Performance Tools",
+  'performance.upsell.description':
+    'Premium unlocks one-click Boost, startup and background app controls, recoverable RAM insights, and live performance analytics — so your PC stays fast.',
+  'performance.upsell.cta': 'Upgrade to Premium',
   'performance.boosting.title': 'Boosting performance…',
   'performance.boosting.message':
     'Clearing temp files, caches, and reclaiming memory for a faster PC.',

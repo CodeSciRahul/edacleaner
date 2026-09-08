@@ -5,46 +5,29 @@ import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess
 import { useEntitlementsStore } from '@/store/entitlements-store'
 import { useTranslation } from '@/i18n/useTranslation'
 import { cn } from '@/utils/cn'
-import storageUpgradeUnlockGif from '@/assets/storage/storage-upgrade-unlock.gif'
-import storageUpsellIllustration from '@/assets/storage/storage-upsell-illustration.png'
+import performanceUpgradeUnlockGif from '@/assets/performance/performance-upgrade-unlock.gif'
+import performanceUpsellIllustration from '@/assets/performance/performance-upsell-illustration.png'
 
-type StorageUpsellVariant = 'overview' | 'largeFiles' | 'duplicates'
-
-interface StoragePremiumUpsellProps {
+interface PerformancePremiumUpsellProps {
   feature?: FeatureId
-  variant?: StorageUpsellVariant
   className?: string
 }
 
-const TITLE_KEY: Record<StorageUpsellVariant, string> = {
-  overview: 'storage.upsell.title',
-  largeFiles: 'storage.upsell.largeFiles.title',
-  duplicates: 'storage.upsell.duplicates.title'
-}
-
-const FEATURE_FOR_VARIANT: Record<StorageUpsellVariant, FeatureId> = {
-  overview: 'storage_overview',
-  largeFiles: 'large_files',
-  duplicates: 'duplicates'
-}
-
 /**
- * Polished Pro upsell card for locked Storage surfaces.
+ * Polished Premium upsell card for locked Performance surfaces.
  * Hierarchy: animation → benefit copy → Upgrade CTA (opens Compare Plans).
  */
-export function StoragePremiumUpsell({
-  feature,
-  variant = 'overview',
+export function PerformancePremiumUpsell({
+  feature = 'performance_boost',
   className
-}: StoragePremiumUpsellProps): React.ReactElement {
+}: PerformancePremiumUpsellProps): React.ReactElement {
   const { t } = useTranslation()
-  const featureId = feature ?? FEATURE_FOR_VARIANT[variant]
-  const { requiredPlan } = useFeatureAccess(featureId)
+  const { requiredPlan } = useFeatureAccess(feature)
   const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
 
   return (
     <section
-      aria-label={t(TITLE_KEY[variant])}
+      aria-label={t('performance.upsell.title')}
       className={cn(
         'overflow-hidden rounded-2xl border border-primary/20 bg-card shadow-card',
         'animate-in fade-in-0 duration-300',
@@ -54,7 +37,7 @@ export function StoragePremiumUpsell({
       <div className="flex flex-col items-center px-5 py-6 text-center sm:px-8 sm:py-8">
         <div className="mb-2 inline-flex items-center gap-2">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
-            {t('storage.upsell.eyebrow')}
+            {t('performance.upsell.eyebrow')}
           </p>
           <PremiumBadge plan={requiredPlan} />
         </div>
@@ -67,7 +50,7 @@ export function StoragePremiumUpsell({
           )}
         >
           <img
-            src={storageUpgradeUnlockGif}
+            src={performanceUpgradeUnlockGif}
             alt=""
             width={800}
             height={450}
@@ -78,16 +61,16 @@ export function StoragePremiumUpsell({
               const img = event.currentTarget
               if (img.dataset.fallback === '1') return
               img.dataset.fallback = '1'
-              img.src = storageUpsellIllustration
+              img.src = performanceUpsellIllustration
             }}
           />
         </div>
 
         <h2 className="mt-5 max-w-lg text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-          {t(TITLE_KEY[variant])}
+          {t('performance.upsell.title')}
         </h2>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-          {t('storage.upsell.description')}
+          {t('performance.upsell.description')}
         </p>
 
         <Button
@@ -96,7 +79,7 @@ export function StoragePremiumUpsell({
           className="mt-5 h-10 min-w-[160px] rounded-lg px-5 text-[13px]"
           onClick={openPlansModal}
         >
-          {t('storage.upsell.cta')}
+          {t('performance.upsell.cta')}
         </Button>
       </div>
     </section>

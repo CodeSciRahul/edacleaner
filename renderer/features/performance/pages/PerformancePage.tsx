@@ -24,7 +24,7 @@ import { PerformanceQuickLinks } from '@/features/performance/components/Perform
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendBoostActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { PerformancePremiumUpsell } from '@/features/performance/components/PerformancePremiumUpsell'
 
 function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
   let score = 100 - Math.round(usedPercent * 0.55)
@@ -205,7 +205,6 @@ export function PerformancePage(): React.ReactElement {
   return (
     <>
       <div className="space-y-6 p-content-pad">
-        <FeatureLockedCallout feature="performance_boost" />
         <PerformanceHero
           score={performanceScore}
           health={status.health}
@@ -221,44 +220,50 @@ export function PerformancePage(): React.ReactElement {
           onOpenMonitoring={() => navigate('/monitoring')}
         />
 
-        <PerformanceBoostLoaderModal
-          open={isBoosting}
-          message={progress?.message}
-          percent={progress?.percent}
-          currentItem={progress?.currentItem}
-          onCancel={() => cancelBoost.mutate()}
-          cancelPending={cancelBoost.isPending}
-        />
+        {!boostAccess.allowed ? (
+          <PerformancePremiumUpsell feature="performance_boost" />
+        ) : (
+          <>
+            <PerformanceBoostLoaderModal
+              open={isBoosting}
+              message={progress?.message}
+              percent={progress?.percent}
+              currentItem={progress?.currentItem}
+              onCancel={() => cancelBoost.mutate()}
+              cancelPending={cancelBoost.isPending}
+            />
 
-        {lastResult ? <BoostResultsCard result={lastResult} /> : null}
+            {lastResult ? <BoostResultsCard result={lastResult} /> : null}
 
-        <PerformanceActionGrid items={actionItems} />
+            <PerformanceActionGrid items={actionItems} />
 
-        <section aria-label={t('performance.memorySection')}>
-          <div className="mb-4">
-            <h2 className="text-section-title text-foreground">
-              {t('performance.memorySection')}
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {t('performance.memoryHint')}
-            </p>
-          </div>
-          <TopProcessesTable
-            processes={topProcesses.map((p) => ({
-              name: p.name,
-              memoryBytes: p.memoryBytes,
-              cpu: Number(p.cpuPercent.toFixed(1))
-            }))}
-            previewCount={4}
-            locked={!boostAccess.allowed}
-            lockFeature="performance_boost"
-          />
-        </section>
+            <section aria-label={t('performance.memorySection')}>
+              <div className="mb-4">
+                <h2 className="text-section-title text-foreground">
+                  {t('performance.memorySection')}
+                </h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {t('performance.memoryHint')}
+                </p>
+              </div>
+              <TopProcessesTable
+                processes={topProcesses.map((p) => ({
+                  name: p.name,
+                  memoryBytes: p.memoryBytes,
+                  cpu: Number(p.cpuPercent.toFixed(1))
+                }))}
+                previewCount={4}
+                locked={false}
+                lockFeature="performance_boost"
+              />
+            </section>
 
-        <PerformanceQuickLinks
-          onOpenStartup={() => navigate('/startup-apps')}
-          onOpenBackground={() => navigate('/background-apps')}
-        />
+            <PerformanceQuickLinks
+              onOpenStartup={() => navigate('/startup-apps')}
+              onOpenBackground={() => navigate('/background-apps')}
+            />
+          </>
+        )}
       </div>
     </>
   )

@@ -1035,6 +1035,11 @@ export const fr: Record<TranslationKey, string> = {
   'performance.hero.lockedTitle': 'Débloquer le boost des performances',
   'performance.hero.lockedMsg':
     'Premium débloque le Boost en un clic pour vider temporaires, caches et récupérer de la mémoire.',
+  'performance.upsell.eyebrow': 'Performances Premium',
+  'performance.upsell.title': 'Vous manquez d’outils de performance puissants',
+  'performance.upsell.description':
+    'Premium débloque le Boost en un clic, le contrôle des apps au démarrage et en arrière-plan, la RAM récupérable et les analyses en direct — pour un PC plus rapide.',
+  'performance.upsell.cta': 'Passer à Premium',
   'performance.boosting.title': 'Boost des performances…',
   'performance.boosting.message':
     'Nettoyage des fichiers temporaires, caches et récupération de mémoire pour un PC plus rapide.',

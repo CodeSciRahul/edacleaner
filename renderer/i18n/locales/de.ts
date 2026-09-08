@@ -1030,6 +1030,11 @@ export const de: Record<TranslationKey, string> = {
   'performance.hero.lockedTitle': 'Leistungs-Boost freischalten',
   'performance.hero.lockedMsg':
     'Premium schaltet den Ein-Klick-Boost frei, um Temp-Dateien, Caches und Speicher freizugeben.',
+  'performance.upsell.eyebrow': 'Premium-Leistung',
+  'performance.upsell.title': 'Dir fehlen leistungsstarke Performance-Tools',
+  'performance.upsell.description':
+    'Premium schaltet Ein-Klick-Boost, Autostart- und Hintergrund-App-Steuerung, freigebbaren RAM und Live-Performance-Analysen frei — damit Ihr PC schnell bleibt.',
+  'performance.upsell.cta': 'Auf Premium upgraden',
   'performance.boosting.title': 'Leistung wird gesteigert…',
   'performance.boosting.message':
     'Temp-Dateien und Caches werden bereinigt und Speicher freigegeben.',
