@@ -110,7 +110,9 @@ module.exports = {
   },
 
   linux: {
-    icon: 'resources/icons/icon.png',
+    // Pre-rendered directly from the vector source so freedesktop packages
+    // receive a native-resolution icon at every standard hicolor size.
+    icon: 'resources/icons/linux',
     // Native packages first (Windows-like install), AppImage as portable fallback.
     target: [
       { target: 'deb', arch: ['x64'] },

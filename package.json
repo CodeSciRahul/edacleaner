@@ -12,6 +12,7 @@
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",
+    "prebuild": "npm run generate:app-icons",
     "build": "npm run typecheck && electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
@@ -31,6 +32,7 @@
     "dist:all": "npm run build && electron-builder -mwl --config build/electron-builder.config.js",
     "publish:release": "node scripts/publish-release.mjs",
     "publish:release:yes": "node scripts/publish-release.mjs --yes",
+    "generate:app-icons": "node scripts/generate-app-icons.mjs",
     "generate:splash-gif": "node scripts/generate-splash-gif.mjs"
   },
   "dependencies": {
