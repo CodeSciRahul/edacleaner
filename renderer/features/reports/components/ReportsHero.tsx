@@ -5,6 +5,7 @@ import {
   Download,
   Eraser,
   FileBarChart2,
+  Loader2,
   Lock,
   ScanSearch,
   Sparkles,
@@ -15,7 +16,7 @@ import { CircularProgress } from '@/components/desktop/CircularProgress'
 import { cn } from '@/utils/cn'
 import { useTranslation } from '@/i18n/useTranslation'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
-import { useEntitlementsStore } from '@/store/entitlements-store'
+import { usePlanCheckout } from '@/features/subscription/hooks/usePlanCheckout'
 import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import type { HealthBand } from '@/features/reports/lib/reports-analytics'
 import type { ReportExportFormat } from '@/features/reports/lib/export-report'
@@ -82,7 +83,7 @@ export function ReportsHero({
 }: ReportsHeroProps): React.ReactElement {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
+  const { startCheckout, checkingOut } = usePlanCheckout()
   const locked = phase === 'locked'
   const displayScore = locked ? null : healthScore
   const displaySpace = locked ? '—' : spaceLabel
@@ -199,9 +200,14 @@ export function ReportsHero({
               <Button
                 size="sm"
                 className="h-9 gap-2 rounded-lg px-4 text-[13px] ring-1 ring-primary/20"
-                onClick={openPlansModal}
+                disabled={checkingOut}
+                onClick={() => void startCheckout('premium')}
               >
-                <Lock className="h-4 w-4" aria-hidden="true" />
+                {checkingOut ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Lock className="h-4 w-4" aria-hidden="true" />
+                )}
                 {t('reports.upsell.cta')}
                 <PremiumBadge plan="premium" />
               </Button>

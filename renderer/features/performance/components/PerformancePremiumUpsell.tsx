@@ -1,8 +1,9 @@
 import type { FeatureId } from '@shared/entitlements'
+import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { useEntitlementsStore } from '@/store/entitlements-store'
+import { usePlanCheckout } from '@/features/subscription/hooks/usePlanCheckout'
 import { useTranslation } from '@/i18n/useTranslation'
 import { cn } from '@/utils/cn'
 import performanceUpgradeUnlockGif from '@/assets/performance/performance-upgrade-unlock.gif'
@@ -15,7 +16,7 @@ interface PerformancePremiumUpsellProps {
 
 /**
  * Polished Premium upsell card for locked Performance surfaces.
- * Hierarchy: animation → benefit copy → Upgrade CTA (opens Compare Plans).
+ * Hierarchy: animation → benefit copy → Upgrade CTA (opens Premium checkout).
  */
 export function PerformancePremiumUpsell({
   feature = 'performance_boost',
@@ -23,7 +24,7 @@ export function PerformancePremiumUpsell({
 }: PerformancePremiumUpsellProps): React.ReactElement {
   const { t } = useTranslation()
   const { requiredPlan } = useFeatureAccess(feature)
-  const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
+  const { startCheckout, checkingOut } = usePlanCheckout()
 
   return (
     <section
@@ -76,9 +77,15 @@ export function PerformancePremiumUpsell({
         <Button
           type="button"
           size="default"
-          className="mt-5 h-10 min-w-[160px] rounded-lg px-5 text-[13px]"
-          onClick={openPlansModal}
+          className="mt-5 h-10 min-w-[160px] gap-2 rounded-lg px-5 text-[13px]"
+          disabled={checkingOut}
+          onClick={() =>
+            void startCheckout(requiredPlan === 'free' ? 'premium' : requiredPlan)
+          }
         >
+          {checkingOut ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : null}
           {t('performance.upsell.cta')}
         </Button>
       </div>

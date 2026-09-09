@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Crown, Lock, Sparkles, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Crown, Loader2, Lock, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import {
   FEATURE_LABELS,
@@ -8,6 +8,10 @@ import {
   type FeatureId
 } from '@shared/entitlements'
 import { useEntitlementsStore } from '@/store/entitlements-store'
+import { useOfflineStore } from '@/store/offline-store'
+import { authService } from '@/services/auth-service'
+import { findPlanForSlug } from '@/features/subscription/lib/plans'
+import { subscriptionService } from '@/features/subscription/services/subscription-service'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
 
@@ -94,15 +98,23 @@ export function UpgradePromptModal(): React.ReactElement | null {
   const feature = useEntitlementsStore((s) => s.upgradePromptFeature)
   const closeUpgradePrompt = useEntitlementsStore((s) => s.closeUpgradePrompt)
   const continueToPlans = useEntitlementsStore((s) => s.continueToPlans)
+  const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
+  const online = useOfflineStore((s) => s.online)
+  const [upgrading, setUpgrading] = useState(false)
+  const [upgradeError, setUpgradeError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!feature) return
+    if (!feature) {
+      setUpgrading(false)
+      setUpgradeError(null)
+      return
+    }
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') closeUpgradePrompt()
+      if (e.key === 'Escape' && !upgrading) closeUpgradePrompt()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [feature, closeUpgradePrompt])
+  }, [feature, closeUpgradePrompt, upgrading])
 
   if (!feature) return null
 
@@ -110,6 +122,52 @@ export function UpgradePromptModal(): React.ReactElement | null {
   const title = t(FEATURE_TITLE_KEYS[feature]) || FEATURE_LABELS[feature]
   const description = t(FEATURE_DESC_KEYS[feature])
   const planLabel = PLAN_DISPLAY_NAMES[requiredPlan]
+
+  async function handleUpgradeNow(): Promise<void> {
+    if (upgrading) return
+    if (!online) {
+      setUpgradeError(t('plans.error.offlineAction'))
+      return
+    }
+
+    setUpgrading(true)
+    setUpgradeError(null)
+
+    try {
+      const plans = await subscriptionService.listPlans()
+      const plan = findPlanForSlug(plans, requiredPlan, 'year')
+      if (!plan) {
+        closeUpgradePrompt()
+        openPlansModal()
+        return
+      }
+
+      const session = await authService.getSession()
+      const result = session.authenticated
+        ? await subscriptionService.changePlan(plan.id)
+        : await subscriptionService.guestCheckout(plan.id)
+
+      if (subscriptionService.isCheckoutResult(result)) {
+        if (!result.url) {
+          throw new Error(t('plans.error.missingCheckoutUrl'))
+        }
+        await subscriptionService.openCheckoutUrl(result.url)
+        closeUpgradePrompt()
+        return
+      }
+
+      await subscriptionService.syncSubscriptionAfterPayment()
+      closeUpgradePrompt()
+    } catch (err) {
+      const mapped = subscriptionService.mapError(err)
+      setUpgradeError(mapped.message || t('plans.error.change'))
+      // Still offer the plans picker so the user can retry payment.
+      closeUpgradePrompt()
+      openPlansModal()
+    } finally {
+      setUpgrading(false)
+    }
+  }
 
   return (
     <div
@@ -120,7 +178,8 @@ export function UpgradePromptModal(): React.ReactElement | null {
         type="button"
         className="absolute inset-0 bg-background/70 backdrop-blur-[2px]"
         aria-label={t('common.close')}
-        onClick={closeUpgradePrompt}
+        onClick={upgrading ? undefined : closeUpgradePrompt}
+        disabled={upgrading}
       />
 
       <div
@@ -151,7 +210,8 @@ export function UpgradePromptModal(): React.ReactElement | null {
           <button
             type="button"
             onClick={closeUpgradePrompt}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            disabled={upgrading}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
             aria-label={t('common.close')}
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -180,6 +240,12 @@ export function UpgradePromptModal(): React.ReactElement | null {
               ))}
             </ul>
           </div>
+
+          {upgradeError ? (
+            <p className="text-xs text-destructive" role="alert">
+              {upgradeError}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-2 border-t border-border/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -189,6 +255,7 @@ export function UpgradePromptModal(): React.ReactElement | null {
             size="sm"
             className="order-3 h-9 sm:order-1"
             onClick={closeUpgradePrompt}
+            disabled={upgrading}
           >
             {t('entitlements.prompt.later')}
           </Button>
@@ -199,11 +266,22 @@ export function UpgradePromptModal(): React.ReactElement | null {
               size="sm"
               className="h-9"
               onClick={continueToPlans}
+              disabled={upgrading}
             >
               {t('entitlements.prompt.compare')}
             </Button>
-            <Button type="button" size="sm" className="h-9 gap-1.5" onClick={continueToPlans}>
-              <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+            <Button
+              type="button"
+              size="sm"
+              className="h-9 gap-1.5"
+              onClick={() => void handleUpgradeNow()}
+              disabled={upgrading}
+            >
+              {upgrading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
               {t('entitlements.prompt.upgrade')}
             </Button>
           </div>

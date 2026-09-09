@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   Cpu,
   Layers,
+  Loader2,
   Lock,
   MemoryStick,
   Power,
@@ -19,6 +20,7 @@ import type { TranslationKey } from '@/i18n/locales/en'
 import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 import { useEntitlementsStore } from '@/store/entitlements-store'
+import { usePlanCheckout } from '@/features/subscription/hooks/usePlanCheckout'
 import performanceHeroBgDark from '@/assets/performance/performance-hero-bg-dark.png'
 import performanceHeroBgLight from '@/assets/performance/performance-hero-bg-light.png'
 
@@ -98,7 +100,7 @@ export function PerformanceHero({
   boostLocked = false
 }: PerformanceHeroProps): React.ReactElement {
   const { t } = useTranslation()
-  const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
+  const { startCheckout, checkingOut } = usePlanCheckout()
   const locked = boostLocked
   const stroke = healthStroke[health]
   const scorePct = score == null ? 0 : Math.min(100, Math.max(0, score))
@@ -235,9 +237,14 @@ export function PerformanceHero({
               <Button
                 size="sm"
                 className="h-9 gap-2 rounded-lg px-4 text-[13px] ring-1 ring-primary/20"
-                onClick={openPlansModal}
+                disabled={checkingOut}
+                onClick={() => void startCheckout('premium')}
               >
-                <Lock className="h-4 w-4" aria-hidden="true" />
+                {checkingOut ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Lock className="h-4 w-4" aria-hidden="true" />
+                )}
                 {t('performance.upsell.cta')}
                 <PremiumBadge plan="premium" />
               </Button>
