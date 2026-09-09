@@ -77,6 +77,8 @@ export interface SystemApi {
 export interface FileApi {
   read: (filePath: string) => Promise<string>
   write: (filePath: string, content: string) => Promise<void>
+  /** Write raw bytes (e.g. PDF). Pass base64-encoded content from the renderer. */
+  writeBinary: (filePath: string, base64: string) => Promise<void>
   exists: (filePath: string) => Promise<boolean>
 }
 
@@ -223,6 +225,12 @@ export interface AuthApi {
   register: (credentials: AuthCredentials) => Promise<AuthSessionSnapshot>
   requestLoginOtp: (email: string) => Promise<{ requiresOtp: true }>
   verifyLoginOtp: (email: string, code: string) => Promise<AuthSessionSnapshot>
+  forgotPassword: (email: string) => Promise<{ requiresOtp: true }>
+  resetPassword: (input: {
+    email: string
+    code: string
+    password: string
+  }) => Promise<AuthSessionSnapshot>
   setPassword: (password: string) => Promise<AuthSessionSnapshot>
   logout: () => Promise<AuthSessionSnapshot>
   getSession: () => Promise<AuthSessionSnapshot>

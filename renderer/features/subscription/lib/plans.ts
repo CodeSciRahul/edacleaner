@@ -147,3 +147,19 @@ export function filterPlansByInterval(
     return normalizeBillingInterval(plan.billingInterval) === interval
   })
 }
+
+/** Prefer yearly paid plan; fall back to any matching slug. */
+export function findPlanForSlug(
+  plans: PublicPlan[],
+  slug: PlanSlug,
+  preferredInterval: BillingInterval = 'year'
+): PublicPlan | null {
+  if (slug === 'free') return null
+  const preferred = plans.find(
+    (plan) =>
+      normalizePlanSlug(plan.slug) === slug &&
+      normalizeBillingInterval(plan.billingInterval) === preferredInterval
+  )
+  if (preferred) return preferred
+  return plans.find((plan) => normalizePlanSlug(plan.slug) === slug) ?? null
+}

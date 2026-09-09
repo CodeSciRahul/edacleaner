@@ -1,10 +1,12 @@
-import { Download, FileStack, Loader2, RefreshCw, Trash2 } from 'lucide-react'
+import { Copy, Download, FileStack, HardDrive, Loader2, RefreshCw, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { formatBytes } from '@shared/utils'
 import { useTranslation } from '@/i18n/useTranslation'
 import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
+import { featureHeroMinHeightClass } from '@/components/desktop/feature-hero'
 import largeFilesHeroBgDark from '@/assets/storage/large-files-hero-bg-dark.png'
 import largeFilesHeroBgLight from '@/assets/storage/large-files-hero-bg-light.png'
 
@@ -36,11 +38,16 @@ export function LargeFilesHero({
   onDelete
 }: LargeFilesHeroProps): React.ReactElement {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const locked = !accessAllowed
 
   let headline: string
   let subtext: string
 
-  if (isLoading) {
+  if (locked) {
+    headline = t('storage.largeFiles.hero.lockedTitle')
+    subtext = t('storage.largeFiles.hero.lockedMsg')
+  } else if (isLoading) {
     headline = t('storage.largeFiles.hero.scanningHeadline')
     subtext = t('storage.largeFiles.hero.scanningSub')
   } else if (fileCount === 0) {
@@ -57,13 +64,37 @@ export function LargeFilesHero({
     subtext = t('storage.largeFiles.hero.readySub')
   }
 
+  const filesValue = locked ? '—' : isLoading ? '…' : String(fileCount)
+  const sizeValue = locked
+    ? '—'
+    : isLoading
+      ? '…'
+      : fileCount > 0
+        ? formatBytes(totalBytes)
+        : '—'
+  const selectedValue = locked ? '—' : isLoading ? '…' : String(selectedCount)
+
+  let tip: string
+  if (locked) {
+    tip = t('storage.largeFiles.hero.lockedMsg')
+  } else if (isLoading) {
+    tip = t('storage.largeFiles.hero.tipScanning')
+  } else if (fileCount === 0) {
+    tip = t('storage.largeFiles.hero.tipEmpty')
+  } else if (selectedCount > 0) {
+    tip = t('storage.largeFiles.hero.tipSelected', { count: selectedCount })
+  } else {
+    tip = t('storage.largeFiles.hero.tipReady')
+  }
+
   return (
     <section
       aria-label={t('storage.largeFiles.hero.overview')}
       className={cn(
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
+        featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
-        'border-border'
+        locked ? 'border-primary/20' : 'border-border'
       )}
     >
       <img
@@ -85,59 +116,123 @@ export function LargeFilesHero({
         aria-hidden="true"
       />
 
-      <div className="relative z-10 flex max-w-2xl flex-col gap-3">
-        <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-600 backdrop-blur-sm dark:text-amber-400">
-          {isLoading ? (
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-          ) : (
-            <FileStack className="h-3 w-3" aria-hidden="true" />
-          )}
-          {isLoading ? t('storage.largeFiles.hero.badgeScanning') : t('storage.largeFiles.hero.badge')}
-        </div>
+      <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 max-w-xl space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-600 backdrop-blur-sm dark:text-amber-400">
+              {isLoading && !locked ? (
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : (
+                <FileStack className="h-3 w-3" aria-hidden="true" />
+              )}
+              {isLoading && !locked
+                ? t('storage.largeFiles.hero.badgeScanning')
+                : t('storage.largeFiles.hero.badge')}
+            </div>
+            {locked ? <PremiumBadge plan="pro" size="md" /> : null}
+          </div>
 
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {headline}
-          </h2>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{subtext}</p>
-        </div>
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              {headline}
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{subtext}</p>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2 pt-0.5">
-          {!accessAllowed ? <PremiumBadge plan="pro" /> : null}
-          <FeatureLockButton
-            feature="large_files"
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
-            forceDisabled={isFetching}
-            onClick={onRefresh}
-          >
-            <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} aria-hidden="true" />
-            {t('common.refresh')}
-          </FeatureLockButton>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
-            disabled={exportDisabled}
-            onClick={onExport}
-          >
-            <Download className="h-4 w-4" aria-hidden="true" />
-            {t('largeFiles.export')}
-          </Button>
-          <FeatureLockButton
-            feature="large_files"
-            size="sm"
-            variant="destructive"
-            className="h-9 gap-2 rounded-lg px-4 text-[13px]"
-            forceDisabled={deleteDisabled}
-            onClick={onDelete}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            {t('largeFiles.delete', { count: selectedCount })}
-          </FeatureLockButton>
+          <div className="flex flex-wrap gap-2">
+            <StatPill label={t('storage.largeFiles.hero.statFiles')} value={filesValue} />
+            <StatPill label={t('storage.largeFiles.hero.statSize')} value={sizeValue} />
+            <StatPill label={t('storage.largeFiles.hero.statSelected')} value={selectedValue} />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <FeatureLockButton
+              feature="large_files"
+              size="sm"
+              variant="outline"
+              className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+              forceDisabled={isFetching}
+              onClick={onRefresh}
+            >
+              <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} aria-hidden="true" />
+              {t('common.refresh')}
+            </FeatureLockButton>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+              disabled={exportDisabled}
+              onClick={onExport}
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              {t('largeFiles.export')}
+            </Button>
+            <FeatureLockButton
+              feature="large_files"
+              size="sm"
+              variant="destructive"
+              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+              forceDisabled={deleteDisabled}
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              {t('largeFiles.delete', { count: selectedCount })}
+            </FeatureLockButton>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            <JumpChip
+              icon={HardDrive}
+              label={t('storage.subnav.overview')}
+              onClick={() => navigate('/storage')}
+            />
+            <JumpChip
+              icon={Copy}
+              label={t('storage.subnav.duplicates')}
+              onClick={() => navigate('/storage/duplicates')}
+            />
+          </div>
+
+          <p className="text-xs text-muted-foreground">{tip}</p>
         </div>
       </div>
     </section>
+  )
+}
+
+function StatPill({ label, value }: { label: string; value: string }): React.ReactElement {
+  return (
+    <div className="rounded-xl border border-border/80 bg-background/60 px-3 py-2 backdrop-blur-sm">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+    </div>
+  )
+}
+
+function JumpChip({
+  icon: Icon,
+  label,
+  onClick
+}: {
+  icon: typeof HardDrive
+  label: string
+  onClick: () => void
+}): React.ReactElement {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/55 px-2.5 py-1',
+        'text-[11px] font-medium text-muted-foreground backdrop-blur-sm',
+        'transition-colors hover:border-primary/25 hover:bg-background/80 hover:text-foreground',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+      )}
+    >
+      <Icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden="true" />
+      {label}
+    </button>
   )
 }

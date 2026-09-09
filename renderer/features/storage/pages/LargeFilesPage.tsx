@@ -24,7 +24,7 @@ import type { LargeFile } from '@shared/interfaces'
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendStorageDeleteActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { StoragePremiumUpsell } from '@/features/storage/components/StoragePremiumUpsell'
 
 type SortKey = 'size' | 'name' | 'path'
 type SizeFilter = 'all' | '100mb' | '500mb' | '1gb' | '5gb'
@@ -205,7 +205,6 @@ export function LargeFilesPage(): React.ReactElement {
           onExport={exportCsv}
           onDelete={() => void handleDeleteSelected()}
         />
-        <FeatureLockedCallout feature="large_files" compact />
         <PageBreadcrumb
           items={[
             { label: t('storage.title'), href: '/storage' },
@@ -214,119 +213,125 @@ export function LargeFilesPage(): React.ReactElement {
         />
         <StorageSubnav />
 
-        {notice ? (
-          <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-            {notice}
-          </p>
-        ) : null}
+        {!access.allowed ? (
+          <StoragePremiumUpsell feature="large_files" variant="largeFiles" />
+        ) : (
+          <>
+            {notice ? (
+              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                {notice}
+              </p>
+            ) : null}
 
-        <StorageFilterBar
-          query={query}
-          onQueryChange={setQuery}
-          pathFilter={pathFilter}
-          onPathFilterChange={setPathFilter}
-          category={category}
-          onCategoryChange={setCategory}
-          sortKey={sortKey}
-          sortOptions={SORT_OPTIONS}
-          onSortKeyChange={(v) => setSortKey(v as SortKey)}
-        >
-          <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-            <span className="shrink-0">{t('largeFiles.sortSize')}</span>
-            <select
-              className="bg-transparent text-sm text-foreground outline-none"
-              value={sizeFilter}
-              onChange={(e) => setSizeFilter(e.target.value as SizeFilter)}
-              aria-label="Minimum file size"
+            <StorageFilterBar
+              query={query}
+              onQueryChange={setQuery}
+              pathFilter={pathFilter}
+              onPathFilterChange={setPathFilter}
+              category={category}
+              onCategoryChange={setCategory}
+              sortKey={sortKey}
+              sortOptions={SORT_OPTIONS}
+              onSortKeyChange={(v) => setSortKey(v as SortKey)}
             >
-              {SIZE_FILTERS.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </StorageFilterBar>
+              <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
+                <span className="shrink-0">{t('largeFiles.sortSize')}</span>
+                <select
+                  className="bg-transparent text-sm text-foreground outline-none"
+                  value={sizeFilter}
+                  onChange={(e) => setSizeFilter(e.target.value as SizeFilter)}
+                  aria-label="Minimum file size"
+                >
+                  {SIZE_FILTERS.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </StorageFilterBar>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span>
-            <strong className="text-foreground">{filtered.length}</strong> shown
-            {files.length !== filtered.length ? ` of ${files.length}` : ''}
-          </span>
-          <span>·</span>
-          <span>
-            Total <strong className="text-foreground">{formatBytes(totalBytes)}</strong>
-          </span>
-          {selected.length > 0 ? (
-            <>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span>
+                <strong className="text-foreground">{filtered.length}</strong> shown
+                {files.length !== filtered.length ? ` of ${files.length}` : ''}
+              </span>
               <span>·</span>
               <span>
-                <strong className="text-foreground">{selected.length}</strong> selected
+                Total <strong className="text-foreground">{formatBytes(totalBytes)}</strong>
               </span>
-            </>
-          ) : null}
-        </div>
-
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
-          {isLoading ? (
-            <EmptyBlock message={t('largeFiles.emptyScanning')} />
-          ) : isError ? (
-            <ErrorBlock
-              message={error instanceof Error ? error.message : 'Failed to load large files'}
-              onRetry={() => void refetch()}
-              retryLabel={t('common.retry')}
-            />
-          ) : filtered.length === 0 ? (
-            <EmptyBlock
-              icon
-              message={
-                files.length === 0
-                  ? t('largeFiles.emptyNone')
-                  : t('largeFiles.emptyFilter')
-              }
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead className="sticky top-0 z-10 bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
-                  <tr className="border-b border-border">
-                    <th className="w-10 px-4 py-3">
-                      <input
-                        type="checkbox"
-                        className="rounded border-border"
-                        aria-label="Select all visible"
-                        checked={
-                          filtered.length > 0 &&
-                          filtered.every((f) => selected.includes(f.path))
-                        }
-                        onChange={toggleAllVisible}
-                      />
-                    </th>
-                    <th className="px-2 py-3 font-medium">{t('largeFiles.col.name')}</th>
-                    <th className="px-2 py-3 font-medium">{t('largeFiles.col.type')}</th>
-                    <th className="px-2 py-3 font-medium">{t('largeFiles.col.size')}</th>
-                    <th className="px-2 py-3 font-medium">{t('largeFiles.col.path')}</th>
-                    <th className="px-4 py-3 text-right font-medium">{t('largeFiles.col.actions')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filtered.map((file) => (
-                    <LargeFileRow
-                      key={file.path}
-                      file={file}
-                      selected={selected.includes(file.path)}
-                      busy={deleteFiles.isPending}
-                      onToggle={() => togglePath(file.path)}
-                      onReveal={() => reveal.mutate(file.path)}
-                      onCopy={() => void copyPath(file.path)}
-                      onDelete={() => void handleDeleteOne(file)}
-                    />
-                  ))}
-                </tbody>
-              </table>
+              {selected.length > 0 ? (
+                <>
+                  <span>·</span>
+                  <span>
+                    <strong className="text-foreground">{selected.length}</strong> selected
+                  </span>
+                </>
+              ) : null}
             </div>
-          )}
-        </div>
+
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+              {isLoading ? (
+                <EmptyBlock message={t('largeFiles.emptyScanning')} />
+              ) : isError ? (
+                <ErrorBlock
+                  message={error instanceof Error ? error.message : 'Failed to load large files'}
+                  onRetry={() => void refetch()}
+                  retryLabel={t('common.retry')}
+                />
+              ) : filtered.length === 0 ? (
+                <EmptyBlock
+                  icon
+                  message={
+                    files.length === 0
+                      ? t('largeFiles.emptyNone')
+                      : t('largeFiles.emptyFilter')
+                  }
+                />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-sm">
+                    <thead className="sticky top-0 z-10 bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
+                      <tr className="border-b border-border">
+                        <th className="w-10 px-4 py-3">
+                          <input
+                            type="checkbox"
+                            className="rounded border-border"
+                            aria-label="Select all visible"
+                            checked={
+                              filtered.length > 0 &&
+                              filtered.every((f) => selected.includes(f.path))
+                            }
+                            onChange={toggleAllVisible}
+                          />
+                        </th>
+                        <th className="px-2 py-3 font-medium">{t('largeFiles.col.name')}</th>
+                        <th className="px-2 py-3 font-medium">{t('largeFiles.col.type')}</th>
+                        <th className="px-2 py-3 font-medium">{t('largeFiles.col.size')}</th>
+                        <th className="px-2 py-3 font-medium">{t('largeFiles.col.path')}</th>
+                        <th className="px-4 py-3 text-right font-medium">{t('largeFiles.col.actions')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {filtered.map((file) => (
+                        <LargeFileRow
+                          key={file.path}
+                          file={file}
+                          selected={selected.includes(file.path)}
+                          busy={deleteFiles.isPending}
+                          onToggle={() => togglePath(file.path)}
+                          onReveal={() => reveal.mutate(file.path)}
+                          onCopy={() => void copyPath(file.path)}
+                          onDelete={() => void handleDeleteOne(file)}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </>
   )

@@ -24,7 +24,7 @@ import { PerformanceQuickLinks } from '@/features/performance/components/Perform
 import { useTranslation } from '@/i18n/useTranslation'
 import { appendBoostActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
-import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
+import { PerformancePremiumUpsell } from '@/features/performance/components/PerformancePremiumUpsell'
 
 function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
   let score = 100 - Math.round(usedPercent * 0.55)
@@ -37,9 +37,9 @@ export function PerformancePage(): React.ReactElement {
   const navigate = useNavigate()
   const boostAccess = useFeatureAccess('performance_boost')
   const { data: analysis, isLoading: analysisLoading, refetch: refetchAnalysis } =
-    useBoostAnalysis()
-  const { data: snapshot, isLoading: snapshotLoading } = useBoostSnapshot()
-  const { data: startupList, isLoading: startupLoading } = useStartupApps()
+    useBoostAnalysis(boostAccess.allowed)
+  const { data: snapshot, isLoading: snapshotLoading } = useBoostSnapshot(boostAccess.allowed)
+  const { data: startupList, isLoading: startupLoading } = useStartupApps(boostAccess.allowed)
   const runBoost = useRunBoost()
   const cancelBoost = useCancelBoost()
   const isBoosting = runBoost.isPending
@@ -63,6 +63,13 @@ export function PerformancePage(): React.ReactElement {
   }, [analysis])
 
   const status = useMemo(() => {
+    if (!boostAccess.allowed) {
+      return {
+        health: 'warning' as const,
+        title: t('performance.hero.lockedTitle'),
+        message: t('performance.hero.lockedMsg')
+      }
+    }
     if (!performanceScore) {
       return {
         health: 'warning' as const,
@@ -89,7 +96,7 @@ export function PerformancePage(): React.ReactElement {
       title: t('performance.needsTitle', { score: performanceScore }),
       message: analysis?.warnings[0] ?? t('performance.needsMsg')
     }
-  }, [performanceScore, analysis?.warnings, t])
+  }, [boostAccess.allowed, performanceScore, analysis?.warnings, t])
 
   const actionItems: PerformanceActionItem[] = [
     {
@@ -191,67 +198,71 @@ export function PerformancePage(): React.ReactElement {
     }
   }
 
-  const diskFreeLabel = analysis?.diskPressure
-    ? formatBytes(analysis.diskPressure.freeBytes)
-    : undefined
-
   return (
     <>
       <div className="space-y-6 p-content-pad">
-        <FeatureLockedCallout feature="performance_boost" />
         <PerformanceHero
-          score={performanceScore}
+          score={boostAccess.allowed ? performanceScore : null}
           health={status.health}
           title={status.title}
           message={status.message}
-          memory={memory}
-          diskFreeLabel={diskFreeLabel}
+          memory={boostAccess.allowed ? memory : undefined}
+          startupCount={
+            boostAccess.allowed ? (startupLoading ? null : startupEnabledCount) : null
+          }
+          recoverableBytes={boostAccess.allowed ? recoverableEstimate : 0}
           isBoosting={isBoosting}
-          isLoading={analysisLoading && !memory}
+          isLoading={boostAccess.allowed && analysisLoading && !memory}
           boostLocked={!boostAccess.allowed}
           onBoost={() => void handleBoost()}
           onCancel={() => cancelBoost.mutate()}
-          onOpenMonitoring={() => navigate('/monitoring')}
-        />
-
-        <PerformanceBoostLoaderModal
-          open={isBoosting}
-          message={progress?.message}
-          percent={progress?.percent}
-          currentItem={progress?.currentItem}
-          onCancel={() => cancelBoost.mutate()}
-          cancelPending={cancelBoost.isPending}
-        />
-
-        {lastResult ? <BoostResultsCard result={lastResult} /> : null}
-
-        <PerformanceActionGrid items={actionItems} />
-
-        <section aria-label={t('performance.memorySection')}>
-          <div className="mb-4">
-            <h2 className="text-section-title text-foreground">
-              {t('performance.memorySection')}
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {t('performance.memoryHint')}
-            </p>
-          </div>
-          <TopProcessesTable
-            processes={topProcesses.map((p) => ({
-              name: p.name,
-              memoryBytes: p.memoryBytes,
-              cpu: Number(p.cpuPercent.toFixed(1))
-            }))}
-            previewCount={4}
-            locked={!boostAccess.allowed}
-            lockFeature="performance_boost"
-          />
-        </section>
-
-        <PerformanceQuickLinks
           onOpenStartup={() => navigate('/startup-apps')}
-          onOpenBackground={() => navigate('/background-apps')}
         />
+
+        {!boostAccess.allowed ? (
+          <PerformancePremiumUpsell feature="performance_boost" />
+        ) : (
+          <>
+            <PerformanceBoostLoaderModal
+              open={isBoosting}
+              message={progress?.message}
+              percent={progress?.percent}
+              currentItem={progress?.currentItem}
+              onCancel={() => cancelBoost.mutate()}
+              cancelPending={cancelBoost.isPending}
+            />
+
+            {lastResult ? <BoostResultsCard result={lastResult} /> : null}
+
+            <PerformanceActionGrid items={actionItems} />
+
+            <section aria-label={t('performance.memorySection')}>
+              <div className="mb-4">
+                <h2 className="text-section-title text-foreground">
+                  {t('performance.memorySection')}
+                </h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {t('performance.memoryHint')}
+                </p>
+              </div>
+              <TopProcessesTable
+                processes={topProcesses.map((p) => ({
+                  name: p.name,
+                  memoryBytes: p.memoryBytes,
+                  cpu: Number(p.cpuPercent.toFixed(1))
+                }))}
+                previewCount={4}
+                locked={false}
+                lockFeature="performance_boost"
+              />
+            </section>
+
+            <PerformanceQuickLinks
+              onOpenStartup={() => navigate('/startup-apps')}
+              onOpenBackground={() => navigate('/background-apps')}
+            />
+          </>
+        )}
       </div>
     </>
   )

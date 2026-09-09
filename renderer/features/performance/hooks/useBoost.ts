@@ -24,11 +24,12 @@ export function useBoostAnalysis(enabled = true) {
   })
 }
 
-export function useBoostSnapshot() {
+export function useBoostSnapshot(enabled = true) {
   return useQuery({
     queryKey: boostKeys.snapshot,
     queryFn: () => electronService.boost().getSnapshot(),
-    refetchInterval: 10_000
+    enabled,
+    refetchInterval: enabled ? 10_000 : false
   })
 }
 

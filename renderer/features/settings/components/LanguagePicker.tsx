@@ -1,7 +1,8 @@
-import { Check, Languages } from 'lucide-react'
+import { Languages } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { APP_LANGUAGES, type AppLanguage } from '@/i18n/types'
 import { useTranslation } from '@/i18n/useTranslation'
+import { SelectedIndicator } from './SelectedIndicator'
 
 export function LanguagePicker(): React.ReactElement {
   const { language, setLanguage, t } = useTranslation()
@@ -31,28 +32,17 @@ export function LanguagePicker(): React.ReactElement {
                 : 'border-border bg-card hover:border-primary/25 hover:shadow-sm'
             )}
           >
-            <div className="flex items-start justify-between gap-2">
-              <div
-                className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-xl transition-colors',
-                  selected
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground group-hover:text-foreground'
-                )}
-              >
-                <Languages className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-              </div>
-              <span
-                className={cn(
-                  'flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200',
-                  selected
-                    ? 'scale-100 border-primary bg-primary text-primary-foreground'
-                    : 'scale-90 border-border bg-background opacity-0 group-hover:opacity-40'
-                )}
-                aria-hidden="true"
-              >
-                {selected ? <Check className="h-3 w-3" strokeWidth={2.5} /> : null}
-              </span>
+            <SelectedIndicator selected={selected} />
+
+            <div
+              className={cn(
+                'flex h-10 w-10 items-center justify-center rounded-xl transition-colors',
+                selected
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground group-hover:text-foreground'
+              )}
+            >
+              <Languages className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
             </div>
 
             <div>

@@ -43,6 +43,8 @@ export function AuthForm({
     error,
     notice,
     online,
+    resendSeconds,
+    canResendOtp,
     handleSubmit,
     switchMode,
     resendOtp,
@@ -125,7 +127,7 @@ export function AuthForm({
           </label>
         ) : null}
 
-        {mode === 'register' || step === 'email' ? (
+        {step === 'credentials' || step === 'forgot' ? (
           <label className="block space-y-1.5">
             <span className="text-xs font-medium text-foreground">{t('auth.field.email')}</span>
             <div className="relative">
@@ -165,7 +167,9 @@ export function AuthForm({
           </label>
         ) : null}
 
-        {mode === 'register' || step === 'password' ? (
+        {(mode === 'register' && step === 'credentials') ||
+        step === 'password' ||
+        step === 'reset' ? (
           <label className="block space-y-1.5">
             <span className="text-xs font-medium text-foreground">{t('auth.field.password')}</span>
             <div className="relative">
@@ -254,10 +258,12 @@ export function AuthForm({
               type="button"
               variant="outline"
               className="h-10 flex-1"
-              disabled={submitting}
+              disabled={submitting || !canResendOtp}
               onClick={() => void resendOtp()}
             >
-              {t('auth.otp.resend')}
+              {canResendOtp
+                ? t('auth.otp.resend')
+                : t('auth.otp.resendIn', { seconds: String(resendSeconds) })}
             </Button>
             <Button
               type="button"

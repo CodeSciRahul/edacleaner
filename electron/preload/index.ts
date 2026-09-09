@@ -116,6 +116,8 @@ const fileApi = {
   read: (filePath: string) => invoke<string>(IPC_CHANNELS.FILE.READ, filePath),
   write: (filePath: string, content: string) =>
     invoke<void>(IPC_CHANNELS.FILE.WRITE, filePath, content),
+  writeBinary: (filePath: string, base64: string) =>
+    invoke<void>(IPC_CHANNELS.FILE.WRITE_BINARY, filePath, base64),
   exists: (filePath: string) => invoke<boolean>(IPC_CHANNELS.FILE.EXISTS, filePath)
 }
 
@@ -389,6 +391,10 @@ const authApi = {
     invoke<{ requiresOtp: true }>(IPC_CHANNELS.AUTH.REQUEST_OTP, { email }),
   verifyLoginOtp: (email: string, code: string) =>
     invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.VERIFY_OTP, { email, code }),
+  forgotPassword: (email: string) =>
+    invoke<{ requiresOtp: true }>(IPC_CHANNELS.AUTH.FORGOT_PASSWORD, { email }),
+  resetPassword: (input: { email: string; code: string; password: string }) =>
+    invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.RESET_PASSWORD, input),
   setPassword: (password: string) =>
     invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.SET_PASSWORD, { password }),
   logout: () => invoke<AuthSessionSnapshot>(IPC_CHANNELS.AUTH.LOGOUT),

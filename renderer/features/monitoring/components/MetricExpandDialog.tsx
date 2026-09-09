@@ -40,7 +40,7 @@ export function MetricExpandDialog({
       className="fixed inset-0 z-50 flex items-center justify-center p-6"
       role="dialog"
       aria-modal="true"
-      aria-label={`${label} detailed view`}
+      aria-label={t('monitoring.expandMetric', { metric: label })}
     >
       <button
         type="button"
@@ -48,20 +48,23 @@ export function MetricExpandDialog({
         aria-label={t('common.close')}
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-4xl rounded-xl border border-border bg-card p-5 shadow-card">
+      <div className="relative z-10 w-full max-w-4xl rounded-2xl border border-border bg-card p-5 shadow-card animate-in fade-in-0 zoom-in-95 duration-200">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-section-title text-foreground">{label}</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {stats
-                ? `Current ${stats.current.toFixed(1)}${definition.unit} · Avg ${stats.avg}${definition.unit}`
+                ? t('monitoring.expandStats', {
+                    current: `${stats.current.toFixed(1)}${definition.unit}`,
+                    avg: `${stats.avg}${definition.unit}`
+                  })
                 : t('monitoring.waitingSamples')}
             </p>
           </div>
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-lg"
             onClick={onClose}
             aria-label={t('common.close')}
           >
@@ -98,7 +101,7 @@ export function MetricExpandDialog({
 
 function StatBox({ label, value }: { label: string; value: string }): React.ReactElement {
   return (
-    <div className={cn('rounded-lg border border-border bg-muted/30 px-3 py-2')}>
+    <div className={cn('rounded-xl border border-border bg-muted/30 px-3 py-2')}>
       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>

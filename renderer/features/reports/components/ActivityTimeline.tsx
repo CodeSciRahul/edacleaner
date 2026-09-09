@@ -1,8 +1,19 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Copy, FileStack, ScanSearch, Sparkles, Trash2, Zap } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  FileStack,
+  ScanSearch,
+  Sparkles,
+  Trash2,
+  Zap
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
+import { Button } from '@/components/ui/Button'
 import { formatRelativeScanTime } from '@/features/smart-scan/lib/scan-history'
 import { formatScanDuration } from '@/features/smart-scan/lib/scan-meta'
 import {
@@ -11,6 +22,9 @@ import {
 } from '@/features/reports/lib/activity-history'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+
+/** Fits the timeline card without excessive scroll; history is client-loaded (≤100). */
+const PAGE_SIZE = 8
 
 interface ActivityTimelineProps {
   entries: ActivityEntry[]
@@ -90,6 +104,17 @@ function getResultLine(
 export function ActivityTimeline({ entries }: ActivityTimelineProps): React.ReactElement {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [page, setPage] = useState(0)
+
+  const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount - 1)
+
+  useEffect(() => {
+    if (page !== safePage) setPage(safePage)
+  }, [page, safePage])
+
+  const pageEntries = entries.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
+  const showPagination = entries.length > PAGE_SIZE
 
   return (
     <section aria-label={t('reports.activity')}>
@@ -100,7 +125,7 @@ export function ActivityTimeline({ entries }: ActivityTimelineProps): React.Reac
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         <ul className="divide-y divide-border">
-          {entries.map((entry, index) => {
+          {pageEntries.map((entry, index) => {
             const Icon = kindIcon(entry)
             const resultLine = getResultLine(entry, t)
 
@@ -156,6 +181,43 @@ export function ActivityTimeline({ entries }: ActivityTimelineProps): React.Reac
             )
           })}
         </ul>
+
+        {showPagination ? (
+          <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1 px-2.5 text-xs"
+              disabled={safePage <= 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              aria-label={t('reports.activityPrev')}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('reports.activityPrev')}
+            </Button>
+
+            <p className="text-xs text-muted-foreground" aria-live="polite">
+              {t('reports.activityPage', {
+                current: safePage + 1,
+                total: pageCount
+              })}
+            </p>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1 px-2.5 text-xs"
+              disabled={safePage >= pageCount - 1}
+              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              aria-label={t('reports.activityNext')}
+            >
+              {t('reports.activityNext')}
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          </div>
+        ) : null}
       </div>
     </section>
   )

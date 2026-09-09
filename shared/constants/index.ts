@@ -32,6 +32,7 @@ export const IPC_CHANNELS = {
     SAVE: 'file:save',
     READ: 'file:read',
     WRITE: 'file:write',
+    WRITE_BINARY: 'file:write-binary',
     EXISTS: 'file:exists'
   },
   DIALOG: {
@@ -130,6 +131,8 @@ export const IPC_CHANNELS = {
     REGISTER: 'auth:register',
     REQUEST_OTP: 'auth:request-otp',
     VERIFY_OTP: 'auth:verify-otp',
+    FORGOT_PASSWORD: 'auth:forgot-password',
+    RESET_PASSWORD: 'auth:reset-password',
     SET_PASSWORD: 'auth:set-password',
     LOGOUT: 'auth:logout',
     GET_SESSION: 'auth:get-session',

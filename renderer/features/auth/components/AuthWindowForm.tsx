@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useId } from 'react'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -38,10 +38,10 @@ export function AuthWindowForm({
   const emailId = `${formId}-email`
   const passwordId = `${formId}-password`
   const otpId = `${formId}-otp`
-  const [forgotHint, setForgotHint] = useState(false)
   const {
     mode,
     step,
+    otpContext,
     name,
     setName,
     email,
@@ -56,30 +56,49 @@ export function AuthWindowForm({
     error,
     notice,
     online,
+    resendSeconds,
+    canResendOtp,
     handleSubmit,
     switchMode,
     resendOtp,
+    startForgotPassword,
     backToCredentials
   } = useAuthSubmit({ onLogin, onRegister, onAuthenticated, defaultMode })
 
   const heading =
-    step === 'otp'
-      ? t('auth.otp.heading')
-      : mode === 'login'
-        ? t('auth.login.title')
-        : t('auth.register.title')
+    step === 'forgot'
+      ? t('auth.forgot.heading')
+      : step === 'reset'
+        ? t('auth.reset.heading')
+        : step === 'otp'
+          ? t('auth.otp.heading')
+          : mode === 'login'
+            ? t('auth.login.title')
+            : t('auth.register.title')
 
   const description =
-    step === 'otp'
-      ? t('auth.otp.body')
-      : mode === 'login'
-        ? step === 'password'
-          ? t('auth.login.passwordStep')
-          : t('auth.login.description')
-        : t('auth.register.description')
+    step === 'forgot'
+      ? t('auth.forgot.body')
+      : step === 'reset'
+        ? t('auth.reset.body')
+        : step === 'otp'
+          ? otpContext === 'register'
+            ? t('auth.otp.registerBody')
+            : otpContext === 'reset'
+              ? t('auth.otp.resetBody')
+              : t('auth.otp.body')
+          : mode === 'login'
+            ? step === 'password'
+              ? t('auth.login.passwordStep')
+              : t('auth.login.description')
+            : t('auth.register.description')
 
-  const showEmailField = mode === 'register' || step === 'email'
-  const showPasswordField = mode === 'register' || step === 'password'
+  const showModeTabs = step === 'credentials'
+  const showNameField = mode === 'register' && step === 'credentials'
+  const showEmailField = step === 'credentials' || step === 'forgot'
+  const showOtpField = step === 'otp'
+  const showPasswordField =
+    (mode === 'register' && step === 'credentials') || step === 'password' || step === 'reset'
 
   return (
     <div
@@ -100,7 +119,7 @@ export function AuthWindowForm({
         </h1>
         <p className="mt-1.5 text-center text-[13px] leading-relaxed text-slate-600">{description}</p>
 
-        {step !== 'otp' ? (
+        {showModeTabs ? (
           <div
             role="tablist"
             aria-label={t('auth.window.modeLabel')}
@@ -137,7 +156,7 @@ export function AuthWindowForm({
           onSubmit={(event) => void handleSubmit(event)}
           noValidate
         >
-          {mode === 'register' ? (
+          {showNameField ? (
             <div>
               <FieldLabel htmlFor={nameId}>{t('auth.field.name')}</FieldLabel>
               <Input
@@ -171,7 +190,7 @@ export function AuthWindowForm({
             <p className="truncate rounded-xl bg-sky-50/80 px-3 py-2 text-[12px] text-slate-600">{email}</p>
           )}
 
-          {step === 'otp' ? (
+          {showOtpField ? (
             <div>
               <FieldLabel htmlFor={otpId}>{t('auth.otp.placeholder')}</FieldLabel>
               <Input
@@ -193,13 +212,13 @@ export function AuthWindowForm({
               <div>
                 <div className="mb-1.5 flex items-center justify-between gap-2">
                   <label htmlFor={passwordId} className="text-[12px] font-medium text-slate-600">
-                    {t('auth.field.password')}
+                    {step === 'reset' ? t('auth.field.newPassword') : t('auth.field.password')}
                   </label>
-                  {mode === 'login' ? (
+                  {mode === 'login' && step === 'password' ? (
                     <button
                       type="button"
                       className="text-[12px] font-medium text-[#2563EB] hover:underline"
-                      onClick={() => setForgotHint((open) => !open)}
+                      onClick={startForgotPassword}
                     >
                       {t('auth.window.forgotPassword')}
                     </button>
@@ -209,8 +228,10 @@ export function AuthWindowForm({
                   <Input
                     id={passwordId}
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                    required={mode === 'register' || step === 'password'}
+                    autoComplete={
+                      step === 'reset' || mode === 'register' ? 'new-password' : 'current-password'
+                    }
+                    required={mode === 'register' || step === 'password' || step === 'reset'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={t('auth.placeholder.password')}
@@ -233,13 +254,10 @@ export function AuthWindowForm({
                 </div>
               </div>
 
-              {mode === 'login' && forgotHint ? (
-                <p className="text-[11px] leading-relaxed text-slate-500">
-                  {t('auth.window.forgotPasswordHint')}
-                </p>
+              {mode === 'register' && step === 'credentials' ? (
+                <p className="text-[11px] leading-relaxed text-slate-500">{t('auth.passwordHint')}</p>
               ) : null}
-
-              {mode === 'register' ? (
+              {step === 'reset' ? (
                 <p className="text-[11px] leading-relaxed text-slate-500">{t('auth.passwordHint')}</p>
               ) : null}
             </>
@@ -274,13 +292,19 @@ export function AuthWindowForm({
             {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
             {submitting
               ? t('auth.submitting')
-              : step === 'otp'
-                ? t('auth.otp.submit')
-                : mode === 'register'
-                  ? t('auth.register.submit')
-                  : step === 'password'
-                    ? t('auth.login.submit')
-                    : t('auth.login.continue')}
+              : step === 'forgot'
+                ? t('auth.forgot.submit')
+                : step === 'reset'
+                  ? t('auth.reset.submit')
+                  : step === 'otp'
+                    ? otpContext === 'reset'
+                      ? t('auth.otp.continue')
+                      : t('auth.otp.submit')
+                    : mode === 'register'
+                      ? t('auth.register.submit')
+                      : step === 'password'
+                        ? t('auth.login.submit')
+                        : t('auth.login.continue')}
           </Button>
 
           {step === 'otp' ? (
@@ -288,10 +312,12 @@ export function AuthWindowForm({
               <button
                 type="button"
                 className="font-medium text-[#2563EB] hover:underline disabled:opacity-50"
-                disabled={submitting}
+                disabled={submitting || !canResendOtp}
                 onClick={() => void resendOtp()}
               >
-                {t('auth.otp.resend')}
+                {canResendOtp
+                  ? t('auth.otp.resend')
+                  : t('auth.otp.resendIn', { seconds: String(resendSeconds) })}
               </button>
               <button
                 type="button"
@@ -299,17 +325,19 @@ export function AuthWindowForm({
                 disabled={submitting}
                 onClick={backToCredentials}
               >
-                {t('auth.otp.changeEmail')}
+                {otpContext === 'reset' ? t('auth.forgot.back') : t('auth.otp.changeEmail')}
               </button>
             </div>
-          ) : step === 'password' ? (
+          ) : step === 'password' || step === 'forgot' || step === 'reset' ? (
             <button
               type="button"
               className="w-full text-center text-[12px] font-medium text-slate-500 hover:text-slate-800 hover:underline disabled:opacity-50"
               disabled={submitting}
               onClick={backToCredentials}
             >
-              {t('auth.otp.changeEmail')}
+              {step === 'forgot' || step === 'reset'
+                ? t('auth.forgot.back')
+                : t('auth.otp.changeEmail')}
             </button>
           ) : (
             <p className="pt-1 text-center text-[12px] text-slate-500">
