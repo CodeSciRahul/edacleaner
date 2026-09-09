@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
 import { useEntitlementsStore } from '@/store/entitlements-store'
+import type { TranslationKey } from '@/i18n/locales/en'
 import { useTranslation } from '@/i18n/useTranslation'
 import { cn } from '@/utils/cn'
 import storageUpgradeUnlockGif from '@/assets/storage/storage-upgrade-unlock.gif'
@@ -16,7 +17,7 @@ interface StoragePremiumUpsellProps {
   className?: string
 }
 
-const TITLE_KEY: Record<StorageUpsellVariant, string> = {
+const TITLE_KEY: Record<StorageUpsellVariant, TranslationKey> = {
   overview: 'storage.upsell.title',
   largeFiles: 'storage.upsell.largeFiles.title',
   duplicates: 'storage.upsell.duplicates.title'
