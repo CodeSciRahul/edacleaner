@@ -267,9 +267,13 @@ export const de: Record<TranslationKey, string> = {
     'Checkout im Browser geöffnet. Kehren Sie nach der Zahlung zurück — Ihr Tarif wird automatisch aktualisiert.',
   'plans.feedback.guestCheckoutOpened':
     'Checkout im Browser geöffnet. Verwenden Sie die E-Mail für diesen Tarif. Nach der Zahlung melden Sie sich mit dieser E-Mail an und geben den zugesandten Code ein.',
-  'plans.feedback.updated': 'Ihr Abonnement ist aktuell.',
+  'plans.feedback.updated': 'Upgrade erfolgreich — Ihr neuer Tarif ist aktiv.',
   'plans.feedback.downgradeScheduled':
     'Downgrade geplant. Ihr aktueller Tarif bleibt bis Periodenende aktiv.',
+  'plans.success.title': 'Willkommen bei {{plan}}',
+  'plans.success.body':
+    'Ihr Upgrade ist abgeschlossen. Premium-Funktionen sind freigeschaltet und eine Bestätigungs-E-Mail ist unterwegs.',
+  'plans.success.dismiss': 'Verstanden',
   'plans.error.load': 'Tarife konnten nicht geladen werden. Erneut versuchen.',
   'plans.error.empty': 'Derzeit sind keine Tarife verfügbar.',
   'plans.error.offlineLoad': 'Stellen Sie eine Internetverbindung her, um Tarife zu laden.',

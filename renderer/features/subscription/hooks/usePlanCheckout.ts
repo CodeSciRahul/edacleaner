@@ -4,6 +4,7 @@ import { useOfflineStore } from '@/store/offline-store'
 import { useEntitlementsStore } from '@/store/entitlements-store'
 import {
   findPlanForSlug,
+  normalizePlanSlug,
   type PlanSlug
 } from '@/features/subscription/lib/plans'
 import { subscriptionService } from '@/features/subscription/services/subscription-service'
@@ -12,11 +13,13 @@ import { useTranslation } from '@/i18n/useTranslation'
 /**
  * Starts browser checkout for a paid plan (yearly preferred).
  * Falls back to the plans modal if checkout cannot be opened.
+ * Immediate upgrades (e.g. Pro → Premium) show the global success dialog.
  */
 export function usePlanCheckout() {
   const { t } = useTranslation()
   const online = useOfflineStore((s) => s.online)
   const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
+  const showPlanChangeSuccess = useEntitlementsStore((s) => s.showPlanChangeSuccess)
   const [checkingOut, setCheckingOut] = useState(false)
 
   const startCheckout = useCallback(
@@ -51,13 +54,23 @@ export function usePlanCheckout() {
         }
 
         await subscriptionService.syncSubscriptionAfterPayment()
+
+        if (result.mode === 'scheduled') {
+          openPlansModal()
+          return
+        }
+
+        const nextPlan = normalizePlanSlug(result.currentPlan) ?? slug
+        if (nextPlan !== 'free') {
+          showPlanChangeSuccess({ plan: nextPlan, kind: 'upgraded' })
+        }
       } catch {
         openPlansModal()
       } finally {
         setCheckingOut(false)
       }
     },
-    [checkingOut, online, openPlansModal, t]
+    [checkingOut, online, openPlansModal, showPlanChangeSuccess, t]
   )
 
   return { startCheckout, checkingOut }

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { authService } from '@/services/auth-service'
 import { useEntitlementsStore } from '@/store/entitlements-store'
 import { PlansModal } from '@/features/subscription/components/PlansModal'
+import { PlanChangeSuccessModal } from '@/features/subscription/components/PlanChangeSuccessModal'
 import { UpgradePromptModal } from '@/features/entitlements/components/UpgradePromptModal'
 
 /**
@@ -47,6 +48,7 @@ export function EntitlementsHost(): React.ReactElement {
           void authService.openWindow('register')
         }}
       />
+      <PlanChangeSuccessModal />
     </>
   )
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOfflineStore } from '@/store/offline-store'
+import { useEntitlementsStore } from '@/store/entitlements-store'
 import { authService } from '@/services/auth-service'
 import { electronService } from '@/services/electron-service'
 import {
@@ -38,6 +39,7 @@ export function usePlansModal({
 }: UsePlansModalOptions) {
   const { t } = useTranslation()
   const online = useOfflineStore((s) => s.online)
+  const showPlanChangeSuccess = useEntitlementsStore((s) => s.showPlanChangeSuccess)
 
   const [plans, setPlans] = useState<PublicPlan[]>([])
   const [currentPlan, setCurrentPlan] = useState<PlanSlug | null>(null)
@@ -76,6 +78,20 @@ export function usePlansModal({
     setCurrentInterval(interval)
     return snapshot
   }, [])
+
+  const announceUpgradeSuccess = useCallback(
+    async (preferredPlan?: PlanSlug | null) => {
+      const snapshot = await refreshLocalSubscription()
+      const plan = preferredPlan ?? normalizePlanSlug(snapshot.plan)
+      if (plan && plan !== 'free') {
+        showPlanChangeSuccess({ plan, kind: 'upgraded' })
+      } else {
+        setFeedback({ type: 'upgraded' })
+      }
+      onUpdatedRef.current?.()
+    },
+    [refreshLocalSubscription, showPlanChangeSuccess]
+  )
 
   const loadCatalog = useCallback(async () => {
     const gen = ++loadGeneration.current
@@ -140,11 +156,9 @@ export function usePlansModal({
       }
       try {
         await subscriptionService.syncSubscriptionAfterPayment()
-        await refreshLocalSubscription()
-        setFeedback({ type: 'upgraded' })
         awaitingCheckoutReturn.current = false
         guestCheckoutPending.current = false
-        onUpdatedRef.current?.()
+        await announceUpgradeSuccess()
       } catch {
         // Keep waiting; user may still be finishing checkout.
       }
@@ -184,7 +198,7 @@ export function usePlansModal({
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [open, refreshLocalSubscription])
+  }, [open, announceUpgradeSuccess])
 
   const selectPlan = useCallback(
     async (plan: PublicPlan) => {
@@ -233,11 +247,15 @@ export function usePlansModal({
         }
 
         await subscriptionService.syncSubscriptionAfterPayment()
-        await refreshLocalSubscription()
-        setFeedback({
-          type: result.mode === 'scheduled' ? 'downgrade-scheduled' : 'upgraded'
-        })
-        onUpdatedRef.current?.()
+
+        if (result.mode === 'scheduled') {
+          await refreshLocalSubscription()
+          setFeedback({ type: 'downgrade-scheduled' })
+          onUpdatedRef.current?.()
+          return
+        }
+
+        await announceUpgradeSuccess(target)
       } catch (err) {
         const mapped = subscriptionService.mapError(err)
         const session = await authService.getSession().catch(() => null)
@@ -254,7 +272,15 @@ export function usePlansModal({
         setActionPlanId(null)
       }
     },
-    [actionPlanId, currentInterval, currentPlan, online, refreshLocalSubscription, t]
+    [
+      actionPlanId,
+      announceUpgradeSuccess,
+      currentInterval,
+      currentPlan,
+      online,
+      refreshLocalSubscription,
+      t
+    ]
   )
 
   return {

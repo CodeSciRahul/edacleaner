@@ -111,14 +111,6 @@ export function PlansModal({
         currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)
 
   useEffect(() => {
-    if (feedback?.type !== 'upgraded') return
-    const timer = window.setTimeout(() => {
-      onClose()
-    }, 1200)
-    return () => window.clearTimeout(timer)
-  }, [feedback, onClose])
-
-  useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape' && !actionPlanId) onClose()

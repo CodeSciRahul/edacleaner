@@ -261,9 +261,13 @@ export const en = {
     'Checkout opened in your browser. Return here after payment — your plan will refresh automatically.',
   'plans.feedback.guestCheckoutOpened':
     'Checkout opened in your browser. Use the email you want for this plan. After payment, log in with that email and enter the code we send you.',
-  'plans.feedback.updated': 'Your subscription is up to date.',
+  'plans.feedback.updated': 'Upgrade successful — your new plan is active.',
   'plans.feedback.downgradeScheduled':
     'Downgrade scheduled. Your current plan stays active until the billing period ends.',
+  'plans.success.title': 'Welcome to {{plan}}',
+  'plans.success.body':
+    'Your upgrade is complete. Premium features are unlocked and a confirmation email is on its way.',
+  'plans.success.dismiss': 'Got it',
   'plans.error.load': 'Could not load subscription plans. Try again.',
   'plans.error.empty': 'No plans are available right now.',
   'plans.error.offlineLoad': 'Connect to the internet to load subscription plans.',
