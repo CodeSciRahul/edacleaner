@@ -266,7 +266,7 @@ export const en = {
     'Downgrade scheduled. Your current plan stays active until the billing period ends.',
   'plans.success.title': 'Welcome to {{plan}}',
   'plans.success.body':
-    'Your upgrade is complete. Premium features are unlocked and a confirmation email is on its way.',
+    '{{plan}} is now active. Features are unlocked, and a confirmation email is on its way.',
   'plans.success.dismiss': 'Got it',
   'plans.error.load': 'Could not load subscription plans. Try again.',
   'plans.error.empty': 'No plans are available right now.',

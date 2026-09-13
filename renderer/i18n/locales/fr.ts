@@ -274,7 +274,7 @@ export const fr: Record<TranslationKey, string> = {
     'Rétrogradation planifiée. Votre offre actuelle reste active jusqu’à la fin de la période.',
   'plans.success.title': 'Bienvenue sur {{plan}}',
   'plans.success.body':
-    'Votre mise à niveau est terminée. Les fonctions Premium sont déverrouillées et un e-mail de confirmation est en route.',
+    '{{plan}} est maintenant actif. Les fonctionnalités sont déverrouillées, et un e-mail de confirmation est en route.',
   'plans.success.dismiss': 'Compris',
   'plans.error.load': 'Impossible de charger les offres. Réessayez.',
   'plans.error.empty': 'Aucune offre n’est disponible pour le moment.',

@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
-import { CheckCircle2, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PLAN_DISPLAY_NAMES, type PlanSlug } from '@shared/entitlements'
 import { useEntitlementsStore } from '@/store/entitlements-store'
 import { useTranslation } from '@/i18n/useTranslation'
+import planChangeSuccessGif from '@/assets/subscription/plan-change-success.gif'
+import planChangeSuccessStill from '@/assets/subscription/plan-change-success-still.png'
 
 /**
  * Global success dialog after an immediate upgrade / checkout return.
@@ -47,7 +49,7 @@ export function PlanChangeSuccessModal(): React.ReactElement | null {
         aria-labelledby="plan-success-title"
         className="relative z-[1] w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-xl animate-in fade-in-0 zoom-in-95 duration-200"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/12 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary/12 to-transparent" />
 
         <div className="relative flex items-start justify-end px-4 pt-3">
           <button
@@ -60,9 +62,23 @@ export function PlanChangeSuccessModal(): React.ReactElement | null {
           </button>
         </div>
 
-        <div className="relative flex flex-col items-center px-6 pb-6 pt-1 text-center">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <CheckCircle2 className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
+        <div className="relative flex flex-col items-center px-6 pb-6 pt-0 text-center">
+          <div className="mb-3 h-36 w-36 overflow-hidden rounded-2xl bg-muted/30">
+            <img
+              src={planChangeSuccessGif}
+              alt=""
+              width={400}
+              height={400}
+              className="h-full w-full object-contain object-center"
+              draggable={false}
+              decoding="async"
+              onError={(event) => {
+                const img = event.currentTarget
+                if (img.dataset.fallback === '1') return
+                img.dataset.fallback = '1'
+                img.src = planChangeSuccessStill
+              }}
+            />
           </div>
           <h2
             id="plan-success-title"

@@ -272,7 +272,7 @@ export const de: Record<TranslationKey, string> = {
     'Downgrade geplant. Ihr aktueller Tarif bleibt bis Periodenende aktiv.',
   'plans.success.title': 'Willkommen bei {{plan}}',
   'plans.success.body':
-    'Ihr Upgrade ist abgeschlossen. Premium-Funktionen sind freigeschaltet und eine Bestätigungs-E-Mail ist unterwegs.',
+    '{{plan}} ist jetzt aktiv. Funktionen sind freigeschaltet, und eine Bestätigungs-E-Mail ist unterwegs.',
   'plans.success.dismiss': 'Verstanden',
   'plans.error.load': 'Tarife konnten nicht geladen werden. Erneut versuchen.',
   'plans.error.empty': 'Derzeit sind keine Tarife verfügbar.',
