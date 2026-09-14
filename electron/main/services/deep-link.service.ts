@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
+import { execFile } from 'node:child_process'
 import path from 'path'
-import { DEEP_LINK_PROTOCOL, IPC_CHANNELS } from '@shared/constants'
+import { APP_NAME, DEEP_LINK_PROTOCOL, IPC_CHANNELS } from '@shared/constants'
 import type { DeepLinkEvent } from '@shared/interfaces'
 import { windowManager } from '@main/managers'
 import { createLogger } from '@main/utils/logger'
@@ -50,6 +51,37 @@ function parseDeepLink(rawUrl: string): DeepLinkEvent {
 }
 
 /**
+ * Chrome/Edge read the protocol handler display name from Windows association
+ * metadata (FriendlyAppName), falling back to the EXE FileDescription.
+ * Set short, professional labels so the "Open app?" dialog is not truncated.
+ */
+function setWindowsProtocolDisplayName(exePath: string): void {
+  if (process.platform !== 'win32') return
+
+  const exeName = path.basename(exePath)
+  if (!exeName || exeName.includes('..')) return
+
+  const protocolKey = `HKCU\\Software\\Classes\\${PROTOCOL}`
+  const applicationKey = `${protocolKey}\\Application`
+  const friendlyKey = `HKCU\\Software\\Classes\\Applications\\${exeName}`
+
+  const runReg = (args: string[]) => {
+    execFile('reg', args, { windowsHide: true }, (error) => {
+      if (error) {
+        log.warn('Failed to update protocol display name registry', {
+          args,
+          error: error.message
+        })
+      }
+    })
+  }
+
+  runReg(['add', protocolKey, '/ve', '/d', `URL:${APP_NAME}`, '/f'])
+  runReg(['add', applicationKey, '/v', 'ApplicationName', '/t', 'REG_SZ', '/d', APP_NAME, '/f'])
+  runReg(['add', friendlyKey, '/v', 'FriendlyAppName', '/t', 'REG_SZ', '/d', APP_NAME, '/f'])
+}
+
+/**
  * Registers `edacleaner://` and routes checkout return URLs into the running app.
  * Windows uses second-instance argv; macOS uses open-url.
  */
@@ -77,6 +109,8 @@ export class DeepLinkService {
   }
 
   registerProtocolClient(): void {
+    let registeredExe = process.execPath
+
     if (process.defaultApp) {
       if (process.argv.length >= 2) {
         const appPath = path.resolve(process.argv[1])
@@ -84,7 +118,13 @@ export class DeepLinkService {
       }
     } else {
       app.setAsDefaultProtocolClient(PROTOCOL)
+      registeredExe = process.execPath
     }
+
+    setWindowsProtocolDisplayName(registeredExe)
+    // Also label the packaged product EXE name (may still own the protocol while developing).
+    setWindowsProtocolDisplayName(`${APP_NAME}.exe`)
+
     log.info('Registered as default protocol client', { protocol: PROTOCOL })
   }
 

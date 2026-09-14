@@ -10,7 +10,7 @@ import {
 import { useEntitlementsStore } from '@/store/entitlements-store'
 import { useOfflineStore } from '@/store/offline-store'
 import { authService } from '@/services/auth-service'
-import { findPlanForSlug } from '@/features/subscription/lib/plans'
+import { findPlanForSlug, normalizePlanSlug } from '@/features/subscription/lib/plans'
 import { subscriptionService } from '@/features/subscription/services/subscription-service'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
@@ -99,6 +99,7 @@ export function UpgradePromptModal(): React.ReactElement | null {
   const closeUpgradePrompt = useEntitlementsStore((s) => s.closeUpgradePrompt)
   const continueToPlans = useEntitlementsStore((s) => s.continueToPlans)
   const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
+  const showPlanChangeSuccess = useEntitlementsStore((s) => s.showPlanChangeSuccess)
   const online = useOfflineStore((s) => s.online)
   const [upgrading, setUpgrading] = useState(false)
   const [upgradeError, setUpgradeError] = useState<string | null>(null)
@@ -157,7 +158,19 @@ export function UpgradePromptModal(): React.ReactElement | null {
       }
 
       await subscriptionService.syncSubscriptionAfterPayment()
-      closeUpgradePrompt()
+
+      if (result.mode === 'scheduled') {
+        closeUpgradePrompt()
+        openPlansModal()
+        return
+      }
+
+      const nextPlan = normalizePlanSlug(result.currentPlan)
+      if (nextPlan && nextPlan !== 'free') {
+        showPlanChangeSuccess({ plan: nextPlan, kind: 'upgraded' })
+      } else {
+        closeUpgradePrompt()
+      }
     } catch (err) {
       const mapped = subscriptionService.mapError(err)
       setUpgradeError(mapped.message || t('plans.error.change'))

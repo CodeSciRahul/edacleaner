@@ -1,7 +1,7 @@
 {
   "name": "eda-cleaner",
   "version": "1.0.0",
-  "description": "EdaCleaner — PC cleanup and performance optimization for Windows, macOS, and Linux",
+  "description": "EDA Cleaner",
   "homepage": "https://edacleaner.com",
   "main": "./out/main/index.js",
   "author": {

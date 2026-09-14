@@ -269,9 +269,13 @@ export const fr: Record<TranslationKey, string> = {
     'Le paiement s’est ouvert dans votre navigateur. Revenez ici après le paiement — votre offre se mettra à jour automatiquement.',
   'plans.feedback.guestCheckoutOpened':
     'Le paiement s’est ouvert dans votre navigateur. Utilisez l’e-mail de cette offre. Après le paiement, connectez-vous avec cet e-mail et saisissez le code reçu.',
-  'plans.feedback.updated': 'Votre abonnement est à jour.',
+  'plans.feedback.updated': 'Mise à niveau réussie — votre nouvelle offre est active.',
   'plans.feedback.downgradeScheduled':
     'Rétrogradation planifiée. Votre offre actuelle reste active jusqu’à la fin de la période.',
+  'plans.success.title': 'Bienvenue sur {{plan}}',
+  'plans.success.body':
+    '{{plan}} est maintenant actif. Les fonctionnalités sont déverrouillées, et un e-mail de confirmation est en route.',
+  'plans.success.dismiss': 'Compris',
   'plans.error.load': 'Impossible de charger les offres. Réessayez.',
   'plans.error.empty': 'Aucune offre n’est disponible pour le moment.',
   'plans.error.offlineLoad': 'Connectez-vous à Internet pour charger les offres.',
