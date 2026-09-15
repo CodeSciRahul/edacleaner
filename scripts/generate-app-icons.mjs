@@ -87,7 +87,6 @@ const createIcns = () => {
 }
 
 const windowsSizes = [16, 24, 32, 48, 64, 128, 256]
-const standaloneSizes = [16, 24, 32, 48, 64, 96, 128, 192, 256]
 const linuxSizes = [16, 24, 32, 48, 64, 96, 128, 256, 512, 1024]
 const ico = createIco(windowsSizes)
 const icns = createIcns()
@@ -95,22 +94,15 @@ const icns = createIcns()
 await rm(linuxIconDirectory, { recursive: true, force: true })
 await mkdir(linuxIconDirectory, { recursive: true })
 
+// Only emit icons consumed by electron-builder / app-icon.ts / Linux packaging.
 await Promise.all([
   writeFile(join(iconDirectory, 'icon.png'), png(1024)),
   writeFile(join(iconDirectory, '512.png'), png(512)),
-  writeFile(join(iconDirectory, 'icon-256.png'), png(256)),
   writeFile(join(iconDirectory, 'icon.ico'), ico),
   writeFile(join(iconDirectory, 'icon.icns'), icns),
-  writeFile(join(root, 'resources', 'icon.png'), png(512)),
-  writeFile(join(root, 'resources', 'icon.ico'), ico),
-  writeFile(join(root, 'resources', 'icon.icns'), icns),
-  ...standaloneSizes.map((size) =>
-    writeFile(join(iconDirectory, `${size}.ico`), createIco([size]))
-  ),
   ...linuxSizes.map((size) =>
     writeFile(join(linuxIconDirectory, `${size}x${size}.png`), png(size))
-  ),
-  writeFile(join(iconDirectory, 'logo.ico'), createIco([256]))
+  )
 ])
 
 console.log(`Generated Windows, macOS, and Linux app icons from ${sourcePath}`)

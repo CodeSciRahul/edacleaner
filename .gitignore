@@ -10,3 +10,6 @@ Thumbs.db
 .env.*.local
 .cursor/
 .cursor/rules/
+__pycache__/
+*.pyc
+scripts/**/_preview/
