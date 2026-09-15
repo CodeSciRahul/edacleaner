@@ -1,9 +1,16 @@
 /**
- * Developer ID + notarytool credentials. When these are missing, do not
- * ad-hoc / hardened-runtime sign — Gatekeeper then reports the downloaded
- * app as "damaged" instead of merely unsigned.
+ * Developer ID + notarytool credentials.
+ *
+ * Prefer MAC_SIGNING_ENABLED=true (CI imports the .p12 into a keychain itself and
+ * leaves CSC_LINK unset). That avoids an electron-builder 25.x bug where
+ * set-key-partition-list is given the .p12 password instead of the temporary
+ * keychain password (SecKeychainUnlock failure).
+ *
+ * Local CSC_LINK + CSC_KEY_PASSWORD is still supported when both are set.
  */
-const hasMacSigningCredentials = Boolean(process.env.CSC_LINK)
+const hasMacSigningCredentials =
+  process.env.MAC_SIGNING_ENABLED === 'true' ||
+  Boolean(process.env.CSC_LINK && process.env.CSC_KEY_PASSWORD)
 const appleTeamId = process.env.APPLE_TEAM_ID || ''
 const canNotarize = Boolean(
   hasMacSigningCredentials &&
@@ -46,7 +53,8 @@ module.exports = {
   compression: 'maximum',
 
   // Windows signing stays disabled until a Windows cert is configured.
-  // macOS signing/notarization is enabled only when CSC_LINK + Apple notary env are set.
+  // macOS signing/notarization is enabled when MAC_SIGNING_ENABLED=true (CI)
+  // or when CSC_LINK + CSC_KEY_PASSWORD are set locally.
 
   win: {
     icon: 'resources/icons/icon.ico',
