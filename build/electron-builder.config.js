@@ -11,12 +11,11 @@
 const hasMacSigningCredentials =
   process.env.MAC_SIGNING_ENABLED === 'true' ||
   Boolean(process.env.CSC_LINK && process.env.CSC_KEY_PASSWORD)
-const appleTeamId = process.env.APPLE_TEAM_ID || ''
 const canNotarize = Boolean(
   hasMacSigningCredentials &&
     process.env.APPLE_ID &&
     (process.env.APPLE_APP_SPECIFIC_PASSWORD || process.env.APPLE_PASSWORD) &&
-    appleTeamId
+    process.env.APPLE_TEAM_ID
 )
 
 /**
@@ -99,7 +98,8 @@ module.exports = {
           hardenedRuntime: true,
           entitlements: 'build/entitlements.mac.plist',
           entitlementsInherit: 'build/entitlements.mac.inherit.plist',
-          notarize: canNotarize ? { teamId: appleTeamId } : false
+          // electron-builder 25+: use boolean only. Team ID must come from APPLE_TEAM_ID env.
+          notarize: canNotarize
         }
       : {
           identity: null,
