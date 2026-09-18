@@ -1429,5 +1429,27 @@ export const de: Record<TranslationKey, string> = {
   'entitlements.benefit.premiumSuite': 'Alles aus Pro plus die Premium-Leistungs-Suite',
   'entitlements.teaser.title': 'Nur Vorschau',
   'entitlements.teaser.body':
-    'Upgraden Sie auf {{plan}}, um die volle Liste freizuschalten und zu handeln.'
+    'Upgraden Sie auf {{plan}}, um die volle Liste freizuschalten und zu handeln.',
+
+  'subscription.expired.nav.settings': 'Einstellungen',
+  'subscription.expired.nav.support': 'Support',
+  'subscription.expired.nav.license': 'Lizenz',
+  'subscription.expired.nav.about': 'Info',
+  'subscription.expired.nav.refresh': 'Abonnementstatus aktualisieren',
+  'subscription.expired.artAlt':
+    'Illustration eines PCs mit Restmülldateien nach Ablauf des EDA-Cleaner-Schutzes',
+  'subscription.expired.title.trial': 'Testphase abgelaufen',
+  'subscription.expired.title.subscription': 'Abonnement abgelaufen',
+  'subscription.expired.subtitle': 'Pro- und Premium-Tools sind gesperrt',
+  'subscription.expired.purchase': 'Kaufen',
+  'subscription.expired.activate': 'Aktivieren',
+  'subscription.expired.later': 'Vielleicht später',
+  'subscription.expired.statsSince': 'Statistik seit {{date}}',
+  'subscription.expired.statsLifetime': 'Ihre Bereinigungsstatistik',
+  'subscription.expired.stat.files': 'Bereinigte Dateien',
+  'subscription.expired.stat.space': 'Freigegebener Speicher',
+  'subscription.expired.stat.boosts': 'Ausgeführte Boosts',
+  'subscription.expired.footer.trial': 'Ihre Testphase endet in {{days}} Tagen',
+  'subscription.expired.footer.subscription': 'Ihr bezahlter Zugang ist beendet',
+  'subscription.expired.footer.buy': 'Lizenz kaufen'
 }

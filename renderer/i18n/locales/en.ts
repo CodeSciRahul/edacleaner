@@ -1357,7 +1357,29 @@ export const en = {
   'entitlements.benefit.proSuite': 'Everything in Free, plus the full Pro storage toolkit',
   'entitlements.benefit.premiumSuite': 'Everything in Pro, plus the full Premium performance suite',
   'entitlements.teaser.title': 'Preview only',
-  'entitlements.teaser.body': 'Upgrade to {{plan}} to unlock the full list and take action.'
+  'entitlements.teaser.body': 'Upgrade to {{plan}} to unlock the full list and take action.',
+
+  'subscription.expired.nav.settings': 'Settings',
+  'subscription.expired.nav.support': 'Support',
+  'subscription.expired.nav.license': 'License',
+  'subscription.expired.nav.about': 'About',
+  'subscription.expired.nav.refresh': 'Refresh subscription status',
+  'subscription.expired.artAlt':
+    'Illustration of a PC with leftover junk files after EDA Cleaner protection lapsed',
+  'subscription.expired.title.trial': 'Trial has expired',
+  'subscription.expired.title.subscription': 'Subscription has expired',
+  'subscription.expired.subtitle': 'Pro and Premium cleanup tools are locked',
+  'subscription.expired.purchase': 'Purchase',
+  'subscription.expired.activate': 'Activate',
+  'subscription.expired.later': 'Maybe later',
+  'subscription.expired.statsSince': 'Statistics since {{date}}',
+  'subscription.expired.statsLifetime': 'Your cleanup statistics',
+  'subscription.expired.stat.files': 'Files cleaned',
+  'subscription.expired.stat.space': 'Space recovered',
+  'subscription.expired.stat.boosts': 'Boosts run',
+  'subscription.expired.footer.trial': 'Your trial ends in {{days}} days',
+  'subscription.expired.footer.subscription': 'Your paid plan access has ended',
+  'subscription.expired.footer.buy': 'Buy license'
 } as const
 
 export type TranslationKey = keyof typeof en
