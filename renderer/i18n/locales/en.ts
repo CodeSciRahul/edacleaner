@@ -293,7 +293,7 @@ export const en = {
   'settings.hero.badge': 'Your workspace',
   'settings.hero.title': 'Make EdaCleaner yours',
   'settings.hero.message':
-    'Tune theme, language, cleanup behavior, notifications, plan, and account — all in one place.',
+    'Tune theme, language, cleanup behavior, plan, and account — all in one place.',
   'settings.hero.section': 'Browsing',
   'settings.hero.browse': 'Categories',
   'settings.hero.statusHint': 'You are editing {{section}}. Changes apply on this device right away.',

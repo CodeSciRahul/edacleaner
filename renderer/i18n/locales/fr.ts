@@ -302,7 +302,7 @@ export const fr: Record<TranslationKey, string> = {
   'settings.hero.badge': 'Votre espace',
   'settings.hero.title': 'Faites d’EdaCleaner le vôtre',
   'settings.hero.message':
-    'Réglez le thème, la langue, le nettoyage, les notifications, l’offre et le compte — au même endroit.',
+    'Réglez le thème, la langue, le nettoyage, l’offre et le compte — au même endroit.',
   'settings.hero.section': 'Section',
   'settings.hero.browse': 'Catégories',
   'settings.hero.statusHint':

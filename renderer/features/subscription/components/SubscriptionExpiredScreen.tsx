@@ -8,7 +8,6 @@ import {
 } from '@/features/reports/lib/activity-history'
 import { computeReportsAnalytics } from '@/features/reports/lib/reports-analytics'
 import { loadSmartScanHistory } from '@/features/smart-scan/lib/scan-history'
-import { subscriptionService } from '@/features/subscription/services/subscription-service'
 import { useEntitlementsStore } from '@/store/entitlements-store'
 import { useTranslation } from '@/i18n/useTranslation'
 import expiredHero from '@/assets/subscription/subscription-expired-hero.png'
@@ -138,12 +137,6 @@ export function SubscriptionExpiredScreen({
     openPlansModal()
   }
 
-  function handleActivate(): void {
-    void subscriptionService.openBillingPortal().catch(() => {
-      openPlansModal()
-    })
-  }
-
   const footerDays = useMemo(() => {
     if (!expiresAt) return 0
     const end = new Date(expiresAt).getTime()
@@ -196,15 +189,6 @@ export function SubscriptionExpiredScreen({
                 onClick={handlePurchase}
               >
                 {t('subscription.expired.purchase')}
-              </Button>
-              <Button
-                type="button"
-                size="lg"
-                variant="outline"
-                className="h-11 min-w-[120px] rounded-lg border-slate-500 bg-transparent text-slate-100 hover:bg-white/5 hover:text-white"
-                onClick={handleActivate}
-              >
-                {t('subscription.expired.activate')}
               </Button>
               <Button
                 type="button"

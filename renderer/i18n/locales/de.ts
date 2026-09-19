@@ -301,7 +301,7 @@ export const de: Record<TranslationKey, string> = {
   'settings.hero.badge': 'Ihr Arbeitsbereich',
   'settings.hero.title': 'Machen Sie EdaCleaner zu Ihrem',
   'settings.hero.message':
-    'Passen Sie Design, Sprache, Bereinigungsverhalten, Benachrichtigungen, Tarif und Konto an einem Ort an.',
+    'Passen Sie Design, Sprache, Bereinigungsverhalten, Tarif und Konto an einem Ort an.',
   'settings.hero.section': 'Bereich',
   'settings.hero.browse': 'Kategorien',
   'settings.hero.statusHint':
