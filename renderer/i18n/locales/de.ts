@@ -1431,11 +1431,6 @@ export const de: Record<TranslationKey, string> = {
   'entitlements.teaser.body':
     'Upgraden Sie auf {{plan}}, um die volle Liste freizuschalten und zu handeln.',
 
-  'subscription.expired.nav.settings': 'Einstellungen',
-  'subscription.expired.nav.support': 'Support',
-  'subscription.expired.nav.license': 'Lizenz',
-  'subscription.expired.nav.about': 'Info',
-  'subscription.expired.nav.refresh': 'Abonnementstatus aktualisieren',
   'subscription.expired.artAlt':
     'Illustration eines PCs mit Restmülldateien nach Ablauf des EDA-Cleaner-Schutzes',
   'subscription.expired.title.trial': 'Testphase abgelaufen',
@@ -1444,12 +1439,12 @@ export const de: Record<TranslationKey, string> = {
   'subscription.expired.purchase': 'Kaufen',
   'subscription.expired.activate': 'Aktivieren',
   'subscription.expired.later': 'Vielleicht später',
-  'subscription.expired.statsSince': 'Statistik seit {{date}}',
-  'subscription.expired.statsLifetime': 'Ihre Bereinigungsstatistik',
+  'subscription.expired.statsSince': 'Letzte Aktivität {{date}}',
+  'subscription.expired.statsEmpty':
+    'Noch keine Historie — Werte erscheinen nach der nächsten Bereinigung',
   'subscription.expired.stat.files': 'Bereinigte Dateien',
   'subscription.expired.stat.space': 'Freigegebener Speicher',
   'subscription.expired.stat.boosts': 'Ausgeführte Boosts',
   'subscription.expired.footer.trial': 'Ihre Testphase endet in {{days}} Tagen',
-  'subscription.expired.footer.subscription': 'Ihr bezahlter Zugang ist beendet',
-  'subscription.expired.footer.buy': 'Lizenz kaufen'
+  'subscription.expired.footer.subscription': 'Ihr bezahlter Zugang ist beendet'
 }

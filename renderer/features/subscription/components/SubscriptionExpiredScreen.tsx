@@ -1,22 +1,16 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  AlertTriangle,
-  HardDrive,
-  RefreshCw,
-  Sparkles,
-  Zap
-} from 'lucide-react'
-import { APP_NAME } from '@shared/constants'
+import { useMemo } from 'react'
+import { AlertTriangle, HardDrive, Sparkles, Zap } from 'lucide-react'
 import { formatBytes } from '@shared/utils'
 import { Button } from '@/components/ui/Button'
-import { loadReportsHistory } from '@/features/reports/lib/activity-history'
+import {
+  loadReportsHistory,
+  type ActivityEntry
+} from '@/features/reports/lib/activity-history'
+import { computeReportsAnalytics } from '@/features/reports/lib/reports-analytics'
+import { loadSmartScanHistory } from '@/features/smart-scan/lib/scan-history'
 import { subscriptionService } from '@/features/subscription/services/subscription-service'
 import { useEntitlementsStore } from '@/store/entitlements-store'
-import { electronService } from '@/services/electron-service'
 import { useTranslation } from '@/i18n/useTranslation'
-import { cn } from '@/utils/cn'
-import appIcon from '@/assets/app logo/App Icon1.svg'
 import expiredHero from '@/assets/subscription/subscription-expired-hero.png'
 
 function formatCompactCount(value: number): string {
@@ -30,7 +24,7 @@ function formatCompactCount(value: number): string {
   return `${m >= 10 ? Math.round(m) : m.toFixed(1).replace(/\.0$/, '')}M`
 }
 
-function formatStatsSince(isoOrMs: string | number | null, language: string): string | null {
+function formatStatsAt(isoOrMs: string | number | null, language: string): string | null {
   if (isoOrMs == null) return null
   const date = typeof isoOrMs === 'number' ? new Date(isoOrMs) : new Date(isoOrMs)
   if (Number.isNaN(date.getTime())) return null
@@ -41,6 +35,76 @@ function formatStatsSince(isoOrMs: string | number | null, language: string): st
     }).format(date)
   } catch {
     return date.toLocaleString()
+  }
+}
+
+function isSuccessful<T extends ActivityEntry>(entry: T | undefined): entry is T {
+  return Boolean(entry && entry.success && !entry.cancelled)
+}
+
+/**
+ * Pulls display metrics from the latest real scan / cleanup / boost activity.
+ * Never uses placeholder numbers.
+ */
+function loadLastScanStats(): {
+  filesCleaned: number
+  bytesFreed: number
+  boostCount: number
+  scannedAt: number | null
+} {
+  const reports = loadReportsHistory()
+  const analytics = computeReportsAnalytics(reports)
+  const smartScan = loadSmartScanHistory()
+  const entries = reports.entries.filter((e) => e.success && !e.cancelled)
+
+  const lastCleanup = entries.find(
+    (e): e is Extract<ActivityEntry, { kind: 'cleanup' }> => e.kind === 'cleanup'
+  )
+  const lastStorage = entries.find(
+    (e): e is Extract<ActivityEntry, { kind: 'storage-delete' }> =>
+      e.kind === 'storage-delete'
+  )
+  const lastBoost = entries.find(
+    (e): e is Extract<ActivityEntry, { kind: 'boost' }> => e.kind === 'boost'
+  )
+  const lastScan = analytics.lastScan
+
+  const filesCleaned = isSuccessful(lastCleanup)
+    ? lastCleanup.filesRemoved
+    : isSuccessful(lastStorage)
+      ? lastStorage.deletedCount
+      : (lastScan?.filesScanned ?? smartScan?.filesScanned ?? 0)
+
+  const bytesFreed = isSuccessful(lastCleanup)
+    ? lastCleanup.bytesFreed
+    : isSuccessful(lastStorage)
+      ? lastStorage.bytesFreed
+      : (lastScan?.reclaimableBytes ??
+        smartScan?.lastResult.totalReclaimableBytes ??
+        smartScan?.storageReclaimedBytes ??
+        0)
+
+  const scanAt = lastScan?.at ?? smartScan?.lastScanAt ?? null
+  const boostCount =
+    scanAt != null
+      ? entries.filter((e) => e.kind === 'boost' && e.at >= scanAt).length
+      : isSuccessful(lastBoost)
+        ? 1
+        : 0
+
+  const scannedAt =
+    lastCleanup?.at ??
+    lastStorage?.at ??
+    lastBoost?.at ??
+    lastScan?.at ??
+    smartScan?.lastScanAt ??
+    null
+
+  return {
+    filesCleaned: Math.max(0, Math.round(filesCleaned)),
+    bytesFreed: Math.max(0, bytesFreed),
+    boostCount: Math.max(0, boostCount),
+    scannedAt
   }
 }
 
@@ -60,43 +124,11 @@ export function SubscriptionExpiredScreen({
   statsSinceIso
 }: SubscriptionExpiredScreenProps): React.ReactElement {
   const { t, language } = useTranslation()
-  const navigate = useNavigate()
   const openPlansModal = useEntitlementsStore((s) => s.openPlansModal)
   const dismissExpiredGate = useEntitlementsStore((s) => s.dismissExpiredGate)
-  const [syncing, setSyncing] = useState(false)
 
-  const stats = useMemo(() => {
-    const history = loadReportsHistory()
-    const filesCleaned = history.entries.reduce((sum, entry) => {
-      if (entry.kind === 'cleanup') return sum + entry.filesRemoved
-      if (entry.kind === 'storage-delete') return sum + entry.deletedCount
-      return sum + entry.itemsAffected
-    }, 0)
-    const oldest =
-      history.entries.length > 0
-        ? Math.min(...history.entries.map((e) => e.at))
-        : null
-    return {
-      filesCleaned,
-      bytesFreed: history.totals.bytesFreed,
-      boostCount: history.totals.boostCount,
-      sinceMs: oldest
-    }
-  }, [])
-
-  const sinceLabel = formatStatsSince(statsSinceIso ?? stats.sinceMs, language)
-
-  async function handleSync(): Promise<void> {
-    if (syncing) return
-    setSyncing(true)
-    try {
-      await subscriptionService.syncSubscriptionAfterPayment()
-    } catch {
-      // Session listener will refresh when sync succeeds later
-    } finally {
-      setSyncing(false)
-    }
-  }
+  const stats = useMemo(() => loadLastScanStats(), [])
+  const sinceLabel = formatStatsAt(stats.scannedAt ?? statsSinceIso, language)
 
   function handleMaybeLater(): void {
     dismissExpiredGate()
@@ -110,16 +142,6 @@ export function SubscriptionExpiredScreen({
     void subscriptionService.openBillingPortal().catch(() => {
       openPlansModal()
     })
-  }
-
-  function goSettings(): void {
-    dismissExpiredGate()
-    navigate('/settings')
-  }
-
-  function goAbout(): void {
-    dismissExpiredGate()
-    navigate('/settings')
   }
 
   const footerDays = useMemo(() => {
@@ -142,64 +164,8 @@ export function SubscriptionExpiredScreen({
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_20%,rgba(37,99,235,0.18),transparent_55%),radial-gradient(ellipse_at_80%_0%,rgba(6,182,212,0.12),transparent_45%)]"
       />
 
-      <header className="relative z-10 flex shrink-0 items-center justify-between gap-4 px-6 py-3 sm:px-8">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <img
-            src={appIcon}
-            alt=""
-            className="h-8 w-8 shrink-0 rounded-md object-contain shadow-sm"
-            draggable={false}
-          />
-          <p className="truncate text-[15px] font-semibold tracking-tight text-white">
-            {APP_NAME}
-          </p>
-        </div>
-
-        <nav className="flex flex-wrap items-center justify-end gap-1 text-[13px] text-slate-300">
-          <button
-            type="button"
-            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-white/5 hover:text-white"
-            onClick={goSettings}
-          >
-            {t('subscription.expired.nav.settings')}
-          </button>
-          <button
-            type="button"
-            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-white/5 hover:text-white"
-            onClick={() => {
-              void electronService.app().openExternal('https://edacleaner.com')
-            }}
-          >
-            {t('subscription.expired.nav.support')}
-          </button>
-          <button
-            type="button"
-            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-white/5 hover:text-white"
-            onClick={handlePurchase}
-          >
-            {t('subscription.expired.nav.license')}
-          </button>
-          <button
-            type="button"
-            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-white/5 hover:text-white"
-            onClick={goAbout}
-          >
-            {t('subscription.expired.nav.about')}
-          </button>
-          <button
-            type="button"
-            className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-white/5 hover:text-white disabled:opacity-60"
-            aria-label={t('subscription.expired.nav.refresh')}
-            disabled={syncing}
-            onClick={() => void handleSync()}
-          >
-            <RefreshCw className={cn('h-4 w-4', syncing && 'animate-spin')} />
-          </button>
-        </nav>
-      </header>
-
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <section className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-10 px-6 py-8 sm:px-10 lg:flex-row lg:items-center lg:gap-14">
+        <section className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-10 px-6 py-10 sm:px-10 lg:flex-row lg:items-center lg:gap-14">
           <div className="flex flex-1 justify-center lg:justify-start">
             <img
               src={expiredHero}
@@ -260,7 +226,7 @@ export function SubscriptionExpiredScreen({
             </p>
           ) : (
             <p className="mb-5 text-center text-xs text-slate-500">
-              {t('subscription.expired.statsLifetime')}
+              {t('subscription.expired.statsEmpty')}
             </p>
           )}
 
@@ -301,7 +267,7 @@ export function SubscriptionExpiredScreen({
           className="h-9 rounded-lg bg-primary px-4 text-primary-foreground hover:bg-primary-hover"
           onClick={handlePurchase}
         >
-          {t('subscription.expired.footer.buy')}
+          {t('subscription.expired.purchase')}
         </Button>
       </footer>
     </div>

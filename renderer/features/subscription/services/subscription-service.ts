@@ -7,6 +7,21 @@ import {
   type PublicPlan
 } from '@/features/subscription/lib/plans'
 
+/** Set while the OS browser is open on Stripe Customer Portal. */
+let awaitingBillingPortalReturn = false
+let portalFollowUpTimer: ReturnType<typeof setTimeout> | null = null
+
+export function isAwaitingBillingPortalReturn(): boolean {
+  return awaitingBillingPortalReturn
+}
+
+function clearPortalFollowUp(): void {
+  if (portalFollowUpTimer != null) {
+    clearTimeout(portalFollowUpTimer)
+    portalFollowUpTimer = null
+  }
+}
+
 export interface SubscriptionInvoice {
   id: string
   number?: string | null
@@ -291,11 +306,36 @@ export const subscriptionService = {
     if (!url) {
       throw new Error('Billing portal URL missing')
     }
+    awaitingBillingPortalReturn = true
+    clearPortalFollowUp()
     await this.openCheckoutUrl(url)
   },
 
   async syncSubscriptionAfterPayment(): Promise<void> {
     await authService.sync('checkout-return')
+  },
+
+  /**
+   * Pull latest subscription after Stripe Customer Portal (cancel / update payment).
+   * Schedules one follow-up sync so late webhooks still land in the desktop cache.
+   */
+  async syncSubscriptionAfterBillingPortal(reason = 'billing-portal-return'): Promise<void> {
+    awaitingBillingPortalReturn = false
+    clearPortalFollowUp()
+    await authService.sync(reason)
+    portalFollowUpTimer = setTimeout(() => {
+      portalFollowUpTimer = null
+      void authService.sync(`${reason}-retry`).catch(() => {
+        // Soft retry — ignore offline / transient failures.
+      })
+    }, 1800)
+  },
+
+  /** Focus / visibility helper — no-ops unless a portal session was opened. */
+  async syncBillingPortalIfAwaiting(): Promise<boolean> {
+    if (!awaitingBillingPortalReturn) return false
+    await this.syncSubscriptionAfterBillingPortal('billing-portal-focus')
+    return true
   },
 
   mapError(error: unknown): {

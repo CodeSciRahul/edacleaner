@@ -312,8 +312,12 @@ export function PlanPanel(): React.ReactElement {
       return
     }
     setPortalBusy(true)
+    setBillingError(null)
     try {
       await subscriptionService.openBillingPortal()
+      // Portal opens in the system browser; focus/deep-link hooks sync on return.
+      // Soft refresh in case the user already cancelled before focus fires.
+      void load({ sync: false })
     } catch (err) {
       const mapped = subscriptionService.mapError(err)
       setBillingError(mapped.message || t('settings.plan.portalError'))
