@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Power, Layers, Cpu, Activity } from 'lucide-react'
 import { TopProcessesTable } from '@/components/desktop/TopProcessesTable'
-import { formatBytes } from '@shared/utils'
+import { computePerformanceScore, formatBytes } from '@shared/utils'
 import { electronService } from '@/services/electron-service'
 import type { BoostResult } from '@shared/interfaces'
 import {
@@ -26,10 +26,38 @@ import { appendBoostActivity } from '@/features/reports/lib/activity-history'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
 import { PerformancePremiumUpsell } from '@/features/performance/components/PerformancePremiumUpsell'
 
-function scoreFromSnapshot(usedPercent: number, isLowDisk: boolean): number {
-  let score = 100 - Math.round(usedPercent * 0.55)
-  if (isLowDisk) score -= 12
-  return Math.max(15, Math.min(98, score))
+/** Hold post-boost display score so live RAM jitter does not erase the win. */
+const BOOST_SCORE_HOLD_MS = 5 * 60 * 1000
+const AUTO_STOP_PROCESS_LIMIT = 5
+
+interface BoostScoreHold {
+  score: number
+  delta: number
+  until: number
+}
+
+function emptyBoostResult(partial?: Partial<BoostResult>): BoostResult {
+  return {
+    success: false,
+    cancelled: false,
+    durationMs: 0,
+    memoryBeforeBytes: 0,
+    memoryAfterBytes: 0,
+    memoryReclaimedBytes: 0,
+    tempFilesRemovedBytes: 0,
+    cacheFilesRemovedBytes: 0,
+    diskFreedBytes: 0,
+    processesTerminated: 0,
+    dnsFlushed: false,
+    trashEmptied: false,
+    scoreBefore: 0,
+    scoreAfter: 0,
+    scoreDelta: 0,
+    steps: [],
+    skipped: [],
+    warnings: [],
+    ...partial
+  }
 }
 
 export function PerformancePage(): React.ReactElement {
@@ -45,6 +73,10 @@ export function PerformancePage(): React.ReactElement {
   const isBoosting = runBoost.isPending
   const progress = useBoostProgress(isBoosting)
   const [lastResult, setLastResult] = useState<BoostResult | null>(null)
+  const [boostHold, setBoostHold] = useState<BoostScoreHold | null>(null)
+  const [holdTick, setHoldTick] = useState(0)
+  /** One-shot count-up from this value after a successful Boost. */
+  const [animateFromScore, setAnimateFromScore] = useState<number | null>(null)
 
   const memory = snapshot?.memory ?? analysis?.memory
   const topProcesses = snapshot?.topProcesses ?? []
@@ -52,10 +84,52 @@ export function PerformancePage(): React.ReactElement {
     startupList?.entries.filter((entry) => entry.enabled).length ?? 0
   const backgroundCount = analysis?.processSuggestions.length ?? 0
 
-  const performanceScore = useMemo(() => {
+  const liveScore = useMemo(() => {
     if (!memory) return null
-    return scoreFromSnapshot(memory.usedPercent, Boolean(analysis?.diskPressure?.isLow))
-  }, [memory, analysis?.diskPressure?.isLow])
+    const suggestions = analysis?.processSuggestions ?? []
+    const backgroundPressureBytes = suggestions.reduce((sum, p) => sum + p.memoryBytes, 0)
+    const junkBytes =
+      (analysis?.estimatedTempBytes ?? 0) + (analysis?.estimatedCacheBytes ?? 0)
+    const disk = analysis?.diskPressure ?? snapshot?.diskPressure ?? null
+
+    return computePerformanceScore({
+      memoryUsedPercent: memory.usedPercent,
+      diskUsedPercent: disk?.usedPercent ?? null,
+      isLowDisk: Boolean(disk?.isLow),
+      junkBytes,
+      backgroundPressureBytes,
+      backgroundProcessCount: suggestions.length
+    })
+  }, [memory, analysis, snapshot?.diskPressure])
+
+  useEffect(() => {
+    if (!boostHold) return
+    const remaining = boostHold.until - Date.now()
+    if (remaining <= 0) {
+      setBoostHold(null)
+      return
+    }
+    const timer = window.setTimeout(() => {
+      setBoostHold(null)
+      setHoldTick((n) => n + 1)
+    }, remaining)
+    return () => window.clearTimeout(timer)
+  }, [boostHold, holdTick])
+
+  const performanceScore = useMemo(() => {
+    if (liveScore == null) return null
+    if (boostHold && Date.now() < boostHold.until) {
+      return Math.max(liveScore, boostHold.score)
+    }
+    return liveScore
+  }, [liveScore, boostHold, holdTick])
+
+  const scoreDelta =
+    boostHold && Date.now() < boostHold.until && boostHold.delta > 0
+      ? boostHold.delta
+      : lastResult && !lastResult.cancelled && lastResult.scoreDelta > 0
+        ? lastResult.scoreDelta
+        : null
 
   const recoverableEstimate = useMemo(() => {
     if (!analysis) return 0
@@ -77,6 +151,13 @@ export function PerformancePage(): React.ReactElement {
         message: t('performance.measuringMsg')
       }
     }
+    if (boostHold && Date.now() < boostHold.until && boostHold.delta > 0) {
+      return {
+        health: 'good' as const,
+        title: t('performance.boostedTitle', { score: performanceScore }),
+        message: t('performance.boostedMsg', { delta: boostHold.delta })
+      }
+    }
     if (performanceScore >= 80) {
       return {
         health: 'good' as const,
@@ -96,7 +177,7 @@ export function PerformancePage(): React.ReactElement {
       title: t('performance.needsTitle', { score: performanceScore }),
       message: analysis?.warnings[0] ?? t('performance.needsMsg')
     }
-  }, [boostAccess.allowed, performanceScore, analysis?.warnings, t])
+  }, [boostAccess.allowed, performanceScore, analysis?.warnings, boostHold, t])
 
   const actionItems: PerformanceActionItem[] = [
     {
@@ -164,37 +245,56 @@ export function PerformancePage(): React.ReactElement {
       emptyTrash = confirm.response === 1
     }
 
+    let terminateProcessIds: number[] = []
+    const suggestions = analysis?.processSuggestions ?? []
+    if (suggestions.length > 0) {
+      const top = suggestions.slice(0, AUTO_STOP_PROCESS_LIMIT)
+      const names = top
+        .map((p) => p.name)
+        .slice(0, 3)
+        .join(', ')
+      const more = top.length > 3 ? ` (+${top.length - 3} more)` : ''
+      const confirmApps = await electronService.dialog().message({
+        type: 'question',
+        title: 'Stop background apps?',
+        message: `Also stop ${top.length} suggested background app(s) during Boost?`,
+        detail: `${names}${more}\n\nUnsaved work in those apps may be lost. You can skip and still clean temps/caches.`,
+        buttons: ['Skip', 'Stop apps', 'Cancel']
+      })
+      if (confirmApps.response === 2) return
+      if (confirmApps.response === 1) {
+        terminateProcessIds = top.map((p) => p.pid)
+      }
+    }
+
     try {
       const result = await runBoost.mutateAsync({
         cleanTempFiles: true,
         cleanAppCaches: true,
         emptyTrash,
         flushDnsCache: true,
-        terminateProcessIds: []
+        terminateProcessIds
       })
       setLastResult(result)
       if (!result.cancelled) {
         appendBoostActivity(result)
+        if (result.scoreDelta > 0 || result.success) {
+          setAnimateFromScore(result.scoreBefore)
+          setBoostHold({
+            score: result.scoreAfter,
+            delta: result.scoreDelta,
+            until: Date.now() + BOOST_SCORE_HOLD_MS
+          })
+          window.setTimeout(() => setAnimateFromScore(null), 1500)
+        }
       }
       void refetchAnalysis()
     } catch (err) {
-      setLastResult({
-        success: false,
-        cancelled: false,
-        durationMs: 0,
-        memoryBeforeBytes: 0,
-        memoryAfterBytes: 0,
-        memoryReclaimedBytes: 0,
-        tempFilesRemovedBytes: 0,
-        cacheFilesRemovedBytes: 0,
-        diskFreedBytes: 0,
-        processesTerminated: 0,
-        dnsFlushed: false,
-        trashEmptied: false,
-        steps: [],
-        skipped: [],
-        warnings: [err instanceof Error ? err.message : 'Boost failed']
-      })
+      setLastResult(
+        emptyBoostResult({
+          warnings: [err instanceof Error ? err.message : 'Boost failed']
+        })
+      )
     }
   }
 
@@ -203,6 +303,8 @@ export function PerformancePage(): React.ReactElement {
       <div className="space-y-6 p-content-pad">
         <PerformanceHero
           score={boostAccess.allowed ? performanceScore : null}
+          scoreDelta={boostAccess.allowed ? scoreDelta : null}
+          animateFromScore={boostAccess.allowed ? animateFromScore : null}
           health={status.health}
           title={status.title}
           message={status.message}

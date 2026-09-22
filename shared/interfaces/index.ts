@@ -239,6 +239,12 @@ export interface BoostResult {
   processesTerminated: number
   dnsFlushed: boolean
   trashEmptied: boolean
+  /** Composite system score immediately before Boost ran. */
+  scoreBefore: number
+  /** Display score after Boost (never below scoreBefore on success). */
+  scoreAfter: number
+  /** scoreAfter − scoreBefore (0 when cancelled / no gain). */
+  scoreDelta: number
   steps: BoostStepResult[]
   skipped: BoostSkippedOp[]
   warnings: string[]

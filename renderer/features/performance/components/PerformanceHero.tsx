@@ -10,6 +10,7 @@ import {
   Square,
   Zap
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { colors } from '@/theme/colors'
@@ -28,6 +29,10 @@ export type PerformanceHealth = 'good' | 'warning' | 'critical'
 
 interface PerformanceHeroProps {
   score: number | null
+  /** Positive gain after a successful Boost (shown as +N). */
+  scoreDelta?: number | null
+  /** When set with a new score, the panel counts up from this value. */
+  animateFromScore?: number | null
   health: PerformanceHealth
   title: string
   message: string
@@ -86,6 +91,8 @@ const LOCKED_FEATURES: Array<{
 
 export function PerformanceHero({
   score,
+  scoreDelta = null,
+  animateFromScore = null,
   health,
   title,
   message,
@@ -283,6 +290,8 @@ export function PerformanceHero({
             <BoostScorePanel
               score={score}
               scorePct={scorePct}
+              scoreDelta={scoreDelta}
+              animateFromScore={animateFromScore}
               stroke={stroke}
               healthLabel={t(healthLabelKey[health])}
               recoverableLabel={
@@ -334,23 +343,68 @@ function MetricTile({
 function BoostScorePanel({
   score,
   scorePct,
+  scoreDelta,
+  animateFromScore,
   stroke,
   healthLabel,
   recoverableLabel
 }: {
   score: number | null
   scorePct: number
+  scoreDelta: number | null
+  animateFromScore: number | null
   stroke: string
   healthLabel: string
   recoverableLabel: string | null
 }): React.ReactElement {
   const { t } = useTranslation()
+  const [displayScore, setDisplayScore] = useState<number | null>(score)
+
+  useEffect(() => {
+    if (score == null) {
+      setDisplayScore(null)
+      return
+    }
+
+    const from =
+      animateFromScore != null && animateFromScore < score ? animateFromScore : score
+
+    if (from === score) {
+      setDisplayScore(score)
+      return
+    }
+
+    setDisplayScore(from)
+    const durationMs = 1100
+    const startedAt = performance.now()
+    let frame = 0
+
+    const tick = (now: number): void => {
+      const tProgress = Math.min(1, (now - startedAt) / durationMs)
+      const eased = 1 - (1 - tProgress) ** 3
+      const next = Math.round(from + (score - from) * eased)
+      setDisplayScore(next)
+      if (tProgress < 1) {
+        frame = requestAnimationFrame(tick)
+      } else {
+        setDisplayScore(score)
+      }
+    }
+
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [score, animateFromScore])
+
+  const shown = displayScore ?? score
+  const barPct = shown == null ? scorePct : Math.min(100, Math.max(0, shown))
+  const showDelta = scoreDelta != null && scoreDelta > 0
 
   return (
     <div
       className={cn(
         'relative w-full max-w-[14.5rem] rounded-2xl border border-border/60',
-        'bg-background/55 p-4 backdrop-blur-sm'
+        'bg-background/55 p-4 backdrop-blur-sm',
+        showDelta && 'ring-1 ring-success/25'
       )}
     >
       <div className="mb-3 flex items-center gap-2.5">
@@ -365,11 +419,16 @@ function BoostScorePanel({
         </div>
       </div>
 
-      <div className="flex items-end gap-1.5">
+      <div className="flex items-end gap-2">
         <span className="text-4xl font-semibold tabular-nums tracking-tight text-foreground">
-          {score == null ? '—' : score}
+          {shown == null ? '—' : shown}
         </span>
         <span className="mb-1.5 text-xs font-medium text-muted-foreground">/ 100</span>
+        {showDelta ? (
+          <span className="mb-1.5 inline-flex items-center rounded-md border border-success/30 bg-success/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-success animate-in fade-in-0 zoom-in-95 duration-300">
+            {t('performance.hero.scoreDelta', { delta: scoreDelta })}
+          </span>
+        ) : null}
       </div>
 
       <div
@@ -377,16 +436,20 @@ function BoostScorePanel({
         role="meter"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={score ?? undefined}
+        aria-valuenow={shown ?? undefined}
         aria-label={t('performance.hero.systemScore')}
       >
         <div
           className="h-full rounded-full transition-[width] duration-700 ease-out"
-          style={{ width: `${scorePct}%`, backgroundColor: stroke }}
+          style={{ width: `${barPct}%`, backgroundColor: stroke }}
         />
       </div>
 
-      {recoverableLabel ? (
+      {showDelta ? (
+        <p className="mt-3 text-[11px] leading-snug text-success">
+          {t('performance.hero.boostedHint', { delta: scoreDelta })}
+        </p>
+      ) : recoverableLabel ? (
         <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-snug text-muted-foreground">
           <Cpu className="mt-0.5 h-3 w-3 shrink-0 text-primary" aria-hidden="true" />
           {recoverableLabel}

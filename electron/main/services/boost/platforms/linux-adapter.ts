@@ -16,7 +16,8 @@ import type {
 import {
   classifyStartupImpact,
   isProtectedProcess,
-  runCommand
+  runCommand,
+  terminateUnixProcesses
 } from './exec-utils'
 import { createLogger } from '@main/utils/logger'
 import { cleanDirectoryContents } from '../fs-utils'
@@ -237,30 +238,22 @@ export class LinuxBoostAdapter implements PlatformBoostAdapter {
     pids: number[],
     signal?: AbortSignal
   ): Promise<PlatformTerminateResult> {
+    const allowed: number[] = []
     const failed: Array<{ pid: number; error: string }> = []
-    let terminated = 0
 
     for (const pid of pids) {
-      if (signal?.aborted) break
       if (isProtectedProcess(`pid-${pid}`, pid)) {
         failed.push({ pid, error: 'Protected process' })
         continue
       }
-      try {
-        await runCommand('kill', ['-TERM', String(pid)], { signal })
-        terminated += 1
-      } catch (err) {
-        failed.push({
-          pid,
-          error: err instanceof Error ? err.message : 'Failed to terminate'
-        })
-      }
+      allowed.push(pid)
     }
 
+    const result = await terminateUnixProcesses(allowed, signal)
     return {
-      terminated,
-      failed,
-      detail: `Sent TERM to ${terminated} process(es)`
+      terminated: result.terminated,
+      failed: [...failed, ...result.failed],
+      detail: result.detail
     }
   }
 }

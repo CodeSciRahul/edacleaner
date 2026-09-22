@@ -9,6 +9,7 @@ import type {
   CleanupResult,
   CleanupScanResult
 } from '@shared/interfaces'
+import { applyCleanupToSmartScanHistory } from '@/features/smart-scan/lib/scan-history'
 
 export const cleanupKeys = {
   scan: ['cleanup', 'scan'] as const
@@ -68,6 +69,11 @@ export function useRunCleanup() {
       void queryClient.invalidateQueries({ queryKey: cleanupKeys.scan })
       void queryClient.invalidateQueries({ queryKey: ['storage'] })
       void queryClient.invalidateQueries({ queryKey: ['boost'] })
+      // Reflect cleanup progress on last Smart Scan (Cleanup was stuck on "Review")
+      if (!payload.result.cancelled && payload.result.success) {
+        applyCleanupToSmartScanHistory(payload.result.bytesFreed)
+        window.dispatchEvent(new Event('eda-smart-scan-history-updated'))
+      }
     }
   })
 }

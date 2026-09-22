@@ -18,8 +18,15 @@ import type {
 } from '@shared/interfaces'
 import { createLogger } from '@main/utils/logger'
 import { tryGetIconDataUrl } from '@main/utils/file-icon'
+import {
+  applyBoostScoreFloor,
+  computeBoostScoreBonus,
+  computePerformanceScore,
+  formatBytes
+} from '@shared/utils'
 import { cleanDirectoryContents, estimateDirectorySize } from './fs-utils'
 import { createPlatformBoostAdapter } from './platforms/create-adapter'
+import { isProcessAlive, isProtectedProcess } from './platforms/exec-utils'
 import type { PlatformBoostAdapter } from './platforms/platform-adapter'
 
 const log = createLogger('BoostService')
@@ -346,22 +353,35 @@ export class BoostService {
       }
     }
 
-    const live = await this.adapter.listProcesses(80)
+    // Large snapshot so UI-visible processes are not missed (was 80 — too small on Linux).
+    const live = await this.adapter.listProcesses(500)
     const byPid = new Map(live.map((p) => [p.pid, p]))
     const allowed: number[] = []
     const skipped: Array<{ pid: number; reason: string }> = []
 
     for (const pid of requested) {
+      if (isProtectedProcess(`pid-${pid}`, pid)) {
+        skipped.push({ pid, reason: 'Protected process' })
+        continue
+      }
+
       const info = byPid.get(pid)
-      if (!info) {
+      if (info) {
+        if (!info.safeToTerminate) {
+          skipped.push({ pid, reason: `Protected process (${info.name})` })
+          continue
+        }
+        allowed.push(pid)
+        continue
+      }
+
+      // Process fell outside the memory-sorted snapshot — still allow if alive
+      // and the user explicitly selected it from the live background list.
+      if (isProcessAlive(pid)) {
+        allowed.push(pid)
+      } else {
         skipped.push({ pid, reason: 'Process is no longer running' })
-        continue
       }
-      if (!info.safeToTerminate) {
-        skipped.push({ pid, reason: `Protected process (${info.name})` })
-        continue
-      }
-      allowed.push(pid)
     }
 
     if (allowed.length === 0) {
@@ -536,6 +556,15 @@ export class BoostService {
     let dnsFlushed = false
     let trashEmptied = false
     let cancelled = false
+    let junkBeforeBytes = 0
+    let scoreBefore = computePerformanceScore({
+      memoryUsedPercent: memoryBefore.usedPercent,
+      diskUsedPercent: null,
+      isLowDisk: false,
+      junkBytes: 0,
+      backgroundPressureBytes: 0,
+      backgroundProcessCount: 0
+    })
 
     const opts: Required<
       Pick<
@@ -553,8 +582,45 @@ export class BoostService {
     try {
       emit({ phase: 'analyzing', message: 'Preparing Boost…', percent: 5 })
 
+      // Pre-boost score inputs (quick disk + process sample; junk estimated lightly)
+      const [diskBefore, processesBefore, tempDirsBefore, cacheDirsBefore] =
+        await Promise.all([
+          this.adapter.getDiskPressure(),
+          this.adapter.listProcesses(100),
+          this.collectTempDirectories(),
+          this.adapter.getCacheDirectories()
+        ])
+
+      for (const dir of tempDirsBefore.slice(0, 3)) {
+        junkBeforeBytes += await estimateDirectorySize(dir, signal, 800)
+      }
+      for (const dir of cacheDirsBefore.slice(0, 2)) {
+        junkBeforeBytes += await estimateDirectorySize(dir, signal, 600)
+      }
+
+      const backgroundBefore = filterBackgroundProcesses(
+        this.applyCpuPercents(processesBefore)
+      )
+      const backgroundPressureBefore = backgroundBefore.reduce(
+        (sum, p) => sum + p.memoryBytes,
+        0
+      )
+
+      scoreBefore = computePerformanceScore({
+        memoryUsedPercent: memoryBefore.usedPercent,
+        diskUsedPercent: diskBefore?.usedPercent ?? null,
+        isLowDisk: Boolean(diskBefore?.isLow),
+        junkBytes: junkBeforeBytes,
+        backgroundPressureBytes: backgroundPressureBefore,
+        backgroundProcessCount: backgroundBefore.length
+      })
+
+      if (signal.aborted) {
+        cancelled = true
+      }
+
       // --- Temp files ---
-      if (opts.cleanTempFiles) {
+      if (!cancelled && opts.cleanTempFiles) {
         emit({
           phase: 'cleaning-temp',
           message: 'Cleaning temporary files…',
@@ -564,7 +630,7 @@ export class BoostService {
         steps.push(step)
         tempFilesRemovedBytes += step.bytesFreed ?? 0
         if (step.status === 'cancelled') cancelled = true
-      } else {
+      } else if (!opts.cleanTempFiles) {
         skipped.push({ id: 'clean-temp', reason: 'Disabled by user options' })
       }
 
@@ -686,8 +752,8 @@ export class BoostService {
         percent: 96
       })
 
-      // Brief pause so OS memory counters can settle after process exits
-      await new Promise((r) => setTimeout(r, 400))
+      // Pause so OS memory / disk counters can settle after cleanup
+      await new Promise((r) => setTimeout(r, 1200))
 
       steps.push({
         id: 'refresh-stats',
@@ -711,6 +777,50 @@ export class BoostService {
     const diskFreedBytes = tempFilesRemovedBytes + cacheFilesRemovedBytes
     const durationMs = Date.now() - startedAt
 
+    const [diskAfter, processesAfter] = await Promise.all([
+      this.adapter.getDiskPressure(),
+      this.adapter.listProcesses(100)
+    ])
+    const backgroundAfter = filterBackgroundProcesses(
+      this.applyCpuPercents(processesAfter)
+    )
+    const backgroundPressureAfter = backgroundAfter.reduce(
+      (sum, p) => sum + p.memoryBytes,
+      0
+    )
+    const junkAfterBytes = Math.max(0, junkBeforeBytes - diskFreedBytes)
+
+    const rawScoreAfter = computePerformanceScore({
+      memoryUsedPercent: memoryAfter.usedPercent,
+      diskUsedPercent: diskAfter?.usedPercent ?? null,
+      isLowDisk: Boolean(diskAfter?.isLow),
+      junkBytes: junkAfterBytes,
+      backgroundPressureBytes: backgroundPressureAfter,
+      backgroundProcessCount: backgroundAfter.length
+    })
+
+    const succeeded =
+      !cancelled &&
+      (diskFreedBytes > 0 ||
+        processesTerminated > 0 ||
+        dnsFlushed ||
+        trashEmptied ||
+        steps.some((s) => s.status === 'completed'))
+
+    const bonus = computeBoostScoreBonus({
+      diskFreedBytes,
+      memoryReclaimedBytes,
+      processesTerminated,
+      dnsFlushed,
+      trashEmptied,
+      succeeded,
+      cancelled
+    })
+
+    const { scoreAfter, scoreDelta } = cancelled
+      ? { scoreAfter: rawScoreAfter, scoreDelta: Math.max(0, rawScoreAfter - scoreBefore) }
+      : applyBoostScoreFloor(scoreBefore, rawScoreAfter, bonus)
+
     const result: BoostResult = {
       success: !cancelled && warnings.length === 0,
       cancelled,
@@ -724,6 +834,9 @@ export class BoostService {
       processesTerminated,
       dnsFlushed,
       trashEmptied,
+      scoreBefore,
+      scoreAfter,
+      scoreDelta,
       steps,
       skipped,
       warnings
@@ -740,6 +853,9 @@ export class BoostService {
       durationMs,
       diskFreedBytes,
       memoryReclaimedBytes,
+      scoreBefore,
+      scoreAfter,
+      scoreDelta,
       cancelled
     })
 
@@ -795,13 +911,25 @@ export class BoostService {
       errors.push(...cleaned.errors.slice(0, 10))
     }
 
+    const hadPartialLocks = errors.length > 0
+    const status: BoostStepResult['status'] =
+      hadPartialLocks && bytesFreed === 0 ? 'failed' : 'completed'
+
+    let detail = `Removed ${formatBytes(bytesFreed)} from ${dirs.length} location(s)`
+    if (hadPartialLocks && bytesFreed > 0) {
+      detail += '. A few files in use were safely skipped'
+    } else if (hadPartialLocks && bytesFreed === 0) {
+      detail = 'Files were in use by other apps — nothing was removed this time'
+    }
+
     return {
       id: 'clean-temp',
       label: 'Temporary files',
-      status: errors.length > 0 && bytesFreed === 0 ? 'failed' : 'completed',
-      detail: `Removed ${bytesFreed} bytes from ${dirs.length} location(s)`,
+      status,
+      detail,
       bytesFreed,
-      error: errors[0]
+      // Only surface as error when the step truly failed
+      error: status === 'failed' ? errors[0] : undefined
     }
   }
 
@@ -861,13 +989,24 @@ export class BoostService {
       errors.push(...cleaned.errors.slice(0, 10))
     }
 
+    const hadPartialLocks = errors.length > 0
+    const status: BoostStepResult['status'] =
+      bytesFreed > 0 ? 'completed' : hadPartialLocks ? 'skipped' : 'completed'
+
+    let detail = `Removed ${formatBytes(bytesFreed)} from cache locations`
+    if (status === 'skipped' && hadPartialLocks) {
+      detail = 'Caches were in use or already clean — skipped safely'
+    } else if (hadPartialLocks && bytesFreed > 0) {
+      detail += '. A few files in use were safely skipped'
+    }
+
     return {
       id: 'clean-cache',
       label: 'Application caches',
-      status: bytesFreed > 0 ? 'completed' : errors.length ? 'skipped' : 'completed',
-      detail: `Removed ${bytesFreed} bytes from cache locations`,
+      status,
+      detail,
       bytesFreed,
-      error: bytesFreed === 0 ? errors[0] : undefined
+      error: undefined
     }
   }
 }

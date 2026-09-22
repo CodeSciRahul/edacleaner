@@ -961,6 +961,9 @@ export const en = {
   'performance.needsTitle': 'Needs a boost — score {{score}}',
   'performance.needsMsg':
     'Memory or disk pressure is high. Run Boost or manage background apps.',
+  'performance.boostedTitle': 'Boosted — score {{score}}',
+  'performance.boostedMsg':
+    'System score improved by +{{delta}}. Temp files, caches, and reclaimable memory were cleared.',
   'performance.startupTitle': 'Startup Apps',
   'performance.startupDesc': 'Apps that launch at sign-in',
   'performance.startupAction': 'Manage startup',
@@ -986,7 +989,10 @@ export const en = {
   'performance.hero.pressure': 'Under pressure',
   'performance.hero.score': 'Score',
   'performance.hero.systemScore': 'System score',
-  'performance.hero.scoreHint': 'Boost clears temps and reclaimable memory safely.',
+  'performance.hero.scoreHint':
+    'Score reflects memory, disk space, junk, and background pressure.',
+  'performance.hero.scoreDelta': '+{{delta}}',
+  'performance.hero.boostedHint': 'Boosted — score improved by {{delta}}.',
   'performance.hero.health': 'Performance health',
   'performance.hero.memory': 'Memory',
   'performance.hero.startup': 'Startup apps',
@@ -1017,6 +1023,8 @@ export const en = {
   'performance.boosting.badge': 'Performance boost',
   'performance.boosting.scanning': 'Running safe optimization steps…',
   'performance.boosting.working': 'Working on {{path}}…',
+  'performance.results.scoreGain': 'Score gain',
+  'performance.results.scoreChange': '{{before}} → {{after}}',
 
   'startupApps.title': 'Startup Applications',
   'startupApps.description': 'Control apps that launch when your PC starts.',

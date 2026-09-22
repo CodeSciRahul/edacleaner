@@ -1005,6 +1005,9 @@ export const fr: Record<TranslationKey, string> = {
   'performance.needsTitle': 'Besoin d’un boost — score {{score}}',
   'performance.needsMsg':
     'La pression mémoire ou disque est élevée. Lancez Boost ou gérez les apps en arrière-plan.',
+  'performance.boostedTitle': 'Boost effectué — score {{score}}',
+  'performance.boostedMsg':
+    'Score système amélioré de +{{delta}}. Temporaires, caches et mémoire récupérable ont été nettoyés.',
   'performance.startupTitle': 'Applications au démarrage',
   'performance.startupDesc': 'Apps qui se lancent à la connexion',
   'performance.startupAction': 'Gérer le démarrage',
@@ -1031,7 +1034,9 @@ export const fr: Record<TranslationKey, string> = {
   'performance.hero.score': 'Score',
   'performance.hero.systemScore': 'Score système',
   'performance.hero.scoreHint':
-    'Le Boost vide en toute sécurité les temporaires et la mémoire récupérable.',
+    'Le score reflète la mémoire, l’espace disque, les fichiers inutiles et la pression en arrière-plan.',
+  'performance.hero.scoreDelta': '+{{delta}}',
+  'performance.hero.boostedHint': 'Boost effectué — score amélioré de {{delta}}.',
   'performance.hero.health': 'Santé des performances',
   'performance.hero.memory': 'Mémoire',
   'performance.hero.startup': 'Apps au démarrage',
@@ -1065,6 +1070,8 @@ export const fr: Record<TranslationKey, string> = {
   'performance.boosting.badge': 'Boost performances',
   'performance.boosting.scanning': 'Exécution d’étapes d’optimisation sûres…',
   'performance.boosting.working': 'Traitement de {{path}}…',
+  'performance.results.scoreGain': 'Gain de score',
+  'performance.results.scoreChange': '{{before}} → {{after}}',
 
   'startupApps.title': 'Applications au démarrage',
   'startupApps.description': 'Contrôlez les apps qui se lancent au démarrage du PC.',

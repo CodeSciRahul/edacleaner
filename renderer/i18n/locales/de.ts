@@ -1000,6 +1000,9 @@ export const de: Record<TranslationKey, string> = {
   'performance.needsTitle': 'Braucht einen Boost — Score {{score}}',
   'performance.needsMsg':
     'Speicher- oder Festplattendruck ist hoch. Boost ausführen oder Hintergrund-Apps verwalten.',
+  'performance.boostedTitle': 'Geboostet — Score {{score}}',
+  'performance.boostedMsg':
+    'System-Score um +{{delta}} verbessert. Temp-Dateien, Caches und freigebbarer Speicher wurden bereinigt.',
   'performance.startupTitle': 'Autostart-Apps',
   'performance.startupDesc': 'Apps, die bei der Anmeldung starten',
   'performance.startupAction': 'Autostart verwalten',
@@ -1025,7 +1028,10 @@ export const de: Record<TranslationKey, string> = {
   'performance.hero.pressure': 'Unter Druck',
   'performance.hero.score': 'Score',
   'performance.hero.systemScore': 'System-Score',
-  'performance.hero.scoreHint': 'Boost leert Temp-Dateien und freigebbaren Speicher sicher.',
+  'performance.hero.scoreHint':
+    'Der Score spiegelt Speicher, Festplatte, Junk und Hintergrunddruck wider.',
+  'performance.hero.scoreDelta': '+{{delta}}',
+  'performance.hero.boostedHint': 'Geboostet — Score um {{delta}} verbessert.',
   'performance.hero.health': 'Leistungszustand',
   'performance.hero.memory': 'Speicher',
   'performance.hero.startup': 'Autostart-Apps',
@@ -1059,6 +1065,8 @@ export const de: Record<TranslationKey, string> = {
   'performance.boosting.badge': 'Leistungs-Boost',
   'performance.boosting.scanning': 'Sichere Optimierungsschritte werden ausgeführt…',
   'performance.boosting.working': 'Bearbeitung von {{path}}…',
+  'performance.results.scoreGain': 'Score-Gewinn',
+  'performance.results.scoreChange': '{{before}} → {{after}}',
 
   'startupApps.title': 'Autostart-Anwendungen',
   'startupApps.description': 'Steuern Sie Apps, die beim PC-Start laden.',

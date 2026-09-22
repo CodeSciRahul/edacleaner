@@ -3,6 +3,11 @@ import type { SmartScanAreaResult } from '@shared/interfaces'
 import { cleanupService } from '@main/services/cleanup'
 import type { SmartScanModule, SmartScanModuleContext } from './types'
 
+/** Residual junk below this still counts as healthy (temps regenerate quickly). */
+const CLEANUP_GOOD_MAX_BYTES = 64 * 1024 * 1024
+/** Above this → Optimize badge. */
+const CLEANUP_ISSUE_MIN_BYTES = 2 * 1024 * 1024 * 1024
+
 export const cleanupScanModule: SmartScanModule = {
   id: 'cleanup',
   label: 'Cleanup',
@@ -44,20 +49,19 @@ export const cleanupScanModule: SmartScanModule = {
       })
 
       const bytes = result.totalBytes
-      const hasWork = bytes > 0 || result.categories.some((c) => c.id === 'recycle' && c.available)
 
       let status: SmartScanAreaResult['status'] = 'good'
       let finding = 'Looking clean — no action needed'
 
-      if (bytes >= 2 * 1024 * 1024 * 1024) {
+      if (bytes >= CLEANUP_ISSUE_MIN_BYTES) {
         status = 'issue'
         finding = `${formatBytes(bytes)} ready to reclaim`
-      } else if (bytes > 0 || hasWork) {
+      } else if (bytes >= CLEANUP_GOOD_MAX_BYTES) {
         status = 'warning'
-        finding =
-          bytes > 0
-            ? `${formatBytes(bytes)} ready to reclaim`
-            : 'Trash can be emptied for a quick tidy-up'
+        finding = `${formatBytes(bytes)} ready to reclaim`
+      } else if (bytes > 0) {
+        // Tiny residual (locked temps, regenerating caches) — still healthy
+        finding = `Looking clean — only ${formatBytes(bytes)} of optional clutter`
       }
 
       return {

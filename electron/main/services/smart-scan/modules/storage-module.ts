@@ -100,7 +100,7 @@ export const storageScanModule: SmartScanModule = {
       } else if (largeBytes >= 2 * 1024 * 1024 * 1024) {
         status = 'warning'
         finding = `${formatBytes(largeBytes)} in large files`
-      } else if (duplicateBytes > 0) {
+      } else if (duplicateBytes >= 50 * 1024 * 1024) {
         status = 'warning'
         finding = `${formatBytes(duplicateBytes)} in duplicates`
       }

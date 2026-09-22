@@ -58,6 +58,23 @@ export function SmartScanPage(): React.ReactElement {
     setDidHydrateResult(true)
   }, [hydrated, history, didHydrateResult, restoreLastSmartScan])
 
+  // After Cleanup updates persisted history, refresh the on-screen result
+  useEffect(() => {
+    if (!hydrated || !restoreLastSmartScan || !history) return
+    if (!didHydrateResult) return
+    setResult((prev) => {
+      if (!prev) return history.lastResult
+      // Prefer newer patched history (cleanup progress) over stale in-memory result
+      if (history.lastResult.healthScore !== prev.healthScore) return history.lastResult
+      const prevCleanup = prev.areas.find((a) => a.id === 'cleanup')
+      const nextCleanup = history.lastResult.areas.find((a) => a.id === 'cleanup')
+      if (prevCleanup && nextCleanup && prevCleanup.status !== nextCleanup.status) {
+        return history.lastResult
+      }
+      return prev
+    })
+  }, [history, hydrated, didHydrateResult, restoreLastSmartScan])
+
   const scanned = Boolean(result) && !isScanning
 
   async function handleScan(): Promise<void> {
