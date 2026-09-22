@@ -59,7 +59,8 @@ export const IPC_CHANNELS = {
     FIND_LARGE_FILES: 'storage:find-large-files',
     FIND_DUPLICATES: 'storage:find-duplicates',
     REVEAL_IN_FOLDER: 'storage:reveal-in-folder',
-    DELETE_FILES: 'storage:delete-files'
+    DELETE_FILES: 'storage:delete-files',
+    DELETE_PROGRESS: 'storage:delete-progress'
   },
   BOOST: {
     ANALYZE: 'boost:analyze',

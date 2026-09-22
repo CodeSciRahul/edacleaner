@@ -300,7 +300,7 @@ export function registerStorageIpc(): void {
     }
   })
 
-  ipcMain.handle(IPC_CHANNELS.STORAGE.DELETE_FILES, async (_event, filePaths: string[]) => {
+  ipcMain.handle(IPC_CHANNELS.STORAGE.DELETE_FILES, async (event, filePaths: string[]) => {
     try {
       // Deleting from Large Files / Duplicates is a Pro capability.
       if (
@@ -309,7 +309,11 @@ export function registerStorageIpc(): void {
       ) {
         entitlementService.assertAccess('large_files')
       }
-      return success(await storageService.deleteFiles(filePaths))
+      return success(
+        await storageService.deleteFiles(filePaths, (progress) => {
+          event.sender.send(IPC_CHANNELS.STORAGE.DELETE_PROGRESS, progress)
+        })
+      )
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Failed to delete files')
     }

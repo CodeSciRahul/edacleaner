@@ -12,6 +12,7 @@ import type {
   DuplicateGroup,
   FindDuplicatesOptions,
   DeleteFilesResult,
+  DeleteFilesProgressEvent,
   BoostAnalysis,
   BoostOptions,
   BoostResult,
@@ -110,6 +111,7 @@ export interface StorageApi {
   findDuplicates: (options?: FindDuplicatesOptions) => Promise<DuplicateGroup[]>
   revealInFolder: (filePath: string) => Promise<void>
   deleteFiles: (filePaths: string[]) => Promise<DeleteFilesResult>
+  onDeleteProgress: (callback: (event: DeleteFilesProgressEvent) => void) => () => void
 }
 
 export interface BoostApi {

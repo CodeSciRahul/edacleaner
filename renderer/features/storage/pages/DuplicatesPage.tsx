@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import {
   AlertCircle,
+  Check,
   ClipboardCopy,
   Copy,
-  FolderOpen
+  FolderOpen,
+  Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -14,8 +16,10 @@ import { StorageFilterBar } from '@/features/storage/components/StorageFilterBar
 import { FileTypeIcon } from '@/features/storage/components/FileTypeIcon'
 import {
   useDeleteFiles,
+  useDeleteFilesProgress,
   useDuplicates,
-  useRevealInFolder
+  useRevealInFolder,
+  confirmMoveToTrash
 } from '@/features/storage/hooks/useStorageData'
 import { getFileCategory, type FileCategory } from '@/features/storage/lib/file-type'
 import { formatBytes } from '@shared/utils'
@@ -46,6 +50,12 @@ export function DuplicatesPage(): React.ReactElement {
   )
   const reveal = useRevealInFolder()
   const deleteFiles = useDeleteFiles()
+  const [pendingDeletePaths, setPendingDeletePaths] = useState<string[]>([])
+  const [omittedPaths, setOmittedPaths] = useState<string[]>([])
+  const [heldGroups, setHeldGroups] = useState<DuplicateGroup[]>([])
+  const rowsBusy = pendingDeletePaths.length > 0
+  const deleteProgress = useDeleteFilesProgress(rowsBusy)
+  const mutatePending = deleteFiles.isPending
 
   const SIZE_FILTERS = SIZE_FILTER_BYTES.map((f) => ({
     ...f,
@@ -66,30 +76,75 @@ export function DuplicatesPage(): React.ReactElement {
   const [sortKey, setSortKey] = useState<SortKey>('size')
   const [selected, setSelected] = useState<string[]>([])
   const [notice, setNotice] = useState<string | null>(null)
+  const [copiedPath, setCopiedPath] = useState<string | null>(null)
+
+  const deletingPath =
+    deleteProgress?.currentItem ?? (rowsBusy ? pendingDeletePaths[0] : undefined)
 
   const minBytes = SIZE_FILTER_BYTES.find((f) => f.id === sizeFilter)?.minBytes ?? 0
+  const omittedSet = useMemo(() => new Set(omittedPaths), [omittedPaths])
+  const pendingSet = useMemo(() => new Set(pendingDeletePaths), [pendingDeletePaths])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     const pathQ = pathFilter.trim().toLowerCase()
+    const groupKey = (g: DuplicateGroup): string => `${g.name}::${g.paths[0] ?? g.name}`
 
-    let list = groups.filter((group) => {
-      if (group.sizeBytes < minBytes) return false
-      if (group.copies < minCopies) return false
-      if (category !== 'all' && getFileCategory(group.name) !== category) return false
-      if (q && !group.name.toLowerCase().includes(q)) return false
-      if (pathQ && !group.paths.some((p) => p.toLowerCase().includes(pathQ))) return false
-      return true
-    })
+    let list = groups
+      .map((group) => {
+        const paths = group.paths.filter(
+          (p) => !omittedSet.has(p) || pendingSet.has(p)
+        )
+        return { ...group, paths, copies: paths.length }
+      })
+      .filter((group) => {
+        if (group.paths.length === 0) return false
+        if (group.sizeBytes < minBytes) return false
+        if (group.copies < minCopies && !group.paths.some((p) => pendingSet.has(p))) {
+          return false
+        }
+        if (category !== 'all' && getFileCategory(group.name) !== category) return false
+        if (q && !group.name.toLowerCase().includes(q)) return false
+        if (pathQ && !group.paths.some((p) => p.toLowerCase().includes(pathQ))) return false
+        return true
+      })
 
-    list = [...list].sort((a, b) => {
+    const byKey = new Map(list.map((g) => [groupKey(g), g]))
+    for (const held of heldGroups) {
+      const keep = held.paths.filter((p) => pendingSet.has(p))
+      if (keep.length === 0) continue
+      const key = groupKey(held)
+      const existing = byKey.get(key)
+      if (!existing) {
+        byKey.set(key, { ...held, paths: keep, copies: keep.length })
+      } else {
+        const merged = [...existing.paths]
+        for (const p of keep) {
+          if (!merged.includes(p)) merged.push(p)
+        }
+        byKey.set(key, { ...existing, paths: merged, copies: merged.length })
+      }
+    }
+
+    list = [...byKey.values()].sort((a, b) => {
       if (sortKey === 'name') return a.name.localeCompare(b.name)
       if (sortKey === 'copies') return b.copies - a.copies || a.name.localeCompare(b.name)
       return b.sizeBytes - a.sizeBytes || a.name.localeCompare(b.name)
     })
 
     return list
-  }, [groups, query, pathFilter, category, minBytes, minCopies, sortKey])
+  }, [
+    groups,
+    query,
+    pathFilter,
+    category,
+    minBytes,
+    minCopies,
+    sortKey,
+    omittedSet,
+    pendingSet,
+    heldGroups
+  ])
 
   const wasteBytes = filtered.reduce(
     (sum, g) => sum + g.sizeBytes * Math.max(0, g.copies - 1),
@@ -116,39 +171,71 @@ export function DuplicatesPage(): React.ReactElement {
   const copyPath = async (path: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(path)
-      setNotice('Path copied to clipboard.')
+      setCopiedPath(path)
+      window.setTimeout(() => {
+        setCopiedPath((current) => (current === path ? null : current))
+      }, 1800)
     } catch {
-      setNotice('Could not copy path.')
+      setNotice(t('storage.copy.failed'))
     }
+  }
+
+  const finishDeleteUi = async (deleted: string[]): Promise<void> => {
+    setPendingDeletePaths(deleted)
+    await refetch()
+    setOmittedPaths((prev) => [...new Set([...prev, ...deleted])])
+    setPendingDeletePaths([])
+    setHeldGroups([])
   }
 
   const handleDeleteSelected = async (): Promise<void> => {
     if (!access.guard()) return
     if (selected.length === 0) return
     setNotice(null)
-    const estimatedBytes = selected.reduce((sum, path) => {
+    const confirmed = await confirmMoveToTrash(selected.length)
+    if (!confirmed) return
+
+    const targets = selected.slice()
+    setPendingDeletePaths(targets)
+    setHeldGroups(groups.filter((g) => g.paths.some((p) => targets.includes(p))))
+
+    const estimatedBytes = targets.reduce((sum, path) => {
       const group = groups.find((g) => g.paths.includes(path))
       return sum + (group?.sizeBytes ?? 0)
     }, 0)
     const startedAt = Date.now()
-    const result = await deleteFiles.mutateAsync(selected)
-    if (result.canceled) return
-    if (result.deleted.length > 0) {
-      const freedBytes = result.deleted.reduce((sum, path) => {
-        const group = groups.find((g) => g.paths.includes(path))
-        return sum + (group?.sizeBytes ?? 0)
-      }, 0)
-      appendStorageDeleteActivity({
-        source: 'duplicates',
-        deletedCount: result.deleted.length,
-        failedCount: result.failed.length,
-        estimatedBytes: freedBytes || estimatedBytes,
-        durationMs: Date.now() - startedAt
-      })
-      setSelected((prev) => prev.filter((p) => !result.deleted.includes(p)))
-      setNotice(`Moved ${result.deleted.length} duplicate(s) to trash.`)
-    } else {
-      setNotice(result.failed[0]?.error ?? 'No files were deleted.')
+
+    try {
+      const result = await deleteFiles.mutateAsync(targets)
+      if (result.canceled) {
+        setPendingDeletePaths([])
+        setHeldGroups([])
+        return
+      }
+      if (result.deleted.length > 0) {
+        const freedBytes = result.deleted.reduce((sum, path) => {
+          const group = groups.find((g) => g.paths.includes(path))
+          return sum + (group?.sizeBytes ?? 0)
+        }, 0)
+        appendStorageDeleteActivity({
+          source: 'duplicates',
+          deletedCount: result.deleted.length,
+          failedCount: result.failed.length,
+          estimatedBytes: freedBytes || estimatedBytes,
+          durationMs: Date.now() - startedAt
+        })
+        setSelected((prev) => prev.filter((p) => !result.deleted.includes(p)))
+        setNotice(`Moved ${result.deleted.length} duplicate(s) to trash.`)
+        await finishDeleteUi(result.deleted)
+      } else {
+        setNotice(result.failed[0]?.error ?? 'No files were deleted.')
+        setPendingDeletePaths([])
+        setHeldGroups([])
+      }
+    } catch {
+      setPendingDeletePaths([])
+      setHeldGroups([])
+      setNotice('Delete failed. Try again.')
     }
   }
 
@@ -162,11 +249,12 @@ export function DuplicatesPage(): React.ReactElement {
           groupCount={filtered.length}
           wasteBytes={wasteBytes}
           selectedCount={selected.length}
-          selectDisabled={!access.allowed || filtered.length === 0}
-          clearDisabled={selected.length === 0}
-          deleteDisabled={selected.length === 0 || deleteFiles.isPending}
+          selectDisabled={!access.allowed || filtered.length === 0 || rowsBusy}
+          clearDisabled={selected.length === 0 || rowsBusy}
+          deleteDisabled={selected.length === 0 || rowsBusy}
           onRefresh={() => {
             setNotice(null)
+            setOmittedPaths([])
             void refetch()
           }}
           onSelectDuplicates={selectAllExceptKeep}
@@ -280,7 +368,11 @@ export function DuplicatesPage(): React.ReactElement {
                     key={`${group.name}-${group.paths[0]}`}
                     group={group}
                     selected={selected}
-                    busy={deleteFiles.isPending}
+                    copiedPath={copiedPath}
+                    deletingPath={deletingPath}
+                    pendingDeletePaths={pendingDeletePaths}
+                    mutatePending={mutatePending}
+                    actionsDisabled={rowsBusy}
                     onToggle={togglePath}
                     onReveal={(path) => reveal.mutate(path)}
                     onCopy={(path) => void copyPath(path)}
@@ -299,7 +391,11 @@ export function DuplicatesPage(): React.ReactElement {
 function DuplicateGroupCard({
   group,
   selected,
-  busy,
+  copiedPath,
+  deletingPath,
+  pendingDeletePaths,
+  mutatePending,
+  actionsDisabled,
   onToggle,
   onReveal,
   onCopy,
@@ -307,12 +403,17 @@ function DuplicateGroupCard({
 }: {
   group: DuplicateGroup
   selected: string[]
-  busy: boolean
+  copiedPath: string | null
+  deletingPath?: string
+  pendingDeletePaths: string[]
+  mutatePending: boolean
+  actionsDisabled: boolean
   onToggle: (path: string) => void
   onReveal: (path: string) => void
   onCopy: (path: string) => void
   keepLabel: string
 }): React.ReactElement {
+  const { t } = useTranslation()
   const waste = group.sizeBytes * Math.max(0, group.copies - 1)
 
   return (
@@ -338,6 +439,10 @@ function DuplicateGroupCard({
         {group.paths.map((path, index) => {
           const isKeep = index === 0
           const isSelected = selected.includes(path)
+          const copied = copiedPath === path
+          const inBatch = pendingDeletePaths.includes(path)
+          const deleting = inBatch && (!mutatePending || deletingPath === path)
+          const queued = inBatch && mutatePending && deletingPath !== path
           const name = path.split(/[/\\]/).pop() ?? path
 
           return (
@@ -345,14 +450,16 @@ function DuplicateGroupCard({
               key={path}
               className={cn(
                 'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/40',
-                isSelected && 'bg-primary/5'
+                isSelected && 'bg-primary/5',
+                deleting && 'bg-destructive/5 ring-1 ring-inset ring-destructive/20',
+                queued && 'opacity-60'
               )}
             >
               <input
                 type="checkbox"
                 className="rounded border-border"
                 checked={isSelected}
-                disabled={busy}
+                disabled={actionsDisabled}
                 onChange={() => onToggle(path)}
                 aria-label={`Select ${name}`}
               />
@@ -368,30 +475,62 @@ function DuplicateGroupCard({
                       Duplicate
                     </Badge>
                   )}
+                  {deleting ? (
+                    <Badge className="gap-1 border-0 bg-destructive/10 text-destructive text-[10px]">
+                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                      {t('storage.deleting.rowShort')}
+                    </Badge>
+                  ) : queued ? (
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                      {t('storage.deleting.queued')}
+                    </Badge>
+                  ) : null}
                 </div>
                 <p className="truncate text-xs text-muted-foreground" title={path}>
                   {path}
                 </p>
               </div>
               <div className="flex shrink-0 gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0"
-                  aria-label={`Reveal ${name}`}
-                  onClick={() => onReveal(path)}
-                >
-                  <FolderOpen className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0"
-                  aria-label={`Copy path for ${name}`}
-                  onClick={() => onCopy(path)}
-                >
-                  <ClipboardCopy className="h-4 w-4" />
-                </Button>
+                {deleting ? (
+                  <div
+                    className="flex h-8 items-center gap-1.5 px-1 text-xs font-medium text-destructive"
+                    aria-live="polite"
+                  >
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      aria-label={`Reveal ${name}`}
+                      disabled={actionsDisabled}
+                      onClick={() => onReveal(path)}
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={cn(
+                        'h-8 w-8 p-0 transition-colors',
+                        copied && 'bg-success/15 text-success hover:bg-success/20 hover:text-success'
+                      )}
+                      aria-label={
+                        copied ? t('storage.copy.copied') : `Copy path for ${name}`
+                      }
+                      disabled={actionsDisabled}
+                      onClick={() => onCopy(path)}
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+                      ) : (
+                        <ClipboardCopy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </>
+                )}
               </div>
             </li>
           )

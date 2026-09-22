@@ -13,6 +13,7 @@ import type {
   DuplicateGroup,
   FindDuplicatesOptions,
   DeleteFilesResult,
+  DeleteFilesProgressEvent,
   BoostAnalysis,
   BoostOptions,
   BoostResult,
@@ -158,7 +159,19 @@ const storageApi = {
   revealInFolder: (filePath: string) =>
     invoke<void>(IPC_CHANNELS.STORAGE.REVEAL_IN_FOLDER, filePath),
   deleteFiles: (filePaths: string[]) =>
-    invoke<DeleteFilesResult>(IPC_CHANNELS.STORAGE.DELETE_FILES, filePaths)
+    invoke<DeleteFilesResult>(IPC_CHANNELS.STORAGE.DELETE_FILES, filePaths),
+  onDeleteProgress: (callback: (event: DeleteFilesProgressEvent) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: DeleteFilesProgressEvent
+    ): void => {
+      callback(data)
+    }
+    ipcRenderer.on(IPC_CHANNELS.STORAGE.DELETE_PROGRESS, listener)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.STORAGE.DELETE_PROGRESS, listener)
+    }
+  }
 }
 
 const boostApi = {
