@@ -1,4 +1,5 @@
 import type { SmartScanAreaResult, SmartScanResult } from '@shared/interfaces'
+import { formatBytes } from '@shared/utils'
 import { useLanguageStore } from '@/i18n/language-store'
 
 const STORAGE_KEY = 'eda-cleaner-smart-scan-history'
@@ -143,6 +144,105 @@ export function saveSmartScanHistory(
     localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
   } catch {
     // Quota / private mode — still return in-memory record for this session
+  }
+
+  return record
+}
+
+const CLEANUP_GOOD_MAX_BYTES = 64 * 1024 * 1024
+const CLEANUP_ISSUE_MIN_BYTES = 2 * 1024 * 1024 * 1024
+
+function computeHealthFromAreas(areas: SmartScanAreaResult[]): number {
+  let score = 100
+  for (const area of areas) {
+    if (area.status === 'issue') score -= 18
+    else if (area.status === 'warning') score -= 8
+  }
+  return Math.max(28, Math.min(98, score))
+}
+
+/**
+ * After a successful Cleanup run, update the last Smart Scan so Cleanup
+ * no longer stuck on "Review" — same idea as Boost score progress.
+ */
+export function applyCleanupToSmartScanHistory(
+  bytesFreed: number
+): SmartScanPersistedRecord | null {
+  const previous = loadSmartScanHistory()
+  if (!previous) return null
+
+  const freed = Math.max(0, bytesFreed)
+  const cleanupBefore = previous.lastResult.areas.find((a) => a.id === 'cleanup')
+  const wasAttention = cleanupBefore != null && cleanupBefore.status !== 'good'
+
+  const areas = previous.lastResult.areas.map((area) => {
+    if (area.id !== 'cleanup') return area
+
+    const prevBytes = Math.max(0, area.reclaimableBytes ?? 0)
+    // If estimate was 0 (e.g. recycle-only) but user cleaned, treat as cleared
+    const nextBytes =
+      freed > 0 ? Math.max(0, prevBytes - freed) : wasAttention ? 0 : prevBytes
+
+    let status: SmartScanAreaResult['status'] = 'good'
+    let finding = 'Looking clean — cleanup applied'
+
+    if (nextBytes >= CLEANUP_ISSUE_MIN_BYTES) {
+      status = 'issue'
+      finding = `${formatBytes(nextBytes)} ready to reclaim`
+    } else if (nextBytes >= CLEANUP_GOOD_MAX_BYTES) {
+      status = 'warning'
+      finding = `${formatBytes(nextBytes)} ready to reclaim`
+    } else if (nextBytes > 0) {
+      finding = `Looking clean — only ${formatBytes(nextBytes)} of optional clutter`
+    }
+
+    return {
+      ...area,
+      status,
+      finding,
+      reclaimableBytes: nextBytes,
+      metricValue: formatBytes(nextBytes)
+    }
+  })
+
+  const healthScore = computeHealthFromAreas(areas)
+  const areasNeedingAttention = areas.filter((a) => a.status !== 'good').length
+  const totalReclaimableBytes = areas.reduce(
+    (sum, a) => sum + (a.reclaimableBytes ?? 0),
+    0
+  )
+
+  const updatedResult: SmartScanResult = {
+    ...previous.lastResult,
+    areas,
+    healthScore,
+    areasNeedingAttention,
+    totalReclaimableBytes,
+    summaryTitle:
+      areasNeedingAttention === 0
+        ? 'System is healthy'
+        : previous.lastResult.summaryTitle,
+    summaryMessage:
+      areasNeedingAttention === 0
+        ? 'Cleanup applied — your PC is looking cleaner.'
+        : previous.lastResult.summaryMessage
+  }
+
+  const issuesResolvedDelta = Math.max(0, previous.issuesFound - areasNeedingAttention)
+
+  const record: SmartScanPersistedRecord = {
+    ...previous,
+    lastResult: normalizeResult(updatedResult),
+    issuesFound: areasNeedingAttention,
+    issuesResolved: previous.issuesResolved + issuesResolvedDelta,
+    storageReclaimedBytes: previous.storageReclaimedBytes + freed,
+    healthScore
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
+  } catch {
+    // ignore persistence errors
   }
 
   return record

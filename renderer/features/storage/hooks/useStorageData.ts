@@ -1,6 +1,11 @@
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { electronService } from '@/services/electron-service'
-import type { FindDuplicatesOptions, FindLargeFilesOptions } from '@shared/interfaces'
+import type {
+  DeleteFilesProgressEvent,
+  FindDuplicatesOptions,
+  FindLargeFilesOptions
+} from '@shared/interfaces'
 
 export const storageKeys = {
   drives: ['storage', 'drives'] as const,
@@ -71,31 +76,49 @@ export function useRevealInFolder() {
   })
 }
 
-export function useDeleteFiles() {
-  const queryClient = useQueryClient()
+/** Confirm trash move before starting delete (keeps loader off during dialog). */
+export async function confirmMoveToTrash(fileCount: number): Promise<boolean> {
+  const trashName =
+    (await electronService.app().getPlatform()) === 'win32' ? 'Recycle Bin' : 'Trash'
+  const confirmed = await electronService.dialog().message({
+    type: 'warning',
+    title: `Move to ${trashName}`,
+    message: `Move ${fileCount} item(s) to the ${trashName}?`,
+    detail: `You can restore them from the ${trashName} later.`,
+    buttons: ['Cancel', `Move to ${trashName}`]
+  })
+  return confirmed.response === 1
+}
 
+export function useDeleteFilesProgress(active: boolean) {
+  const [progress, setProgress] = useState<DeleteFilesProgressEvent | null>(null)
+
+  useEffect(() => {
+    if (!active) {
+      setProgress(null)
+      return
+    }
+
+    const unsubscribe = electronService.storage().onDeleteProgress((event) => {
+      setProgress(event)
+    })
+
+    return () => {
+      unsubscribe()
+    }
+  }, [active])
+
+  return progress
+}
+
+export function useDeleteFiles() {
   return useMutation({
     mutationFn: async (filePaths: string[]) => {
-      const trashName =
-        (await electronService.app().getPlatform()) === 'win32' ? 'Recycle Bin' : 'Trash'
-      const confirmed = await electronService.dialog().message({
-        type: 'warning',
-        title: `Move to ${trashName}`,
-        message: `Move ${filePaths.length} item(s) to the ${trashName}?`,
-        detail: `You can restore them from the ${trashName} later.`,
-        buttons: ['Cancel', `Move to ${trashName}`]
-      })
-
-      if (confirmed.response !== 1) {
+      if (filePaths.length === 0) {
         return { deleted: [] as string[], failed: [], canceled: true as const }
       }
-
       const result = await electronService.storage().deleteFiles(filePaths)
       return { ...result, canceled: false as const }
-    },
-    onSuccess: (result) => {
-      if (result.canceled || result.deleted.length === 0) return
-      void queryClient.invalidateQueries({ queryKey: ['storage'] })
     }
   })
 }

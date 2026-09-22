@@ -16,6 +16,12 @@ export function useSmartScanHistory() {
   useEffect(() => {
     setHistory(loadSmartScanHistory())
     setHydrated(true)
+
+    const onPatched = (): void => {
+      setHistory(loadSmartScanHistory())
+    }
+    window.addEventListener('eda-smart-scan-history-updated', onPatched)
+    return () => window.removeEventListener('eda-smart-scan-history-updated', onPatched)
   }, [])
 
   const persistResult = useCallback((result: SmartScanResult) => {

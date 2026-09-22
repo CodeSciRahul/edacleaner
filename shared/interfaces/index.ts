@@ -131,6 +131,18 @@ export interface DeleteFilesResult {
   failed: Array<{ path: string; error: string }>
 }
 
+/** Progress while moving large / duplicate files to trash. */
+export interface DeleteFilesProgressEvent {
+  phase: 'deleting' | 'finalizing'
+  message: string
+  percent: number
+  currentItem?: string
+  /** 1-based index of the file currently being deleted */
+  currentIndex: number
+  total: number
+  deletedSoFar: number
+}
+
 /** Safe Boost optimization identifiers */
 export type BoostOperationId =
   | 'clean-temp'
@@ -239,6 +251,12 @@ export interface BoostResult {
   processesTerminated: number
   dnsFlushed: boolean
   trashEmptied: boolean
+  /** Composite system score immediately before Boost ran. */
+  scoreBefore: number
+  /** Display score after Boost (never below scoreBefore on success). */
+  scoreAfter: number
+  /** scoreAfter − scoreBefore (0 when cancelled / no gain). */
+  scoreDelta: number
   steps: BoostStepResult[]
   skipped: BoostSkippedOp[]
   warnings: string[]

@@ -8,6 +8,19 @@ import {
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
 
+/** Native select styles that stay readable in dark mode (Electron / Windows). */
+export const storageFilterSelectClassName = cn(
+  'h-8 min-w-[4.5rem] max-w-[11rem] cursor-pointer rounded-md border border-border',
+  'bg-muted px-2 text-sm font-medium text-foreground outline-none',
+  'focus-visible:ring-2 focus-visible:ring-ring',
+  '[color-scheme:light] dark:[color-scheme:dark]',
+  '[&>option]:bg-popover [&>option]:text-popover-foreground'
+)
+
+export const storageFilterSelectWrapClassName = cn(
+  'flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3'
+)
+
 const FILE_CATEGORY_KEYS: Record<FileCategory, TranslationKey> = {
   videos: 'storage.fileType.videos',
   images: 'storage.fileType.images',
@@ -71,10 +84,12 @@ export function StorageFilterBar({
           className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring lg:max-w-xs"
           aria-label={t('storage.filter.path')}
         />
-        <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-          <span className="shrink-0">{t('storage.filter.sort')}</span>
+        <label className={storageFilterSelectWrapClassName}>
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">
+            {t('storage.filter.sort')}
+          </span>
           <select
-            className="bg-transparent text-sm text-foreground outline-none"
+            className={storageFilterSelectClassName}
             value={sortKey}
             onChange={(e) => onSortKeyChange(e.target.value)}
             aria-label={t('storage.filter.sort')}

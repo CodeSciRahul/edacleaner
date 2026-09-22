@@ -849,6 +849,18 @@ export const fr: Record<TranslationKey, string> = {
   'storage.analyzing.step.usage': 'Utilisation disque',
   'storage.analyzing.step.largeFiles': 'Gros fichiers',
   'storage.analyzing.step.duplicates': 'Doublons',
+  'storage.deleting.title': 'Déplacement vers la corbeille…',
+  'storage.deleting.message': 'Déplacement sécurisé des fichiers — restauration possible plus tard.',
+  'storage.deleting.badge': 'Suppression',
+  'storage.deleting.preparing': 'Préparation des fichiers…',
+  'storage.deleting.working': 'Suppression de {{name}}…',
+  'storage.deleting.count': 'Fichier {{current}} sur {{total}} · {{done}} déplacé(s)',
+  'storage.deleting.hint': 'Veuillez patienter — ne fermez pas l’appli',
+  'storage.deleting.row': 'Vers la corbeille…',
+  'storage.deleting.rowShort': 'Suppression…',
+  'storage.deleting.queued': 'En attente…',
+  'storage.copy.copied': 'Copié',
+  'storage.copy.failed': 'Impossible de copier le chemin.',
   'storage.drivesError': 'Impossible de charger les disques',
   'storage.localDisks': 'Disques locaux',
   'storage.localDisksHint':
@@ -1005,6 +1017,9 @@ export const fr: Record<TranslationKey, string> = {
   'performance.needsTitle': 'Besoin d’un boost — score {{score}}',
   'performance.needsMsg':
     'La pression mémoire ou disque est élevée. Lancez Boost ou gérez les apps en arrière-plan.',
+  'performance.boostedTitle': 'Boost effectué — score {{score}}',
+  'performance.boostedMsg':
+    'Score système amélioré de +{{delta}}. Temporaires, caches et mémoire récupérable ont été nettoyés.',
   'performance.startupTitle': 'Applications au démarrage',
   'performance.startupDesc': 'Apps qui se lancent à la connexion',
   'performance.startupAction': 'Gérer le démarrage',
@@ -1031,7 +1046,9 @@ export const fr: Record<TranslationKey, string> = {
   'performance.hero.score': 'Score',
   'performance.hero.systemScore': 'Score système',
   'performance.hero.scoreHint':
-    'Le Boost vide en toute sécurité les temporaires et la mémoire récupérable.',
+    'Le score reflète la mémoire, l’espace disque, les fichiers inutiles et la pression en arrière-plan.',
+  'performance.hero.scoreDelta': '+{{delta}}',
+  'performance.hero.boostedHint': 'Boost effectué — score amélioré de {{delta}}.',
   'performance.hero.health': 'Santé des performances',
   'performance.hero.memory': 'Mémoire',
   'performance.hero.startup': 'Apps au démarrage',
@@ -1065,6 +1082,8 @@ export const fr: Record<TranslationKey, string> = {
   'performance.boosting.badge': 'Boost performances',
   'performance.boosting.scanning': 'Exécution d’étapes d’optimisation sûres…',
   'performance.boosting.working': 'Traitement de {{path}}…',
+  'performance.results.scoreGain': 'Gain de score',
+  'performance.results.scoreChange': '{{before}} → {{after}}',
 
   'startupApps.title': 'Applications au démarrage',
   'startupApps.description': 'Contrôlez les apps qui se lancent au démarrage du PC.',

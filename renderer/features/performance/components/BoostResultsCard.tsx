@@ -1,11 +1,13 @@
 import {
   CheckCircle2,
   Clock,
+  Gauge,
   HardDrive,
   MemoryStick,
   MinusCircle,
   OctagonX,
   SkipForward,
+  TrendingUp,
   XCircle,
   Zap
 } from 'lucide-react'
@@ -13,6 +15,7 @@ import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/utils/cn'
 import { formatBytes } from '@shared/utils'
 import type { BoostResult, BoostStepResult, BoostStepStatus } from '@shared/interfaces'
+import { useTranslation } from '@/i18n/useTranslation'
 
 interface BoostResultsCardProps {
   result: BoostResult
@@ -86,7 +89,10 @@ function outcomeFor(result: BoostResult): {
   if (failed > 0 && completed > 0) {
     return {
       title: 'Boost finished with issues',
-      message: `${completed} step(s) completed · ${failed} needed attention`,
+      message:
+        result.scoreDelta > 0
+          ? `Score ${result.scoreBefore} → ${result.scoreAfter} (+${result.scoreDelta}). ${completed} step(s) completed · ${failed} needed attention.`
+          : `${completed} step(s) completed · ${failed} needed attention`,
       tone: 'border-warning/30 bg-warning/10',
       Icon: OctagonX
     }
@@ -101,6 +107,15 @@ function outcomeFor(result: BoostResult): {
     }
   }
 
+  if (result.scoreDelta > 0) {
+    return {
+      title: 'Boost completed',
+      message: `Score ${result.scoreBefore} → ${result.scoreAfter} (+${result.scoreDelta}) in ${(result.durationMs / 1000).toFixed(1)}s.`,
+      tone: 'border-success/30 bg-success/10',
+      Icon: TrendingUp
+    }
+  }
+
   return {
     title: 'Boost completed',
     message: `Finished in ${(result.durationMs / 1000).toFixed(1)}s — resources reclaimed where possible.`,
@@ -109,33 +124,59 @@ function outcomeFor(result: BoostResult): {
   }
 }
 
-function friendlyError(error: string): string {
+function isExpectedCleanupNoise(error: string): boolean {
+  const lower = error.toLowerCase()
+  return (
+    lower.includes('eperm') ||
+    lower.includes('operation not permitted') ||
+    lower.includes('ebusy') ||
+    lower.includes('resource busy') ||
+    lower.includes('access is denied') ||
+    lower.includes('eacces') ||
+    lower.includes('ebadf') ||
+    lower.includes('locked') ||
+    lower.includes('in use')
+  )
+}
+
+function stepNote(error: string): { text: string; soft: boolean } {
   const lower = error.toLowerCase()
   if (lower.includes('eperm') || lower.includes('operation not permitted')) {
-    return 'Some files were locked by another app and could not be removed.'
+    return {
+      text: 'A few files were in use by other apps and were safely skipped — that is normal.',
+      soft: true
+    }
   }
-  if (lower.includes('ebusy') || lower.includes('resource busy')) {
-    return 'Some files were in use and skipped.'
+  if (lower.includes('ebusy') || lower.includes('resource busy') || lower.includes('locked')) {
+    return {
+      text: 'Some files were busy, so they were left alone for next time.',
+      soft: true
+    }
   }
   if (lower.includes('access is denied') || lower.includes('eacces')) {
-    return 'Permission was denied for some files.'
+    return {
+      text: 'A few protected files were skipped to keep your system safe.',
+      soft: true
+    }
   }
   if (error.length > 120) {
-    return `${error.slice(0, 117).trimEnd()}…`
+    return { text: `${error.slice(0, 117).trimEnd()}…`, soft: isExpectedCleanupNoise(error) }
   }
-  return error
+  return { text: error, soft: isExpectedCleanupNoise(error) }
 }
 
 function stepDetail(step: BoostStepResult): string | undefined {
-  if (step.detail && step.detail.length > 140) {
-    return `${step.detail.slice(0, 137).trimEnd()}…`
+  if (step.detail && step.detail.length > 160) {
+    return `${step.detail.slice(0, 157).trimEnd()}…`
   }
   return step.detail
 }
 
 export function BoostResultsCard({ result }: BoostResultsCardProps): React.ReactElement {
+  const { t } = useTranslation()
   const outcome = outcomeFor(result)
   const OutcomeIcon = outcome.Icon
+  const showScoreGain = !result.cancelled && result.scoreDelta > 0
 
   return (
     <section
@@ -152,7 +193,23 @@ export function BoostResultsCard({ result }: BoostResultsCardProps): React.React
         </div>
       </div>
 
-      <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-5">
+        <ResultStat
+          icon={Gauge}
+          label={t('performance.results.scoreGain')}
+          value={
+            showScoreGain
+              ? t('performance.results.scoreChange', {
+                  before: result.scoreBefore,
+                  after: result.scoreAfter
+                })
+              : result.cancelled
+                ? '—'
+                : `${result.scoreAfter}`
+          }
+          accent="text-success"
+          emphasize={showScoreGain}
+        />
         <ResultStat
           icon={HardDrive}
           label="Disk freed"
@@ -216,11 +273,13 @@ export function BoostResultsCard({ result }: BoostResultsCardProps): React.React
                   {detail ? (
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{detail}</p>
                   ) : null}
-                  {step.error ? (
-                    <p className="mt-2 rounded-lg border border-destructive/20 bg-destructive/5 px-2.5 py-1.5 text-xs leading-relaxed text-destructive/90">
-                      {friendlyError(step.error)}
-                    </p>
-                  ) : null}
+                  {step.error
+                    ? (() => {
+                        const note = stepNote(step.error)
+                        const soft = step.status !== 'failed' || note.soft
+                        return <StepMessage text={note.text} soft={soft} />
+                      })()
+                    : null}
                 </div>
               </li>
             )
@@ -231,19 +290,41 @@ export function BoostResultsCard({ result }: BoostResultsCardProps): React.React
   )
 }
 
+function StepMessage({ text, soft }: { text: string; soft: boolean }): React.ReactElement {
+  return (
+    <p
+      className={cn(
+        'mt-2 rounded-lg border px-2.5 py-1.5 text-xs leading-relaxed',
+        soft
+          ? 'border-border/80 bg-muted/40 text-muted-foreground'
+          : 'border-destructive/20 bg-destructive/5 text-destructive/90'
+      )}
+    >
+      {text}
+    </p>
+  )
+}
+
 function ResultStat({
   icon: Icon,
   label,
   value,
-  accent
+  accent,
+  emphasize = false
 }: {
   icon: typeof HardDrive
   label: string
   value: string
   accent: string
+  emphasize?: boolean
 }): React.ReactElement {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/25 px-3.5 py-3">
+    <div
+      className={cn(
+        'flex items-center gap-3 rounded-xl border px-3.5 py-3',
+        emphasize ? 'border-success/30 bg-success/10' : 'border-border bg-muted/25'
+      )}
+    >
       <div
         className={cn(
           'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-card border border-border',

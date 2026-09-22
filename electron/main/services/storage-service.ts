@@ -6,6 +6,7 @@ import { basename, join, normalize, resolve, sep } from 'path'
 import { fdir } from 'fdir'
 import checkDiskSpaceImport from 'check-disk-space'
 import type {
+  DeleteFilesProgressEvent,
   DeleteFilesResult,
   DriveInfo,
   DuplicateGroup,
@@ -609,11 +610,33 @@ export class StorageService {
     shell.showItemInFolder(filePath)
   }
 
-  async deleteFiles(filePaths: string[]): Promise<DeleteFilesResult> {
+  async deleteFiles(
+    filePaths: string[],
+    onProgress?: (event: DeleteFilesProgressEvent) => void
+  ): Promise<DeleteFilesResult> {
     const deleted: string[] = []
     const failed: Array<{ path: string; error: string }> = []
+    const uniquePaths = [...new Set(filePaths.filter((p) => typeof p === 'string' && p.length > 0))]
+    const total = uniquePaths.length
 
-    for (const filePath of filePaths) {
+    for (let i = 0; i < uniquePaths.length; i++) {
+      const filePath = uniquePaths[i]
+      const currentIndex = i + 1
+      const percent = Math.min(96, Math.round((i / Math.max(total, 1)) * 100))
+
+      onProgress?.({
+        phase: 'deleting',
+        message:
+          total === 1
+            ? 'Moving file to trash…'
+            : `Moving file ${currentIndex} of ${total} to trash…`,
+        percent,
+        currentItem: filePath,
+        currentIndex,
+        total,
+        deletedSoFar: deleted.length
+      })
+
       try {
         await shell.trashItem(filePath)
         deleted.push(filePath)
@@ -624,6 +647,18 @@ export class StorageService {
         })
       }
     }
+
+    onProgress?.({
+      phase: 'finalizing',
+      message:
+        deleted.length > 0
+          ? `Moved ${deleted.length} item(s) to trash`
+          : 'No files were moved',
+      percent: 100,
+      currentIndex: total,
+      total,
+      deletedSoFar: deleted.length
+    })
 
     return { deleted, failed }
   }

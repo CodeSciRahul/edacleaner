@@ -95,3 +95,125 @@ export function classifyStartupImpact(name: string): 'high' | 'medium' | 'low' |
   if (medium.some((k) => lower.includes(k))) return 'medium'
   return 'unknown'
 }
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** True when the OS still has a live process for this PID. */
+export function isProcessAlive(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return false
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException | undefined)?.code
+    // EPERM means it exists but we cannot signal it
+    return code === 'EPERM'
+  }
+}
+
+function errnoCode(err: unknown): string | undefined {
+  if (err && typeof err === 'object' && 'code' in err) {
+    const code = (err as NodeJS.ErrnoException).code
+    return typeof code === 'string' ? code : undefined
+  }
+  return undefined
+}
+
+/**
+ * Stop Unix processes with Node signals (no shell `kill` binary).
+ * Sends SIGTERM, then escalates to SIGKILL if the process is still alive.
+ */
+export async function terminateUnixProcesses(
+  pids: number[],
+  signal?: AbortSignal
+): Promise<{
+  terminated: number
+  failed: Array<{ pid: number; error: string }>
+  detail: string
+}> {
+  const failed: Array<{ pid: number; error: string }> = []
+  let terminated = 0
+
+  for (const pid of pids) {
+    if (signal?.aborted) break
+
+    if (pid === process.pid || pid <= 1) {
+      failed.push({ pid, error: 'Protected process' })
+      continue
+    }
+
+    if (!isProcessAlive(pid)) {
+      // Already gone — count as success for the user action
+      terminated += 1
+      continue
+    }
+
+    try {
+      process.kill(pid, 'SIGTERM')
+    } catch (err) {
+      const code = errnoCode(err)
+      if (code === 'ESRCH') {
+        terminated += 1
+        continue
+      }
+      if (code === 'EPERM') {
+        failed.push({ pid, error: 'Permission denied' })
+        continue
+      }
+      failed.push({
+        pid,
+        error: err instanceof Error ? err.message : 'Failed to signal process'
+      })
+      continue
+    }
+
+    await sleep(450)
+    if (signal?.aborted) break
+
+    if (!isProcessAlive(pid)) {
+      terminated += 1
+      continue
+    }
+
+    // Escalate — many desktop apps ignore SIGTERM
+    try {
+      process.kill(pid, 'SIGKILL')
+    } catch (err) {
+      const code = errnoCode(err)
+      if (code === 'ESRCH') {
+        terminated += 1
+        continue
+      }
+      if (code === 'EPERM') {
+        failed.push({ pid, error: 'Permission denied' })
+        continue
+      }
+      failed.push({
+        pid,
+        error: err instanceof Error ? err.message : 'Failed to force-stop process'
+      })
+      continue
+    }
+
+    await sleep(250)
+
+    if (!isProcessAlive(pid)) {
+      terminated += 1
+    } else {
+      failed.push({ pid, error: 'Process did not exit after SIGKILL' })
+    }
+  }
+
+  return {
+    terminated,
+    failed,
+    detail:
+      terminated > 0
+        ? `Stopped ${terminated} process(es)`
+        : failed.length > 0
+          ? 'Could not stop the selected process(es)'
+          : 'No processes were stopped'
+  }
+}
