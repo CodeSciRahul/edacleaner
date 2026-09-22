@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/Badge'
 import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
 import { DuplicatesHero } from '@/features/storage/components/DuplicatesHero'
 import { StorageSubnav } from '@/features/storage/components/StorageSubnav'
-import { StorageFilterBar } from '@/features/storage/components/StorageFilterBar'
+import { StorageFilterBar, storageFilterSelectClassName, storageFilterSelectWrapClassName } from '@/features/storage/components/StorageFilterBar'
 import { FileTypeIcon } from '@/features/storage/components/FileTypeIcon'
 import {
   useDeleteFiles,
@@ -290,10 +290,12 @@ export function DuplicatesPage(): React.ReactElement {
               sortOptions={SORT_OPTIONS}
               onSortKeyChange={(v) => setSortKey(v as SortKey)}
             >
-              <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-                <span className="shrink-0">{t('duplicates.sortSize')}</span>
+              <label className={storageFilterSelectWrapClassName}>
+                <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                  {t('duplicates.sortSize')}
+                </span>
                 <select
-                  className="bg-transparent text-sm text-foreground outline-none"
+                  className={storageFilterSelectClassName}
                   value={sizeFilter}
                   onChange={(e) => setSizeFilter(e.target.value as SizeFilter)}
                   aria-label="Minimum file size"
@@ -305,10 +307,12 @@ export function DuplicatesPage(): React.ReactElement {
                   ))}
                 </select>
               </label>
-              <label className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-muted-foreground">
-                <span className="shrink-0">{t('duplicates.sortCopies')}</span>
+              <label className={storageFilterSelectWrapClassName}>
+                <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                  {t('duplicates.sortCopies')}
+                </span>
                 <select
-                  className="bg-transparent text-sm text-foreground outline-none"
+                  className={storageFilterSelectClassName}
                   value={String(minCopies)}
                   onChange={(e) => setMinCopies(Number(e.target.value))}
                   aria-label="Minimum duplicate copies"
