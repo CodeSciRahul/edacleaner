@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import {
-  Bell,
   Languages,
   Palette,
   PanelLeftClose,
@@ -49,7 +48,6 @@ export function SettingsPage(): React.ReactElement {
   const autoSelectSafeCategories = useSettingsStore((s) => s.autoSelectSafeCategories)
   const restoreLastSmartScan = useSettingsStore((s) => s.restoreLastSmartScan)
   const reduceMotion = useSettingsStore((s) => s.reduceMotion)
-  const showCompletionFeedback = useSettingsStore((s) => s.showCompletionFeedback)
   const setSetting = useSettingsStore((s) => s.setSetting)
   const resetSettings = useSettingsStore((s) => s.resetSettings)
 
@@ -190,21 +188,6 @@ export function SettingsPage(): React.ReactElement {
                   onCheckedChange={(checked) => setSetting('restoreLastSmartScan', checked)}
                 />
               </div>
-            </SettingsSection>
-          ) : null}
-
-          {activeCategory === 'notifications' ? (
-            <SettingsSection
-              icon={Bell}
-              title={t('settings.notifications.title')}
-              description={t('settings.notifications.description')}
-            >
-              <SettingsToggleRow
-                title={t('settings.notifications.completion')}
-                description={t('settings.notifications.completionDesc')}
-                checked={showCompletionFeedback}
-                onCheckedChange={(checked) => setSetting('showCompletionFeedback', checked)}
-              />
             </SettingsSection>
           ) : null}
 

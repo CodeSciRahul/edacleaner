@@ -674,7 +674,7 @@ export interface AuthSessionChangedEvent {
 export interface DeepLinkEvent {
   url: string
   path: string
-  action: 'checkout-success' | 'checkout-cancel' | 'unknown'
+  action: 'checkout-success' | 'checkout-cancel' | 'billing-portal-return' | 'unknown'
   sessionId: string | null
   receivedAt: number
 }

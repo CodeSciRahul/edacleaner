@@ -301,7 +301,7 @@ export const de: Record<TranslationKey, string> = {
   'settings.hero.badge': 'Ihr Arbeitsbereich',
   'settings.hero.title': 'Machen Sie EdaCleaner zu Ihrem',
   'settings.hero.message':
-    'Passen Sie Design, Sprache, Bereinigungsverhalten, Benachrichtigungen, Tarif und Konto an einem Ort an.',
+    'Passen Sie Design, Sprache, Bereinigungsverhalten, Tarif und Konto an einem Ort an.',
   'settings.hero.section': 'Bereich',
   'settings.hero.browse': 'Kategorien',
   'settings.hero.statusHint':
@@ -1429,5 +1429,22 @@ export const de: Record<TranslationKey, string> = {
   'entitlements.benefit.premiumSuite': 'Alles aus Pro plus die Premium-Leistungs-Suite',
   'entitlements.teaser.title': 'Nur Vorschau',
   'entitlements.teaser.body':
-    'Upgraden Sie auf {{plan}}, um die volle Liste freizuschalten und zu handeln.'
+    'Upgraden Sie auf {{plan}}, um die volle Liste freizuschalten und zu handeln.',
+
+  'subscription.expired.artAlt':
+    'Illustration eines PCs mit Restmülldateien nach Ablauf des EDA-Cleaner-Schutzes',
+  'subscription.expired.title.trial': 'Testphase abgelaufen',
+  'subscription.expired.title.subscription': 'Abonnement abgelaufen',
+  'subscription.expired.subtitle': 'Pro- und Premium-Tools sind gesperrt',
+  'subscription.expired.purchase': 'Kaufen',
+  'subscription.expired.activate': 'Aktivieren',
+  'subscription.expired.later': 'Vielleicht später',
+  'subscription.expired.statsSince': 'Letzte Aktivität {{date}}',
+  'subscription.expired.statsEmpty':
+    'Noch keine Historie — Werte erscheinen nach der nächsten Bereinigung',
+  'subscription.expired.stat.files': 'Bereinigte Dateien',
+  'subscription.expired.stat.space': 'Freigegebener Speicher',
+  'subscription.expired.stat.boosts': 'Ausgeführte Boosts',
+  'subscription.expired.footer.trial': 'Ihre Testphase endet in {{days}} Tagen',
+  'subscription.expired.footer.subscription': 'Ihr bezahlter Zugang ist beendet'
 }

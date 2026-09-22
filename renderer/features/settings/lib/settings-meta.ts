@@ -3,7 +3,6 @@ import {
   Palette,
   SlidersHorizontal,
   Sparkles,
-  Bell,
   Crown,
   UserRound,
   Info
@@ -14,7 +13,6 @@ export type SettingsCategoryId =
   | 'appearance'
   | 'general'
   | 'optimization'
-  | 'notifications'
   | 'plan'
   | 'account'
   | 'about'
@@ -44,12 +42,6 @@ export const settingsCategories: SettingsCategory[] = [
     labelKey: 'settings.cat.optimization',
     descriptionKey: 'settings.cat.optimizationDesc',
     icon: Sparkles
-  },
-  {
-    id: 'notifications',
-    labelKey: 'settings.cat.notifications',
-    descriptionKey: 'settings.cat.notificationsDesc',
-    icon: Bell
   },
   {
     id: 'plan',

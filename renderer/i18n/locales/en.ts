@@ -293,7 +293,7 @@ export const en = {
   'settings.hero.badge': 'Your workspace',
   'settings.hero.title': 'Make EdaCleaner yours',
   'settings.hero.message':
-    'Tune theme, language, cleanup behavior, notifications, plan, and account — all in one place.',
+    'Tune theme, language, cleanup behavior, plan, and account — all in one place.',
   'settings.hero.section': 'Browsing',
   'settings.hero.browse': 'Categories',
   'settings.hero.statusHint': 'You are editing {{section}}. Changes apply on this device right away.',
@@ -1357,7 +1357,23 @@ export const en = {
   'entitlements.benefit.proSuite': 'Everything in Free, plus the full Pro storage toolkit',
   'entitlements.benefit.premiumSuite': 'Everything in Pro, plus the full Premium performance suite',
   'entitlements.teaser.title': 'Preview only',
-  'entitlements.teaser.body': 'Upgrade to {{plan}} to unlock the full list and take action.'
+  'entitlements.teaser.body': 'Upgrade to {{plan}} to unlock the full list and take action.',
+
+  'subscription.expired.artAlt':
+    'Illustration of a PC with leftover junk files after EDA Cleaner protection lapsed',
+  'subscription.expired.title.trial': 'Trial has expired',
+  'subscription.expired.title.subscription': 'Subscription has expired',
+  'subscription.expired.subtitle': 'Pro and Premium cleanup tools are locked',
+  'subscription.expired.purchase': 'Purchase',
+  'subscription.expired.activate': 'Activate',
+  'subscription.expired.later': 'Maybe later',
+  'subscription.expired.statsSince': 'Last activity {{date}}',
+  'subscription.expired.statsEmpty': 'No scan history yet — stats appear after your next cleanup',
+  'subscription.expired.stat.files': 'Files cleaned',
+  'subscription.expired.stat.space': 'Space recovered',
+  'subscription.expired.stat.boosts': 'Boosts run',
+  'subscription.expired.footer.trial': 'Your trial ends in {{days}} days',
+  'subscription.expired.footer.subscription': 'Your paid plan access has ended'
 } as const
 
 export type TranslationKey = keyof typeof en

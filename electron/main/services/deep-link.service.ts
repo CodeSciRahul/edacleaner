@@ -39,6 +39,13 @@ function parseDeepLink(rawUrl: string): DeepLinkEvent {
     action = 'checkout-success'
   } else if (pathName === 'checkout/cancel' || pathName.endsWith('/checkout/cancel')) {
     action = 'checkout-cancel'
+  } else if (
+    pathName === 'billing/return' ||
+    pathName.endsWith('/billing/return') ||
+    pathName === 'billing/portal' ||
+    pathName.endsWith('/billing/portal')
+  ) {
+    action = 'billing-portal-return'
   }
 
   return {
@@ -173,6 +180,19 @@ export class DeepLinkService {
         }
       } catch (error) {
         log.warn('Post-checkout subscription sync failed', {
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
+    }
+
+    if (event.action === 'billing-portal-return') {
+      try {
+        const { authSessionService } = await import('@main/services/auth')
+        if (authSessionService.isAuthenticated()) {
+          await authSessionService.synchronizeSession('deep-link-billing-portal')
+        }
+      } catch (error) {
+        log.warn('Post-billing-portal subscription sync failed', {
           error: error instanceof Error ? error.message : String(error)
         })
       }
