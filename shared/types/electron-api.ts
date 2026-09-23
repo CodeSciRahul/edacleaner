@@ -51,6 +51,8 @@ import type {
 import type { AppPath } from '@shared/types'
 
 export interface AppApi {
+  /** Sync OS platform (`darwin` | `win32` | `linux`). Prefer for UI chrome (no IPC). */
+  platform: string
   getVersion: () => Promise<string>
   getPlatform: () => Promise<string>
   quit: () => Promise<void>

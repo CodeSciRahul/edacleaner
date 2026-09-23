@@ -2,6 +2,7 @@ import type { BrowserWindowConstructorOptions } from 'electron'
 import { join } from 'path'
 import { WINDOW_DEFAULTS } from '@shared/constants'
 import { resolveAppIconPath } from '@main/utils/app-icon'
+import { getPlatformWindowChromeOptions } from '@main/windows/window-chrome'
 
 export function getMainWindowOptions(preloadPath: string): BrowserWindowConstructorOptions {
   const icon = resolveAppIconPath()
@@ -12,8 +13,7 @@ export function getMainWindowOptions(preloadPath: string): BrowserWindowConstruc
     minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
     minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
     show: false,
-    frame: false,
-    titleBarStyle: 'hidden',
+    ...getPlatformWindowChromeOptions(),
     autoHideMenuBar: true,
     backgroundColor: '#2563EB',
     ...(icon ? { icon } : {}),

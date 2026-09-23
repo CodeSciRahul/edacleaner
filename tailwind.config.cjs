@@ -76,14 +76,16 @@ module.exports = {
         'section-title': ['18px', { lineHeight: '1.4', letterSpacing: '-0.01em', fontWeight: '600' }],
         'card-title': ['16px', { lineHeight: '1.4', fontWeight: '500' }]
       },
+      width: {
+        sidebar: '260px',
+        'sidebar-collapsed': '68px',
+        'sidebar-collapsed-mac': '120px'
+      },
       spacing: {
         'grid-gap': '20px',
         'card-pad': '24px',
-        'content-pad': '24px'
-      },
-      width: {
-        sidebar: '260px',
-        'sidebar-collapsed': '68px'
+        'content-pad': '24px',
+        'mac-traffic-lights': '76px'
       },
       height: {
         toolbar: '64px',

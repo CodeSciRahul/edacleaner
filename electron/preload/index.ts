@@ -60,6 +60,7 @@ async function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
 }
 
 const appApi = {
+  platform: process.platform,
   getVersion: () => invoke<string>(IPC_CHANNELS.APP.GET_VERSION),
   getPlatform: () => invoke<string>(IPC_CHANNELS.APP.GET_PLATFORM),
   quit: () => invoke<void>(IPC_CHANNELS.APP.QUIT),
