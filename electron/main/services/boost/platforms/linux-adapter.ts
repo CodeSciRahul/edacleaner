@@ -81,7 +81,7 @@ export class LinuxBoostAdapter implements PlatformBoostAdapter {
           memoryBytes: rssKb * 1024,
           cpuPercent: cpu,
           path: exePath,
-          safeToTerminate: !isProtectedProcess(name, pid)
+          safeToTerminate: !isProtectedProcess(name, pid, exePath)
         })
       }
 

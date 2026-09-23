@@ -142,35 +142,41 @@ export function StoragePage(): React.ReactElement {
             <section aria-label={t('storage.localDisks')}>
               <div className="mb-4">
                 <h2 className="text-section-title text-foreground">{t('storage.localDisks')}</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">{t('storage.localDisksHint')}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t('storage.localDisksHint')}</p>
               </div>
 
               {drivesLoading ? (
-                <div className="grid gap-grid-gap sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   {[0, 1].map((i) => (
                     <div
                       key={i}
-                      className="h-[280px] animate-pulse rounded-xl border border-border bg-muted/40"
+                      className="h-[300px] animate-pulse rounded-2xl border border-border bg-muted/40"
                     />
                   ))}
                 </div>
               ) : drives.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
-                  <HardDrive className="mb-3 h-8 w-8 text-muted-foreground" />
-                  <p className="text-sm font-medium text-foreground">{t('storage.noDrives')}</p>
-                  <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center shadow-card">
+                  <div
+                    className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-chart-disk/10 to-transparent"
+                    aria-hidden="true"
+                  />
+                  <div className="relative z-10 mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-chart-disk/10 text-chart-disk ring-1 ring-chart-disk/20">
+                    <HardDrive className="h-6 w-6" strokeWidth={1.85} />
+                  </div>
+                  <p className="relative z-10 text-sm font-semibold text-foreground">
+                    {t('storage.noDrives')}
+                  </p>
+                  <p className="relative z-10 mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
                     {t('storage.noDrivesHint')}
                   </p>
-                  <Button size="sm" className="mt-4" onClick={() => void refetchDrives()}>
+                  <Button size="sm" className="relative z-10 mt-4" onClick={() => void refetchDrives()}>
                     {t('common.retry')}
                   </Button>
                 </div>
               ) : (
                 <div
                   className={
-                    drives.length === 1
-                      ? 'grid gap-grid-gap'
-                      : 'grid gap-grid-gap sm:grid-cols-2'
+                    drives.length === 1 ? 'grid gap-4' : 'grid gap-4 sm:grid-cols-2'
                   }
                 >
                   {drives.map((drive) => (

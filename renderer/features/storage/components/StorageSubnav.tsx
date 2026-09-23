@@ -36,7 +36,7 @@ export function StorageSubnav(): React.ReactElement {
   return (
     <nav
       aria-label={t('storage.title')}
-      className="flex gap-1 rounded-xl border border-border bg-muted/40 p-1"
+      className="flex gap-1 rounded-2xl border border-border/80 bg-muted/35 p-1.5 shadow-sm"
     >
       {links.map((link) => {
         const Icon = link.icon
@@ -47,10 +47,10 @@ export function StorageSubnav(): React.ReactElement {
             end={link.end}
             className={({ isActive }) =>
               cn(
-                'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150',
                 isActive
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-card/60 hover:text-foreground'
+                  ? 'bg-card text-foreground shadow-sm ring-1 ring-border/60'
+                  : 'text-muted-foreground hover:bg-card/70 hover:text-foreground'
               )
             }
           >

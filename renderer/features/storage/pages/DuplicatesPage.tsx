@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { AppsEmptyState } from '@/features/apps/components/AppsEmptyState'
 import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
 import { DuplicatesHero } from '@/features/storage/components/DuplicatesHero'
 import { StorageSubnav } from '@/features/storage/components/StorageSubnav'
@@ -353,12 +354,6 @@ export function DuplicatesPage(): React.ReactElement {
           <StoragePremiumUpsell feature="duplicates" variant="duplicates" />
         ) : (
           <>
-            {notice ? (
-              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                {notice}
-              </p>
-            ) : null}
-
             <StorageFilterBar
               query={query}
               onQueryChange={setQuery}
@@ -406,80 +401,140 @@ export function DuplicatesPage(): React.ReactElement {
               </label>
             </StorageFilterBar>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span>
-                {t('storage.list.showing', {
-                  visible: visibleCount,
-                  total: filteredTotal
-                })}
-                {groups.length !== filtered.length ? ` · ${groups.length} scanned` : ''}
-              </span>
-              <span>·</span>
-              <span>
-                Waste <strong className="text-foreground">{formatBytes(wasteBytes)}</strong>
-              </span>
-              {selected.length > 0 ? (
-                <>
-                  <span>·</span>
-                  <span>
-                    <strong className="text-foreground">{selected.length}</strong> selected
-                  </span>
-                </>
-              ) : null}
-            </div>
-
-            {isLoading ? (
-              <EmptyCard message={t('duplicates.emptyScanning')} />
-            ) : isError ? (
-              <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-16 text-center shadow-card">
-                <AlertCircle className="h-8 w-8 text-destructive" />
-                <p className="text-sm text-destructive">
-                  {error instanceof Error ? error.message : 'Failed to load duplicates'}
-                </p>
-                <Button size="sm" variant="outline" onClick={() => void refetch()}>
-                  {t('common.retry')}
-                </Button>
-              </div>
-            ) : filtered.length === 0 ? (
-              <EmptyCard
-                icon
-                message={
-                  groups.length === 0
-                    ? t('duplicates.emptyNone')
-                    : t('duplicates.emptyFilter')
-                }
+            <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card animate-in fade-in-0 duration-300">
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-chart-disk/14 via-chart-disk/5 to-transparent"
+                aria-hidden="true"
               />
-            ) : (
-              <div className="space-y-3">
-                {visibleGroups.map((group) => (
-                  <DuplicateGroupCard
-                    key={`${group.name}-${group.paths[0]}`}
-                    group={group}
-                    selected={selected}
-                    copiedPath={copiedPath}
-                    deletingPath={deletingPath}
-                    pendingDeletePaths={pendingDeletePaths}
-                    mutatePending={mutatePending}
-                    actionsDisabled={rowsBusy}
-                    onToggle={togglePath}
-                    onReveal={(path) => reveal.mutate(path)}
-                    onCopy={(path) => void copyPath(path)}
-                    keepLabel={t('duplicates.keep')}
-                  />
-                ))}
-                <div
-                  ref={sentinelRef}
-                  className="flex items-center justify-center rounded-xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground"
-                  aria-hidden={!hasMore}
-                >
-                  {hasMore
-                    ? t('storage.list.loadingMore')
-                    : filteredTotal > STORAGE_LIST_PAGE_SIZE
-                      ? t('storage.list.end')
-                      : null}
-                </div>
+
+              <div className="relative z-10 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-border/80 px-4 py-3 text-xs text-muted-foreground sm:px-5">
+                <span className="font-medium text-foreground/80">
+                  {t('storage.list.showing', {
+                    visible: visibleCount,
+                    total: filteredTotal
+                  })}
+                </span>
+                {groups.length !== filtered.length ? (
+                  <>
+                    <span className="text-border">·</span>
+                    <span>{t('storage.list.scanned', { count: groups.length })}</span>
+                  </>
+                ) : null}
+                <span className="text-border">·</span>
+                <span>
+                  {t('storage.list.wasteBytes', { bytes: formatBytes(wasteBytes) })}
+                </span>
+                {selected.length > 0 ? (
+                  <>
+                    <span className="text-border">·</span>
+                    <span className="rounded-full bg-chart-disk/12 px-2 py-0.5 font-semibold tabular-nums text-chart-disk ring-1 ring-chart-disk/20">
+                      {t('storage.list.selected', { count: selected.length })}
+                    </span>
+                  </>
+                ) : null}
               </div>
-            )}
+
+              {notice ? (
+                <div
+                  className="relative z-10 border-b border-border/80 bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground sm:px-5"
+                  role="status"
+                >
+                  {notice}
+                </div>
+              ) : null}
+
+              {isLoading ? (
+                <div className="relative z-10 space-y-3 p-4 sm:p-5">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="overflow-hidden rounded-xl border border-border/70 bg-background/40"
+                    >
+                      <div className="flex animate-pulse items-center gap-3 border-b border-border/70 px-4 py-3.5">
+                        <div className="h-9 w-9 rounded-xl bg-muted" />
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="h-4 w-40 rounded-lg bg-muted" />
+                          <div className="h-3 w-32 rounded-lg bg-muted" />
+                        </div>
+                        <div className="h-6 w-20 rounded-full bg-muted" />
+                      </div>
+                      <div className="space-y-0 divide-y divide-border/70">
+                        {[0, 1].map((row) => (
+                          <div
+                            key={row}
+                            className="flex animate-pulse items-center gap-3 px-4 py-3"
+                          >
+                            <div className="h-4 w-4 rounded bg-muted" />
+                            <div className="h-4 flex-1 rounded-lg bg-muted" />
+                            <div className="h-8 w-16 rounded-lg bg-muted" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : isError ? (
+                <div className="relative z-10">
+                  <AppsEmptyState
+                    icon={AlertCircle}
+                    title={t('duplicates.loadError')}
+                    description={
+                      error instanceof Error ? error.message : t('duplicates.loadError')
+                    }
+                    actionLabel={t('common.retry')}
+                    onAction={() => void refetch()}
+                  />
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="relative z-10">
+                  <AppsEmptyState
+                    icon={Copy}
+                    title={
+                      groups.length === 0
+                        ? t('duplicates.emptyNone')
+                        : t('duplicates.emptyFilter')
+                    }
+                    description={
+                      groups.length === 0
+                        ? t('duplicates.emptyNoneHint')
+                        : t('duplicates.emptyFilterHint')
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="relative z-10 space-y-3 p-4 sm:p-5">
+                  {visibleGroups.map((group, index) => (
+                    <DuplicateGroupCard
+                      key={`${group.name}-${group.paths[0]}`}
+                      group={group}
+                      index={index}
+                      selected={selected}
+                      copiedPath={copiedPath}
+                      deletingPath={deletingPath}
+                      pendingDeletePaths={pendingDeletePaths}
+                      mutatePending={mutatePending}
+                      actionsDisabled={rowsBusy}
+                      onToggle={togglePath}
+                      onReveal={(path) => reveal.mutate(path)}
+                      onCopy={(path) => void copyPath(path)}
+                      keepLabel={t('duplicates.keep')}
+                      duplicateLabel={t('duplicates.duplicate')}
+                    />
+                  ))}
+                  <div
+                    ref={sentinelRef}
+                    className="flex items-center justify-center rounded-xl border border-dashed border-border/80 px-4 py-3 text-xs text-muted-foreground"
+                    aria-hidden={!hasMore}
+                  >
+                    {hasMore
+                      ? t('storage.list.loadingMore')
+                      : filteredTotal > STORAGE_LIST_PAGE_SIZE
+                        ? t('storage.list.end')
+                        : null}
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -489,6 +544,7 @@ export function DuplicatesPage(): React.ReactElement {
 
 function DuplicateGroupCard({
   group,
+  index,
   selected,
   copiedPath,
   deletingPath,
@@ -498,9 +554,11 @@ function DuplicateGroupCard({
   onToggle,
   onReveal,
   onCopy,
-  keepLabel
+  keepLabel,
+  duplicateLabel
 }: {
   group: DuplicateGroup
+  index: number
   selected: string[]
   copiedPath: string | null
   deletingPath?: string
@@ -511,39 +569,63 @@ function DuplicateGroupCard({
   onReveal: (path: string) => void
   onCopy: (path: string) => void
   keepLabel: string
+  duplicateLabel: string
 }): React.ReactElement {
   const { t } = useTranslation()
   const waste = group.sizeBytes * Math.max(0, group.copies - 1)
+  const selectedInGroup = group.paths.filter((p) => selected.includes(p)).length
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <section
+      className={cn(
+        'relative overflow-hidden rounded-xl border border-border/80 bg-background/50 shadow-sm',
+        'transition-shadow hover:border-chart-disk/30 hover:shadow-md',
+        'animate-in fade-in-0 slide-in-from-bottom-1 duration-300',
+        selectedInGroup > 0 && 'border-chart-disk/35 ring-1 ring-chart-disk/15'
+      )}
+      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-chart-disk/10 to-transparent"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border/80 px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted/80 text-[10px] font-semibold tabular-nums text-muted-foreground">
+            {index + 1}
+          </span>
           <FileTypeIcon fileName={group.name} />
           <div className="min-w-0">
-            <p className="truncate font-medium text-foreground">{group.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {formatBytes(group.sizeBytes)} each · {group.copies} copies
+            <p className="truncate text-sm font-semibold text-foreground">{group.name}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {t('duplicates.groupMeta', {
+                size: formatBytes(group.sizeBytes),
+                count: group.copies
+              })}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="tabular-nums">
-            {formatBytes(waste)} waste
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-full bg-muted/80 px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground ring-1 ring-border/60">
+            {group.copies}×
+          </span>
+          <Badge className="border-0 bg-chart-disk/12 font-semibold tabular-nums text-chart-disk shadow-none ring-1 ring-chart-disk/20">
+            {t('duplicates.wasteLabel', { bytes: formatBytes(waste) })}
           </Badge>
         </div>
       </div>
 
-      <ul className="divide-y divide-border">
-        {group.paths.map((path, index) => {
-          const isKeep = index === 0
+      <ul className="relative z-10 divide-y divide-border/70">
+        {group.paths.map((path, pathIndex) => {
+          const isKeep = pathIndex === 0
           const isSelected = selected.includes(path)
           const copied = copiedPath === path
           const inBatch = pendingDeletePaths.includes(path)
           const deleting = inBatch && (!mutatePending || deletingPath === path)
           const queued = inBatch && mutatePending && deletingPath !== path
           const name = path.split(/[/\\]/).pop() ?? path
-          const safety = group.pathSafety?.[index]
+          const safety = group.pathSafety?.[pathIndex]
           const canDelete = isDeletableSafety(safety)
           const riskLabel =
             safety?.riskLevel === 'PROTECTED'
@@ -558,11 +640,12 @@ function DuplicateGroupCard({
             <li
               key={path}
               className={cn(
-                'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/40',
-                isSelected && 'bg-primary/5',
+                'group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-chart-disk/[0.04]',
+                isSelected && 'bg-chart-disk/[0.06]',
                 deleting && 'bg-destructive/5 ring-1 ring-inset ring-destructive/20',
                 queued && 'opacity-60',
-                !canDelete && 'bg-muted/20'
+                !canDelete && 'bg-muted/10',
+                isKeep && 'bg-success/[0.03]'
               )}
             >
               <input
@@ -575,19 +658,22 @@ function DuplicateGroupCard({
               />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-sm font-medium text-foreground">{name}</p>
+                  <p className="truncate text-sm font-semibold text-foreground">{name}</p>
                   {isKeep ? (
-                    <Badge className="border-0 bg-success/10 text-success text-[10px]">
+                    <Badge className="border-0 bg-success/12 text-[10px] font-semibold text-success shadow-none ring-1 ring-success/20">
                       {keepLabel}
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-[10px]">
-                      Duplicate
+                    <Badge
+                      variant="outline"
+                      className="border-chart-disk/25 bg-chart-disk/8 text-[10px] font-medium text-chart-disk"
+                    >
+                      {duplicateLabel}
                     </Badge>
                   )}
                   {safety ? <SafetyRiskBadge safety={safety} label={riskLabel} /> : null}
                   {deleting ? (
-                    <Badge className="gap-1 border-0 bg-destructive/10 text-destructive text-[10px]">
+                    <Badge className="gap-1 border-0 bg-destructive/10 text-[10px] text-destructive shadow-none">
                       <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
                       {t('storage.deleting.rowShort')}
                     </Badge>
@@ -599,17 +685,17 @@ function DuplicateGroupCard({
                 </div>
                 {safety && safety.riskLevel !== 'SAFE' ? (
                   <p
-                    className="line-clamp-1 text-[11px] text-muted-foreground"
+                    className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground"
                     title={safety.reason}
                   >
                     {safety.reason}
                   </p>
                 ) : null}
-                <p className="truncate text-xs text-muted-foreground" title={path}>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground" title={path}>
                   {path}
                 </p>
               </div>
-              <div className="flex shrink-0 gap-1">
+              <div className="flex shrink-0 gap-1 opacity-80 transition-opacity group-hover:opacity-100">
                 {deleting ? (
                   <div
                     className="flex h-8 items-center gap-1.5 px-1 text-xs font-medium text-destructive"
@@ -622,7 +708,7 @@ function DuplicateGroupCard({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8 rounded-lg p-0"
                       aria-label={`Reveal ${name}`}
                       disabled={actionsDisabled}
                       onClick={() => onReveal(path)}
@@ -633,7 +719,7 @@ function DuplicateGroupCard({
                       size="sm"
                       variant="ghost"
                       className={cn(
-                        'h-8 w-8 p-0 transition-colors',
+                        'h-8 w-8 rounded-lg p-0 transition-colors',
                         copied && 'bg-success/15 text-success hover:bg-success/20 hover:text-success'
                       )}
                       aria-label={
@@ -656,20 +742,5 @@ function DuplicateGroupCard({
         })}
       </ul>
     </section>
-  )
-}
-
-function EmptyCard({
-  message,
-  icon
-}: {
-  message: string
-  icon?: boolean
-}): React.ReactElement {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card px-6 py-16 text-center shadow-card">
-      {icon ? <Copy className="mb-3 h-8 w-8 text-muted-foreground" /> : null}
-      <p className="text-sm text-muted-foreground">{message}</p>
-    </div>
   )
 }

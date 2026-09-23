@@ -1,4 +1,4 @@
-import { Copy, FileStack, HardDrive, Loader2, Lock, PieChart, ShieldCheck } from 'lucide-react'
+import { Copy, FileStack, HardDrive, Loader2, Lock, PieChart } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
@@ -112,7 +112,7 @@ export function StorageHero({
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
         featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
-        locked ? 'border-primary/20' : 'border-border'
+        locked ? 'border-primary/20' : 'border-chart-disk/25'
       )}
     >
       <img
@@ -130,20 +130,34 @@ export function StorageHero({
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/90 via-card/55 to-transparent sm:via-card/40"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/92 via-card/60 to-transparent sm:via-card/42"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-chart-disk/15 blur-3xl"
         aria-hidden="true"
       />
 
       <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 max-w-xl space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary backdrop-blur-sm">
+            <div
+              className={cn(
+                'inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1',
+                'text-[11px] font-semibold uppercase tracking-wide backdrop-blur-sm',
+                locked
+                  ? 'border-primary/25 bg-primary/10 text-primary'
+                  : 'border-chart-disk/30 bg-chart-disk/10 text-chart-disk'
+              )}
+            >
               {locked ? (
                 <Lock className="h-3 w-3" aria-hidden="true" />
               ) : isAnalyzing ? (
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : hasStorageData ? (
                 <PieChart className="h-3 w-3" aria-hidden="true" />
               ) : (
-                <ShieldCheck className="h-3 w-3" aria-hidden="true" />
+                <HardDrive className="h-3 w-3" aria-hidden="true" />
               )}
               {isAnalyzing && !locked
                 ? t('storage.analyzing.badge')
@@ -204,19 +218,32 @@ export function StorageHero({
               )}
               {isAnalyzing && !locked ? t('storage.analyzing') : t('storage.analyze')}
             </FeatureLockButton>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5 pt-0.5">
-            <JumpChip
-              icon={FileStack}
-              label={t('storage.subnav.largeFiles')}
+            <button
+              type="button"
               onClick={() => navigate('/storage/large-files')}
-            />
-            <JumpChip
-              icon={Copy}
-              label={t('storage.subnav.duplicates')}
+              className={cn(
+                'inline-flex h-9 items-center gap-2 rounded-lg border border-border/80',
+                'bg-background/70 px-3 text-[13px] font-medium text-foreground backdrop-blur-sm',
+                'transition-colors hover:bg-background/90',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+            >
+              <FileStack className="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
+              {t('storage.subnav.largeFiles')}
+            </button>
+            <button
+              type="button"
               onClick={() => navigate('/storage/duplicates')}
-            />
+              className={cn(
+                'inline-flex h-9 items-center gap-2 rounded-lg border border-border/80',
+                'bg-background/70 px-3 text-[13px] font-medium text-foreground backdrop-blur-sm',
+                'transition-colors hover:bg-background/90',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+            >
+              <Copy className="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
+              {t('storage.subnav.duplicates')}
+            </button>
           </div>
 
           <p className="text-xs text-muted-foreground">{tip}</p>
@@ -234,31 +261,5 @@ function StatPill({ label, value }: { label: string; value: string }): React.Rea
       </p>
       <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
     </div>
-  )
-}
-
-function JumpChip({
-  icon: Icon,
-  label,
-  onClick
-}: {
-  icon: typeof HardDrive
-  label: string
-  onClick: () => void
-}): React.ReactElement {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/55 px-2.5 py-1',
-        'text-[11px] font-medium text-muted-foreground backdrop-blur-sm',
-        'transition-colors hover:border-primary/25 hover:bg-background/80 hover:text-foreground',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-      )}
-    >
-      <Icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden="true" />
-      {label}
-    </button>
   )
 }

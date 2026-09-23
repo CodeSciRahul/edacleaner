@@ -9,7 +9,7 @@ export interface DashboardMetrics {
   disk: number
   freeMemoryLabel: string
   diskFreeLabel: string
-  topProcesses: Array<{ name: string; memoryBytes: number }>
+  topProcesses: Array<{ name: string; memoryBytes: number; iconDataUrl?: string }>
 }
 
 function diskUsedPercent(used: number, total: number): number {
@@ -70,13 +70,14 @@ export function useDashboardMetrics() {
 
 function mapTopProcesses(
   processes: BoostProcessInfo[]
-): Array<{ name: string; memoryBytes: number }> {
+): Array<{ name: string; memoryBytes: number; iconDataUrl?: string }> {
   return processes
     .slice()
     .sort((a, b) => b.memoryBytes - a.memoryBytes)
     .slice(0, 5)
     .map((p) => ({
       name: p.name || p.path || `PID ${p.pid}`,
-      memoryBytes: p.memoryBytes
+      memoryBytes: p.memoryBytes,
+      iconDataUrl: p.iconDataUrl
     }))
 }

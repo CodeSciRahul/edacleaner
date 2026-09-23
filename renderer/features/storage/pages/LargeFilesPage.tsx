@@ -9,6 +9,7 @@ import {
   Trash2
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { AppsEmptyState } from '@/features/apps/components/AppsEmptyState'
 import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
 import { LargeFilesHero } from '@/features/storage/components/LargeFilesHero'
 import { StorageSubnav } from '@/features/storage/components/StorageSubnav'
@@ -173,6 +174,7 @@ export function LargeFilesPage(): React.ReactElement {
   })
 
   const totalBytes = filtered.reduce((sum, f) => sum + f.sizeBytes, 0)
+  const maxBytes = Math.max(0, ...filtered.map((f) => f.sizeBytes))
 
   const togglePath = (path: string): void => {
     const file = files.find((f) => f.path === path) ?? filtered.find((f) => f.path === path)
@@ -382,12 +384,6 @@ export function LargeFilesPage(): React.ReactElement {
           <StoragePremiumUpsell feature="large_files" variant="largeFiles" />
         ) : (
           <>
-            {notice ? (
-              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                {notice}
-              </p>
-            ) : null}
-
             <StorageFilterBar
               query={query}
               onQueryChange={setQuery}
@@ -418,52 +414,100 @@ export function LargeFilesPage(): React.ReactElement {
               </label>
             </StorageFilterBar>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span>
-                {t('storage.list.showing', {
-                  visible: visibleCount,
-                  total: filteredTotal
-                })}
-                {files.length !== filtered.length ? ` · ${files.length} scanned` : ''}
-              </span>
-              <span>·</span>
-              <span>
-                Total <strong className="text-foreground">{formatBytes(totalBytes)}</strong>
-              </span>
-              {selected.length > 0 ? (
-                <>
-                  <span>·</span>
-                  <span>
-                    <strong className="text-foreground">{selected.length}</strong> selected
-                  </span>
-                </>
-              ) : null}
-            </div>
+            <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card animate-in fade-in-0 duration-300">
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-warning/14 via-warning/5 to-transparent"
+                aria-hidden="true"
+              />
 
-            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+              <div className="relative z-10 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-border/80 px-4 py-3 text-xs text-muted-foreground sm:px-5">
+                <span className="font-medium text-foreground/80">
+                  {t('storage.list.showing', {
+                    visible: visibleCount,
+                    total: filteredTotal
+                  })}
+                </span>
+                {files.length !== filtered.length ? (
+                  <>
+                    <span className="text-border">·</span>
+                    <span>{t('storage.list.scanned', { count: files.length })}</span>
+                  </>
+                ) : null}
+                <span className="text-border">·</span>
+                <span>
+                  {t('storage.list.totalBytes', { bytes: formatBytes(totalBytes) })}
+                </span>
+                {selected.length > 0 ? (
+                  <>
+                    <span className="text-border">·</span>
+                    <span className="rounded-full bg-warning/12 px-2 py-0.5 font-semibold tabular-nums text-warning ring-1 ring-warning/20">
+                      {t('storage.list.selected', { count: selected.length })}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+
+              {notice ? (
+                <div
+                  className="relative z-10 border-b border-border/80 bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground sm:px-5"
+                  role="status"
+                >
+                  {notice}
+                </div>
+              ) : null}
+
               {isLoading ? (
-                <EmptyBlock message={t('largeFiles.emptyScanning')} />
+                <div className="relative z-10 divide-y divide-border/70">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex animate-pulse items-center gap-3.5 px-4 py-3.5 sm:px-5"
+                    >
+                      <div className="h-4 w-4 rounded bg-muted" />
+                      <div className="h-9 w-9 rounded-xl bg-muted" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="h-4 w-40 rounded-lg bg-muted" />
+                        <div className="h-3 w-56 rounded-lg bg-muted" />
+                      </div>
+                      <div className="h-5 w-14 rounded-full bg-muted" />
+                      <div className="h-4 w-16 rounded-lg bg-muted" />
+                    </div>
+                  ))}
+                </div>
               ) : isError ? (
-                <ErrorBlock
-                  message={error instanceof Error ? error.message : 'Failed to load large files'}
-                  onRetry={() => void refetch()}
-                  retryLabel={t('common.retry')}
-                />
+                <div className="relative z-10">
+                  <AppsEmptyState
+                    icon={AlertCircle}
+                    title={t('largeFiles.loadError')}
+                    description={
+                      error instanceof Error ? error.message : t('largeFiles.loadError')
+                    }
+                    actionLabel={t('common.retry')}
+                    onAction={() => void refetch()}
+                  />
+                </div>
               ) : filtered.length === 0 ? (
-                <EmptyBlock
-                  icon
-                  message={
-                    files.length === 0
-                      ? t('largeFiles.emptyNone')
-                      : t('largeFiles.emptyFilter')
-                  }
-                />
+                <div className="relative z-10">
+                  <AppsEmptyState
+                    icon={FileStack}
+                    title={
+                      files.length === 0
+                        ? t('largeFiles.emptyNone')
+                        : t('largeFiles.emptyFilter')
+                    }
+                    description={
+                      files.length === 0
+                        ? t('largeFiles.emptyNoneHint')
+                        : t('largeFiles.emptyFilterHint')
+                    }
+                  />
+                </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[720px] text-sm">
-                    <thead className="sticky top-0 z-10 bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
-                      <tr className="border-b border-border">
-                        <th className="w-10 px-4 py-3">
+                <div className="relative z-10 overflow-x-auto">
+                  <table className="w-full min-w-[720px] border-collapse text-sm">
+                    <thead className="sticky top-0 z-10 bg-card/90 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur-sm">
+                      <tr className="border-b border-border/80">
+                        <th className="w-10 px-4 py-3 sm:px-5">
                           <input
                             type="checkbox"
                             className="rounded border-border"
@@ -477,15 +521,19 @@ export function LargeFilesPage(): React.ReactElement {
                           />
                         </th>
                         <th className="px-2 py-3 font-medium">{t('largeFiles.col.name')}</th>
-                        <th className="px-2 py-3 font-medium">{t('largeFiles.col.type')}</th>
+                        <th className="hidden px-2 py-3 font-medium sm:table-cell">
+                          {t('largeFiles.col.type')}
+                        </th>
                         <th className="px-2 py-3 font-medium">{t('largeFiles.col.size')}</th>
-                        <th className="px-2 py-3 font-medium">{t('largeFiles.col.path')}</th>
-                        <th className="px-4 py-3 text-right font-medium">
+                        <th className="hidden px-2 py-3 font-medium md:table-cell">
+                          {t('largeFiles.col.path')}
+                        </th>
+                        <th className="px-4 py-3 text-right font-medium sm:px-5">
                           {t('largeFiles.col.actions')}
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border/70">
                       {visibleFiles.map((file) => {
                         const inBatch = pendingSet.has(file.path)
                         const deleting =
@@ -496,6 +544,7 @@ export function LargeFilesPage(): React.ReactElement {
                           <LargeFileRow
                             key={file.path}
                             file={file}
+                            maxBytes={maxBytes}
                             selected={selected.includes(file.path)}
                             copied={copiedPath === file.path}
                             deleting={deleting}
@@ -517,7 +566,7 @@ export function LargeFilesPage(): React.ReactElement {
                   </table>
                   <div
                     ref={sentinelRef}
-                    className="flex items-center justify-center border-t border-border px-4 py-3 text-xs text-muted-foreground"
+                    className="flex items-center justify-center border-t border-border/80 px-4 py-3 text-xs text-muted-foreground"
                     aria-hidden={!hasMore}
                   >
                     {hasMore
@@ -538,6 +587,7 @@ export function LargeFilesPage(): React.ReactElement {
 
 function LargeFileRow({
   file,
+  maxBytes,
   selected,
   copied,
   deleting,
@@ -550,6 +600,7 @@ function LargeFileRow({
   onDelete
 }: {
   file: LargeFile
+  maxBytes: number
   selected: boolean
   copied: boolean
   deleting: boolean
@@ -564,18 +615,22 @@ function LargeFileRow({
   const { t } = useTranslation()
   const ext = getExtension(file.name)
   const canDelete = isDeletableSafety(file.safety)
+  const share =
+    maxBytes > 0 && file.sizeBytes > 0
+      ? Math.max(8, Math.round((file.sizeBytes / maxBytes) * 100))
+      : 0
 
   return (
     <tr
       className={cn(
-        'transition-colors hover:bg-muted/40',
-        selected && 'bg-primary/5',
+        'group align-middle transition-colors hover:bg-warning/[0.04]',
+        selected && 'bg-warning/[0.06]',
         deleting && 'bg-destructive/5 ring-1 ring-inset ring-destructive/20',
         queued && 'opacity-60',
-        !canDelete && 'bg-muted/20'
+        !canDelete && 'bg-muted/10'
       )}
     >
-      <td className="px-4 py-3">
+      <td className="px-4 py-3.5 sm:px-5">
         <input
           type="checkbox"
           className="rounded border-border"
@@ -585,16 +640,22 @@ function LargeFileRow({
           aria-label={`Select ${file.name}`}
         />
       </td>
-      <td className="px-2 py-3">
+      <td className="px-2 py-3.5">
         <div className="flex min-w-0 items-center gap-3">
           <FileTypeIcon fileName={file.name} />
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <p className="truncate font-medium text-foreground">{file.name}</p>
+              <p className="truncate text-sm font-semibold text-foreground">{file.name}</p>
               {file.safety ? (
                 <SafetyRiskBadge safety={file.safety} label={riskLabel} />
               ) : null}
             </div>
+            <p
+              className="mt-0.5 truncate text-[11px] text-muted-foreground md:hidden"
+              title={file.path}
+            >
+              {file.path}
+            </p>
             {file.safety && file.safety.riskLevel !== 'SAFE' ? (
               <p
                 className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground"
@@ -616,20 +677,36 @@ function LargeFileRow({
           </div>
         </div>
       </td>
-      <td className="px-2 py-3 uppercase text-muted-foreground">{ext || '—'}</td>
-      <td className="px-2 py-3 tabular-nums font-medium text-foreground">
-        {formatBytes(file.sizeBytes)}
+      <td className="hidden px-2 py-3.5 sm:table-cell">
+        <span className="inline-flex max-w-[5.5rem] truncate rounded-full bg-muted/80 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground ring-1 ring-border/60">
+          {ext || '—'}
+        </span>
       </td>
-      <td className="max-w-[280px] px-2 py-3">
+      <td className="px-2 py-3.5">
+        <div className="min-w-[5.5rem]">
+          <p className="text-sm font-semibold tabular-nums text-foreground">
+            {formatBytes(file.sizeBytes)}
+          </p>
+          {share > 0 ? (
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted/80">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-warning to-chart-disk transition-[width] duration-500"
+                style={{ width: `${share}%` }}
+              />
+            </div>
+          ) : null}
+        </div>
+      </td>
+      <td className="hidden max-w-[280px] px-2 py-3.5 md:table-cell">
         <p className="truncate text-xs text-muted-foreground" title={file.path}>
           {file.path}
         </p>
       </td>
-      <td className="px-4 py-3">
-        <div className="flex justify-end gap-1">
+      <td className="px-4 py-3.5 sm:px-5">
+        <div className="flex justify-end gap-1 opacity-80 transition-opacity group-hover:opacity-100">
           {deleting ? (
             <div
-              className="flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-destructive"
+              className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-destructive"
               aria-live="polite"
             >
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -640,7 +717,7 @@ function LargeFileRow({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 rounded-lg p-0"
                 aria-label={`Reveal ${file.name}`}
                 disabled={actionsDisabled}
                 onClick={onReveal}
@@ -651,7 +728,7 @@ function LargeFileRow({
                 size="sm"
                 variant="ghost"
                 className={cn(
-                  'h-8 w-8 p-0 transition-colors',
+                  'h-8 w-8 rounded-lg p-0 transition-colors',
                   copied && 'bg-success/15 text-success hover:bg-success/20 hover:text-success'
                 )}
                 aria-label={
@@ -669,7 +746,7 @@ function LargeFileRow({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 text-destructive"
+                className="h-8 w-8 rounded-lg p-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 aria-label={
                   canDelete
                     ? `Delete ${file.name}`
@@ -686,40 +763,5 @@ function LargeFileRow({
         </div>
       </td>
     </tr>
-  )
-}
-
-function EmptyBlock({
-  message,
-  icon
-}: {
-  message: string
-  icon?: boolean
-}): React.ReactElement {
-  return (
-    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-      {icon ? <FileStack className="mb-3 h-8 w-8 text-muted-foreground" /> : null}
-      <p className="text-sm text-muted-foreground">{message}</p>
-    </div>
-  )
-}
-
-function ErrorBlock({
-  message,
-  onRetry,
-  retryLabel
-}: {
-  message: string
-  onRetry: () => void
-  retryLabel: string
-}): React.ReactElement {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-      <AlertCircle className="h-8 w-8 text-destructive" />
-      <p className="text-sm text-destructive">{message}</p>
-      <Button size="sm" variant="outline" onClick={onRetry}>
-        {retryLabel}
-      </Button>
-    </div>
   )
 }

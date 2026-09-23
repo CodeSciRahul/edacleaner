@@ -26,7 +26,7 @@ import {
 } from '@shared/utils'
 import { cleanDirectoryContents, estimateDirectorySize } from './fs-utils'
 import { createPlatformBoostAdapter } from './platforms/create-adapter'
-import { isProcessAlive, isProtectedProcess } from './platforms/exec-utils'
+import { isProtectedProcess, isSelfCleanerProcess } from './platforms/exec-utils'
 import type { PlatformBoostAdapter } from './platforms/platform-adapter'
 
 const log = createLogger('BoostService')
@@ -72,13 +72,21 @@ function uniquePaths(paths: string[]): string[] {
 
 function filterBackgroundProcesses(processes: BoostProcessInfo[]): BoostProcessInfo[] {
   return processes
-    .filter((p) => p.safeToTerminate && p.memoryBytes >= MIN_BACKGROUND_PROCESS_BYTES)
+    .filter((p) => {
+      // Always surface this cleaner / Electron runtime so Stop can show as protected+disabled
+      if (isSelfCleanerProcess(p.name, p.pid, p.path)) return true
+      return p.safeToTerminate && p.memoryBytes >= MIN_BACKGROUND_PROCESS_BYTES
+    })
     .slice(0, MAX_BACKGROUND_PROCESSES)
 }
 
 function processIconCacheKey(process: BoostProcessInfo): string {
-  if (process.path) return process.path.toLowerCase()
+  if (process.path) return `path:${process.path.toLowerCase()}`
   return `name:${process.name.toLowerCase()}`
+}
+
+function processIconNameKey(name: string): string {
+  return `name:${name.toLowerCase()}`
 }
 
 export class BoostService {
@@ -127,7 +135,7 @@ export class BoostService {
 
   /**
    * Attach cached icons; optionally resolve missing ones (capped concurrency).
-   * Live ticks use waitForMissing=false so polling stays light.
+   * Live ticks also wait briefly so logos are not wiped by icon-less snapshots.
    */
   private async attachProcessIcons(
     processes: BoostProcessInfo[],
@@ -135,13 +143,25 @@ export class BoostService {
   ): Promise<BoostProcessInfo[]> {
     const missingPaths = new Map<string, string>()
 
-    const withCached = processes.map((process) => {
-      const key = processIconCacheKey(process)
-      if (this.processIconCache.has(key)) {
-        const cached = this.processIconCache.get(key)
-        return cached ? { ...process, iconDataUrl: cached } : process
+    const lookupCached = (process: BoostProcessInfo): string | null | undefined => {
+      const pathKey = processIconCacheKey(process)
+      if (this.processIconCache.has(pathKey)) {
+        return this.processIconCache.get(pathKey)
       }
-      if (process.path) missingPaths.set(key, process.path)
+      const nameKey = processIconNameKey(process.name)
+      if (this.processIconCache.has(nameKey)) {
+        return this.processIconCache.get(nameKey)
+      }
+      return undefined
+    }
+
+    const withCached = processes.map((process) => {
+      const cached = lookupCached(process)
+      if (cached) return { ...process, iconDataUrl: cached }
+      if (cached === null) return process
+      if (process.path) {
+        missingPaths.set(processIconCacheKey(process), process.path)
+      }
       return process
     })
 
@@ -155,15 +175,14 @@ export class BoostService {
     await this.resolveProcessIcons(missingPaths)
 
     return processes.map((process) => {
-      const key = processIconCacheKey(process)
-      const cached = this.processIconCache.get(key)
+      const cached = lookupCached(process)
       return cached ? { ...process, iconDataUrl: cached } : process
     })
   }
 
   private async resolveProcessIcons(pathsByKey: Map<string, string>): Promise<void> {
     const entries = [...pathsByKey.entries()]
-    const batchSize = 6
+    const batchSize = 8
 
     for (let i = 0; i < entries.length; i += batchSize) {
       const batch = entries.slice(i, i + batchSize)
@@ -184,6 +203,11 @@ export class BoostService {
       .then((icon) => {
         const value = icon ?? null
         this.processIconCache.set(key, value)
+        // Also index by exe basename so later path-less rows can reuse the logo
+        const base = path.split(/[/\\]/).pop()
+        if (base) {
+          this.processIconCache.set(processIconNameKey(base), value)
+        }
         this.processIconPending.delete(key)
         return value
       })
@@ -288,12 +312,12 @@ export class BoostService {
     }
   }
 
-  /** Watch tick: reuse icon cache; prefetch missing without blocking. */
+  /** Watch tick: reuse icon cache and wait for newly seen exe paths so logos stick. */
   private async listBackgroundProcessesForWatch(): Promise<BackgroundProcessesUpdate> {
     const raw = await this.adapter.listProcesses(100)
     const withCpu = this.applyCpuPercents(raw)
     const filtered = filterBackgroundProcesses(withCpu)
-    const processes = await this.attachProcessIcons(filtered, { waitForMissing: false })
+    const processes = await this.attachProcessIcons(filtered, { waitForMissing: true })
     return {
       processes,
       updatedAt: Date.now()
@@ -360,12 +384,17 @@ export class BoostService {
     const skipped: Array<{ pid: number; reason: string }> = []
 
     for (const pid of requested) {
-      if (isProtectedProcess(`pid-${pid}`, pid)) {
-        skipped.push({ pid, reason: 'Protected process' })
+      const info = byPid.get(pid)
+      if (isProtectedProcess(info?.name ?? `pid-${pid}`, pid, info?.path)) {
+        skipped.push({
+          pid,
+          reason: info
+            ? `Protected process (${info.name})`
+            : 'Protected process'
+        })
         continue
       }
 
-      const info = byPid.get(pid)
       if (info) {
         if (!info.safeToTerminate) {
           skipped.push({ pid, reason: `Protected process (${info.name})` })
@@ -375,13 +404,8 @@ export class BoostService {
         continue
       }
 
-      // Process fell outside the memory-sorted snapshot — still allow if alive
-      // and the user explicitly selected it from the live background list.
-      if (isProcessAlive(pid)) {
-        allowed.push(pid)
-      } else {
-        skipped.push({ pid, reason: 'Process is no longer running' })
-      }
+      // Unknown PID outside the snapshot — do not kill blindly (avoids stopping this app)
+      skipped.push({ pid, reason: 'Process is no longer listed as safe to stop' })
     }
 
     if (allowed.length === 0) {
@@ -405,10 +429,12 @@ export class BoostService {
   }
 
   async getSnapshot(): Promise<BoostSnapshot> {
-    const [topProcesses, diskPressure] = await Promise.all([
+    const [rawTop, diskPressure] = await Promise.all([
       this.adapter.listProcesses(10),
       this.adapter.getDiskPressure()
     ])
+    const withCpu = this.applyCpuPercents(rawTop)
+    const topProcesses = await this.attachProcessIcons(withCpu, { waitForMissing: true })
 
     return {
       memory: getMemoryInfo(),

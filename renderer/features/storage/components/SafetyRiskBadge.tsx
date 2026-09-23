@@ -7,17 +7,17 @@ const RISK_STYLES: Record<
   { className: string; Icon: typeof ShieldBan; labelKey: string }
 > = {
   PROTECTED: {
-    className: 'bg-destructive/10 text-destructive',
+    className: 'bg-destructive/12 text-destructive ring-1 ring-destructive/20',
     Icon: ShieldBan,
     labelKey: 'storage.safety.protected'
   },
   HIGH_RISK: {
-    className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+    className: 'bg-warning/12 text-warning ring-1 ring-warning/20',
     Icon: ShieldAlert,
     labelKey: 'storage.safety.highRisk'
   },
   CAUTION: {
-    className: 'bg-amber-500/10 text-amber-800 dark:text-amber-300',
+    className: 'bg-warning/10 text-warning ring-1 ring-warning/15',
     Icon: TriangleAlert,
     labelKey: 'storage.safety.caution'
   }
@@ -38,7 +38,7 @@ export function SafetyRiskBadge({
   return (
     <span
       className={cn(
-        'inline-flex max-w-full items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium',
+        'inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
         style.className
       )}
       title={safety.reason}

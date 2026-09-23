@@ -35,24 +35,24 @@ export const PROTECTED_PROCESS_NAMES = new Set(
     // Windows
     'system',
     'registry',
-    'smss.exe',
-    'csrss.exe',
-    'wininit.exe',
-    'services.exe',
-    'lsass.exe',
-    'svchost.exe',
-    'winlogon.exe',
-    'dwm.exe',
-    'explorer.exe',
-    'fontdrvhost.exe',
-    'sihost.exe',
-    'taskhostw.exe',
-    'runtimebroker.exe',
-    'searchhost.exe',
-    'startmenuexperiencehost.exe',
-    'shellexperiencehost.exe',
-    'securityhealthservice.exe',
-    'msmpeng.exe',
+    'smss',
+    'csrss',
+    'wininit',
+    'services',
+    'lsass',
+    'svchost',
+    'winlogon',
+    'dwm',
+    'explorer',
+    'fontdrvhost',
+    'sihost',
+    'taskhostw',
+    'runtimebroker',
+    'searchhost',
+    'startmenuexperiencehost',
+    'shellexperiencehost',
+    'securityhealthservice',
+    'msmpeng',
     // macOS
     'kernel_task',
     'launchd',
@@ -71,19 +71,95 @@ export const PROTECTED_PROCESS_NAMES = new Set(
     'rcu_sched',
     'dbus-daemon',
     'NetworkManager',
-    // Electron / self
+    // Electron / this cleaner (basename without extension)
     'electron',
     'eda cleaner',
-    'eda-cleaner'
+    'eda-cleaner',
+    'edacleaner',
+    'eda_cleaner'
   ].map((n) => n.toLowerCase())
 )
 
-export function isProtectedProcess(name: string, pid: number): boolean {
+function normalizeProcessBaseName(name: string): string {
+  const base = name.split(/[/\\]/).pop() ?? name
+  return base.replace(/\.(exe|bin)$/i, '').toLowerCase()
+}
+
+function selfAppPathHints(): string[] {
+  const hints = ['edacleaner', 'eda cleaner', 'eda-cleaner', 'eda_cleaner']
+  try {
+    // Lazy require — unit tests / non-Electron contexts may not have app ready
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { app } = require('electron') as typeof import('electron')
+    if (app && typeof app.getPath === 'function') {
+      try {
+        hints.push(app.getPath('exe').toLowerCase())
+      } catch {
+        // ignore
+      }
+      try {
+        hints.push(app.getAppPath().toLowerCase())
+      } catch {
+        // ignore
+      }
+    }
+  } catch {
+    // electron unavailable
+  }
+  return hints
+}
+
+/**
+ * True for EDA Cleaner / Electron runtime processes that must never be stopped
+ * from inside the cleaner UI.
+ */
+export function isSelfCleanerProcess(
+  name: string,
+  pid: number,
+  exePath?: string
+): boolean {
+  if (pid === process.pid) return true
+
+  const base = normalizeProcessBaseName(name)
+  if (
+    base === 'electron' ||
+    base.startsWith('electron-') ||
+    base.startsWith('electron ') ||
+    (base.includes('eda') && base.includes('clean'))
+  ) {
+    return true
+  }
+
+  const pathLower = (exePath ?? '').toLowerCase().replace(/\\/g, '/')
+  if (!pathLower) return false
+
+  for (const hint of selfAppPathHints()) {
+    const normalizedHint = hint.replace(/\\/g, '/')
+    if (normalizedHint && pathLower.includes(normalizedHint)) return true
+  }
+
+  // Dev: electron binary running this repo
+  if (
+    pathLower.includes('electron') &&
+    (pathLower.includes('edacleaner') || pathLower.includes('eda-cleaner'))
+  ) {
+    return true
+  }
+
+  return false
+}
+
+export function isProtectedProcess(
+  name: string,
+  pid: number,
+  exePath?: string
+): boolean {
   if (pid === process.pid || pid === 0 || pid === 4) return true
-  const base = name.split(/[/\\]/).pop()?.toLowerCase() ?? name.toLowerCase()
+  if (isSelfCleanerProcess(name, pid, exePath)) return true
+
+  const base = normalizeProcessBaseName(name)
   if (PROTECTED_PROCESS_NAMES.has(base)) return true
-  // Protect our own app variants
-  if (base.includes('eda') && base.includes('clean')) return true
+
   return false
 }
 

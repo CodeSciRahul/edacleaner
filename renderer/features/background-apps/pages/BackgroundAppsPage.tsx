@@ -1,18 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   AlertCircle,
   ArrowUpDown,
   Layers,
-  Radio,
-  RefreshCw,
   Search,
   Square,
   User,
   Shield
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { Toolbar } from '@/components/desktop/Toolbar'
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import {
@@ -21,21 +17,19 @@ import {
 } from '@/features/performance/hooks/useBoost'
 import { PageBreadcrumb } from '@/features/apps/components/PageBreadcrumb'
 import { AppsEmptyState } from '@/features/apps/components/AppsEmptyState'
+import { BackgroundAppsHero } from '@/features/background-apps/components/BackgroundAppsHero'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
 import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
-import { FeatureLockButton } from '@/features/entitlements/components/FeatureLockButton'
 import { FeatureTeaserBlock } from '@/features/entitlements/components/FeatureTeaserBlock'
-import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 
-type StatusFilter = 'all' | 'safe' | 'selected'
+type StatusFilter = 'all' | 'safe'
 type SortKey = 'memory' | 'cpu' | 'name'
 
 const filterLabelKeys: Record<StatusFilter, TranslationKey> = {
   all: 'backgroundApps.filterAll',
-  safe: 'backgroundApps.filterSafe',
-  selected: 'backgroundApps.filterSelected'
+  safe: 'backgroundApps.filterSafe'
 }
 
 const sortLabelKeys: Record<SortKey, TranslationKey> = {
@@ -44,12 +38,15 @@ const sortLabelKeys: Record<SortKey, TranslationKey> = {
   name: 'backgroundApps.sortName'
 }
 
+function displayName(processName: string): string {
+  return processName.replace(/\.exe$/i, '')
+}
+
 export function BackgroundAppsPage(): React.ReactElement {
   const { t } = useTranslation()
   const access = useFeatureAccess('background_apps')
   const {
     processes: apps,
-    updatedAt,
     isLoading,
     isFetching,
     isError,
@@ -62,19 +59,16 @@ export function BackgroundAppsPage(): React.ReactElement {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [sortKey, setSortKey] = useState<SortKey>('memory')
-  const [selectedPids, setSelectedPids] = useState<number[]>([])
-  const [notice, setNotice] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(
+    null
+  )
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     let list = apps.filter((app) => {
       if (statusFilter === 'safe' && !app.safeToTerminate) return false
-      if (statusFilter === 'selected' && !selectedPids.includes(app.pid)) return false
       if (!q) return true
-      return (
-        app.name.toLowerCase().includes(q) ||
-        String(app.pid).includes(q)
-      )
+      return app.name.toLowerCase().includes(q) || String(app.pid).includes(q)
     })
 
     list = [...list].sort((a, b) => {
@@ -84,67 +78,36 @@ export function BackgroundAppsPage(): React.ReactElement {
     })
 
     return list
-  }, [apps, query, statusFilter, sortKey, selectedPids])
+  }, [apps, query, statusFilter, sortKey])
 
   const totalMemory = useMemo(
-    () => filtered.reduce((sum, app) => sum + app.memoryBytes, 0),
-    [filtered]
+    () => apps.reduce((sum, app) => sum + app.memoryBytes, 0),
+    [apps]
   )
 
-  // Drop selections for PIDs that disappeared from the live list
-  useEffect(() => {
-    const livePids = new Set(apps.map((app) => app.pid))
-    setSelectedPids((prev) => {
-      const next = prev.filter((pid) => livePids.has(pid))
-      return next.length === prev.length ? prev : next
-    })
-  }, [apps])
-
-  const togglePid = (pid: number): void => {
-    setSelectedPids((prev) =>
-      prev.includes(pid) ? prev.filter((id) => id !== pid) : [...prev, pid]
-    )
-  }
-
-  const toggleAllVisible = (): void => {
-    const visibleSafe = filtered.filter((a) => a.safeToTerminate).map((a) => a.pid)
-    const allSelected = visibleSafe.every((pid) => selectedPids.includes(pid))
-    if (allSelected) {
-      setSelectedPids((prev) => prev.filter((pid) => !visibleSafe.includes(pid)))
-    } else {
-      setSelectedPids((prev) => [...new Set([...prev, ...visibleSafe])])
-    }
-  }
-
-  const handleStop = async (
-    targets: Array<{ pid: number; name: string }>
-  ): Promise<void> => {
+  const handleStop = async (targets: Array<{ pid: number; name: string }>): Promise<void> => {
     if (!access.guard()) return
     setNotice(null)
     const result = await stopProcesses.mutateAsync(targets)
     if (result.cancelled) return
 
     if (result.terminated > 0) {
-      setNotice(`Stopped ${result.terminated} process(es).`)
-      setSelectedPids((prev) => prev.filter((pid) => !targets.some((t) => t.pid === pid)))
+      setNotice({
+        type: 'success',
+        text: t('backgroundApps.noticeStopped', { count: result.terminated })
+      })
       void refresh()
     } else {
-      setNotice(
-        result.failed[0]?.error ??
+      setNotice({
+        type: 'error',
+        text:
+          result.failed[0]?.error ??
           result.skipped[0]?.reason ??
           result.detail ??
-          'No processes were stopped.'
-      )
+          t('backgroundApps.noticeNone')
+      })
     }
   }
-
-  const displayName = (processName: string): string =>
-    processName.replace(/\.exe$/i, '')
-
-  const updatedLabel =
-    updatedAt == null
-      ? t('backgroundApps.waiting')
-      : new Date(updatedAt).toLocaleTimeString()
 
   const PREVIEW_COUNT = 5
   const showTeaser = !access.allowed && filtered.length > PREVIEW_COUNT
@@ -152,344 +115,268 @@ export function BackgroundAppsPage(): React.ReactElement {
   const teaserApps = showTeaser ? filtered.slice(PREVIEW_COUNT, PREVIEW_COUNT + 5) : []
 
   return (
-    <>
-      <Toolbar
-        title={t('backgroundApps.title')}
-        description={t('backgroundApps.description')}
-        actions={
-          <div className="flex items-center gap-2">
-            {!access.allowed ? <PremiumBadge plan="premium" /> : null}
-            <span
-              className={cn(
-                'inline-flex h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium',
-                isLive
-                  ? 'border-success/30 bg-success/10 text-success'
-                  : 'border-border bg-muted text-muted-foreground'
-              )}
-              title={isLive ? 'Receiving live process updates' : 'Live updates paused or starting'}
-            >
-              <Radio className={cn('h-3.5 w-3.5', isLive && 'animate-pulse')} />
-              {isLive ? t('backgroundApps.live') : t('backgroundApps.offline')}
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 gap-2"
-              disabled={isFetching}
-              onClick={() => {
-                setNotice(null)
-                void refresh()
-              }}
-            >
-              <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-              {t('common.refresh')}
-            </Button>
-            <FeatureLockButton
-              feature="background_apps"
-              size="sm"
-              variant="destructive"
-              className="h-9 gap-2"
-              forceDisabled={selectedPids.length === 0 || stopProcesses.isPending}
-              onClick={() => {
-                const targets = apps
-                  .filter((app) => selectedPids.includes(app.pid))
-                  .map((app) => ({ pid: app.pid, name: app.name }))
-                void handleStop(targets)
-              }}
-            >
-              <Square className="h-3.5 w-3.5" />
-              {t('backgroundApps.stopSelected')}
-              {selectedPids.length > 0 ? ` (${selectedPids.length})` : ''}
-            </FeatureLockButton>
-          </div>
-        }
+    <div className="space-y-4 p-content-pad">
+      <BackgroundAppsHero
+        isLoading={isLoading}
+        isRefreshing={isFetching}
+        isLive={isLive}
+        accessAllowed={access.allowed}
+        listedCount={apps.length}
+        memoryBytes={totalMemory}
+        onRefresh={() => {
+          setNotice(null)
+          void refresh()
+        }}
       />
 
-      <div className="space-y-4 p-content-pad">
-        <FeatureLockedCallout feature="background_apps" compact />
-        <PageBreadcrumb
-          items={[
-            { label: t('performance.title'), href: '/performance' },
-            { label: t('backgroundApps.title') }
-          ]}
+      <FeatureLockedCallout feature="background_apps" compact />
+      <PageBreadcrumb
+        items={[
+          { label: t('performance.title'), href: '/performance' },
+          { label: t('backgroundApps.title') }
+        ]}
+      />
+
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-chart-ram/14 via-chart-ram/5 to-transparent"
+          aria-hidden="true"
         />
 
-        <div className="grid gap-3 sm:grid-cols-4">
-          <SummaryChip label={t('backgroundApps.listed')} value={String(apps.length)} />
-          <SummaryChip label={t('backgroundApps.visible')} value={String(filtered.length)} />
-          <SummaryChip label={t('backgroundApps.memory')} value={formatBytes(totalMemory)} />
-          <SummaryChip label={t('backgroundApps.lastUpdate')} value={updatedLabel} />
-        </div>
-
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
-          <div className="flex flex-col gap-3 border-b border-border bg-surface/50 p-4 lg:flex-row lg:items-center">
-            <div className="relative min-w-0 flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by app or PID…"
-                className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search background applications"
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {(['all', 'safe', 'selected'] as const).map((filter) => (
-                <Button
+        <div className="relative z-10 flex flex-col gap-3 border-b border-border/80 px-4 py-4 sm:px-5 lg:flex-row lg:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('backgroundApps.searchPlaceholder')}
+              className="h-10 w-full rounded-xl border border-border/80 bg-background/80 pl-9 pr-3 text-sm outline-none backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={t('backgroundApps.searchAria')}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex flex-wrap items-center gap-0.5 rounded-xl border border-border/80 bg-background/60 p-1 backdrop-blur-sm">
+              {(['all', 'safe'] as const).map((filter) => (
+                <button
                   key={filter}
-                  size="sm"
-                  variant={statusFilter === filter ? 'default' : 'outline'}
-                  className="h-9"
+                  type="button"
                   onClick={() => setStatusFilter(filter)}
+                  className={cn(
+                    'h-8 rounded-lg px-2.5 text-xs font-medium transition-colors',
+                    statusFilter === filter
+                      ? 'bg-chart-ram/15 text-chart-ram shadow-sm ring-1 ring-chart-ram/25'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  )}
                 >
                   {t(filterLabelKeys[filter])}
-                </Button>
+                </button>
               ))}
-              <label className="flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-2 text-xs text-muted-foreground">
-                <ArrowUpDown className="h-3.5 w-3.5" />
-                <select
-                  value={sortKey}
-                  onChange={(e) => setSortKey(e.target.value as SortKey)}
-                  className="bg-transparent text-foreground outline-none"
-                  aria-label="Sort background apps"
-                >
-                  {(Object.keys(sortLabelKeys) as SortKey[]).map((key) => (
-                    <option key={key} value={key}>
-                      {t(sortLabelKeys[key])}
-                    </option>
-                  ))}
-                </select>
-              </label>
             </div>
+            <label className="flex h-9 items-center gap-2 rounded-xl border border-border/80 bg-background/70 px-2.5 text-xs text-muted-foreground backdrop-blur-sm">
+              <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
+              <select
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value as SortKey)}
+                className="bg-transparent text-foreground outline-none"
+                aria-label={t('backgroundApps.sortAria')}
+              >
+                {(Object.keys(sortLabelKeys) as SortKey[]).map((key) => (
+                  <option key={key} value={key}>
+                    {t(sortLabelKeys[key])}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
+        </div>
 
-          {notice ? (
-            <div
-              className="border-b border-border bg-muted/30 px-4 py-2.5 text-sm text-foreground"
-              role="status"
-            >
-              {notice}
-            </div>
-          ) : null}
+        {notice ? (
+          <div
+            className={cn(
+              'relative z-10 border-b border-border/80 px-4 py-2.5 text-sm sm:px-5',
+              notice.type === 'success'
+                ? 'bg-success/10 text-success'
+                : 'bg-destructive/10 text-destructive'
+            )}
+            role="status"
+          >
+            {notice.text}
+          </div>
+        ) : null}
 
-          {isError ? (
+        {isError ? (
+          <div className="relative z-10">
             <AppsEmptyState
               icon={AlertCircle}
-              title="Couldn’t load background apps"
+              title={t('backgroundApps.loadError')}
               description={
-                error instanceof Error ? error.message : 'Something went wrong while scanning processes.'
+                error instanceof Error ? error.message : t('backgroundApps.loadErrorDesc')
               }
               actionLabel={t('common.retry')}
               onAction={() => void refresh()}
             />
-          ) : isLoading ? (
-            <div className="space-y-0 divide-y divide-border">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex animate-pulse items-center gap-4 px-4 py-4">
-                  <div className="h-4 w-4 rounded bg-muted" />
-                  <div className="h-9 w-9 rounded-lg bg-muted" />
-                  <div className="h-4 flex-1 rounded bg-muted" />
-                  <div className="h-4 w-16 rounded bg-muted" />
-                </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
+          </div>
+        ) : isLoading ? (
+          <div className="relative z-10 divide-y divide-border/70">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex animate-pulse items-center gap-3.5 px-4 py-3.5 sm:px-5">
+                <div className="h-9 w-9 rounded-xl bg-muted" />
+                <div className="h-4 flex-1 rounded-lg bg-muted" />
+                <div className="h-5 w-16 rounded-full bg-muted" />
+                <div className="h-8 w-16 rounded-lg bg-muted" />
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="relative z-10">
             <AppsEmptyState
               icon={Layers}
               title={t('backgroundApps.empty')}
-              description={t('backgroundApps.empty')}
+              description={t('backgroundApps.emptyHint')}
               actionLabel={t('common.refresh')}
               onAction={() => void refresh()}
             />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-sm">
-                <thead className="sticky top-0 z-10 bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
-                  <tr className="border-b border-border">
-                    <th className="w-10 px-4 py-3">
-                      <input
-                        type="checkbox"
-                        className="rounded border-border"
-                        aria-label="Select all visible"
-                        checked={
-                          filtered.filter((a) => a.safeToTerminate).length > 0 &&
-                          filtered
-                            .filter((a) => a.safeToTerminate)
-                            .every((a) => selectedPids.includes(a.pid))
-                        }
-                        onChange={toggleAllVisible}
-                      />
-                    </th>
-                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.app')}</th>
-                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.process')}</th>
-                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.type')}</th>
-                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.cpu')}</th>
-                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.memory')}</th>
-                    <th className="px-2 py-3 font-medium">{t('backgroundApps.col.status')}</th>
-                    <th className="px-4 py-3 text-right font-medium">
-                      {t('backgroundApps.col.action')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {visibleApps.map((app) => {
-                    const selected = selectedPids.includes(app.pid)
-                    const stopping =
-                      stopProcesses.isPending &&
-                      (stopProcesses.variables?.some((t) => t.pid === app.pid) ?? false)
-                    const appLabel = displayName(app.name)
+          </div>
+        ) : (
+          <div className="relative z-10 overflow-x-auto">
+            <table className="w-full min-w-[620px] border-collapse text-sm">
+              <thead className="sticky top-0 z-10 bg-card/90 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur-sm">
+                <tr className="border-b border-border/80">
+                  <th className="px-4 py-3 font-medium sm:px-5">{t('backgroundApps.col.app')}</th>
+                  <th className="px-2 py-3 font-medium">{t('backgroundApps.col.type')}</th>
+                  <th className="px-2 py-3 font-medium">{t('backgroundApps.col.cpu')}</th>
+                  <th className="px-2 py-3 font-medium">{t('backgroundApps.col.memory')}</th>
+                  <th className="px-4 py-3 text-right font-medium sm:px-5">
+                    {t('backgroundApps.col.action')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/70">
+                {visibleApps.map((app) => {
+                  const stopping =
+                    stopProcesses.isPending &&
+                    (stopProcesses.variables?.some((target) => target.pid === app.pid) ?? false)
+                  const appLabel = displayName(app.name)
+                  const canStop = app.safeToTerminate
+                  const hasIcon = Boolean(app.iconDataUrl)
+                  const cpu =
+                    app.cpuPercent > 0 && app.cpuPercent <= 400 ? app.cpuPercent : null
 
-                    return (
-                      <tr
-                        key={app.pid}
-                        className={cn(
-                          'transition-colors hover:bg-muted/40',
-                          selected && 'bg-primary/5'
-                        )}
-                      >
-                        <td className="px-4 py-3">
-                          <input
-                            type="checkbox"
-                            className="rounded border-border"
-                            checked={selected}
-                            disabled={
-                              !access.allowed ||
-                              !app.safeToTerminate ||
-                              stopProcesses.isPending
-                            }
-                            onChange={() => {
-                              if (!access.guard()) return
-                              togglePid(app.pid)
-                            }}
-                            aria-label={`Select ${appLabel}`}
-                          />
-                        </td>
-                        <td className="px-2 py-3">
-                          <div className="flex items-center gap-3">
-                            {app.iconDataUrl ? (
-                              <img
-                                src={app.iconDataUrl}
-                                alt=""
-                                className="h-9 w-9 shrink-0 rounded-lg"
-                              />
-                            ) : (
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold uppercase text-primary">
-                                {appLabel.slice(0, 2)}
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <p className="truncate font-medium text-foreground">{appLabel}</p>
-                              <p className="truncate text-xs text-muted-foreground">
-                                PID {app.pid}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-2 py-3 font-mono text-xs text-muted-foreground">
-                          {app.name}
-                        </td>
-                        <td className="px-2 py-3">
-                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                            {app.safeToTerminate ? (
-                              <>
-                                <User className="h-3.5 w-3.5" /> {t('backgroundApps.user')}
-                              </>
-                            ) : (
-                              <>
-                                <Shield className="h-3.5 w-3.5" /> {t('backgroundApps.protected')}
-                              </>
-                            )}
-                          </span>
-                        </td>
-                        <td className="px-2 py-3 tabular-nums text-muted-foreground">
-                          {app.cpuPercent > 0 ? `${app.cpuPercent.toFixed(1)}` : '—'}
-                        </td>
-                        <td className="px-2 py-3 tabular-nums font-medium text-foreground">
-                          {formatBytes(app.memoryBytes)}
-                        </td>
-                        <td className="px-2 py-3">
-                          <Badge className="border-0 bg-success/10 text-success">
-                            {t('backgroundApps.running')}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1.5"
-                            disabled={
-                              !access.allowed
-                                ? false
-                                : !app.safeToTerminate || stopProcesses.isPending
-                            }
-                            onClick={() => {
-                              if (!access.guard()) return
-                              void handleStop([{ pid: app.pid, name: app.name }])
-                            }}
-                          >
-                            <Square className="h-3 w-3" />
-                            {stopping ? t('backgroundApps.stopping') : t('backgroundApps.stop')}
-                          </Button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-              {showTeaser ? (
-                <FeatureTeaserBlock feature="background_apps" maxHeightClassName="max-h-48">
-                  <div className="divide-y divide-border">
-                    {teaserApps.map((app) => {
-                      const appLabel = displayName(app.name)
-                      return (
-                        <div
-                          key={`teaser-${app.pid}`}
-                          className="flex items-center gap-3 px-4 py-3"
-                        >
-                          {app.iconDataUrl ? (
+                  return (
+                    <tr
+                      key={app.pid}
+                      className={cn(
+                        'group align-middle transition-colors hover:bg-chart-ram/[0.04]',
+                        !canStop && 'bg-muted/10'
+                      )}
+                    >
+                      <td className="px-4 py-3 sm:px-5">
+                        <div className="flex items-center gap-3">
+                          {hasIcon ? (
                             <img
                               src={app.iconDataUrl}
                               alt=""
-                              className="h-9 w-9 shrink-0 rounded-lg"
+                              className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-border/60"
+                              draggable={false}
                             />
-                          ) : (
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold uppercase text-muted-foreground">
-                              {appLabel.slice(0, 2)}
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-foreground">
+                          ) : null}
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-foreground">
                               {appLabel}
                             </p>
-                            <p className="truncate text-xs text-muted-foreground">
-                              {formatBytes(app.memoryBytes)} · PID {app.pid}
+                            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                              PID {app.pid}
                             </p>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
-                </FeatureTeaserBlock>
-              ) : null}
-            </div>
-          )}
-
-          <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-            Only user-safe processes are listed. System-critical processes cannot be stopped from
-            here.
+                      </td>
+                      <td className="px-2 py-3">
+                        {canStop ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground ring-1 ring-border/60">
+                            <User className="h-3 w-3" aria-hidden="true" />
+                            {t('backgroundApps.user')}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-warning/12 px-2.5 py-0.5 text-[11px] font-medium text-warning ring-1 ring-warning/20">
+                            <Shield className="h-3 w-3" aria-hidden="true" />
+                            {t('backgroundApps.protected')}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 py-3 tabular-nums text-muted-foreground">
+                        {cpu != null ? `${cpu.toFixed(1)}%` : '—'}
+                      </td>
+                      <td className="px-2 py-3 tabular-nums text-sm font-semibold text-foreground">
+                        {formatBytes(app.memoryBytes)}
+                      </td>
+                      <td className="px-4 py-3 text-right sm:px-5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 rounded-lg border-border/80 bg-background/70 text-[12px] backdrop-blur-sm"
+                          disabled={
+                            !access.allowed ? false : !canStop || stopProcesses.isPending
+                          }
+                          title={
+                            !canStop ? t('backgroundApps.selfProtectedHint') : undefined
+                          }
+                          onClick={() => {
+                            if (!access.guard()) return
+                            if (!canStop) return
+                            void handleStop([{ pid: app.pid, name: app.name }])
+                          }}
+                        >
+                          <Square className="h-3 w-3" aria-hidden="true" />
+                          {stopping
+                            ? t('backgroundApps.stopping')
+                            : t('backgroundApps.stop')}
+                        </Button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            {showTeaser ? (
+              <FeatureTeaserBlock feature="background_apps" maxHeightClassName="max-h-48">
+                <div className="divide-y divide-border/70">
+                  {teaserApps.map((app) => {
+                    const appLabel = displayName(app.name)
+                    return (
+                      <div
+                        key={`teaser-${app.pid}`}
+                        className="flex items-center gap-3 px-4 py-3 sm:px-5"
+                      >
+                        {app.iconDataUrl ? (
+                          <img
+                            src={app.iconDataUrl}
+                            alt=""
+                            className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-border/60"
+                            draggable={false}
+                          />
+                        ) : null}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {appLabel}
+                          </p>
+                          <p className="truncate text-[11px] text-muted-foreground">
+                            {formatBytes(app.memoryBytes)} · PID {app.pid}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </FeatureTeaserBlock>
+            ) : null}
           </div>
+        )}
+
+        <div className="relative z-10 border-t border-border/80 px-4 py-3 text-xs text-muted-foreground sm:px-5">
+          {t('backgroundApps.footerHint')}
         </div>
       </div>
-    </>
-  )
-}
-
-function SummaryChip({ label, value }: { label: string; value: string }): React.ReactElement {
-  return (
-    <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-card">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-lg font-semibold tabular-nums text-foreground">{value}</p>
     </div>
   )
 }

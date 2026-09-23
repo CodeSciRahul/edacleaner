@@ -27,16 +27,25 @@ export async function tryGetIconDataUrl(location: string): Promise<string | unde
   if (!iconPath) return undefined
 
   try {
+    // Prefer large icons so Background Apps logos look closer to OS / PC Manager
+    const image = await app.getFileIcon(iconPath, { size: 'large' })
+    if (!image.isEmpty()) return image.toDataURL()
+  } catch {
+    // fall through
+  }
+
+  try {
     const image = await app.getFileIcon(iconPath, { size: 'normal' })
+    if (!image.isEmpty()) return image.toDataURL()
+  } catch {
+    // fall through
+  }
+
+  try {
+    const image = nativeImage.createFromPath(iconPath)
     if (image.isEmpty()) return undefined
     return image.toDataURL()
   } catch {
-    try {
-      const image = nativeImage.createFromPath(iconPath)
-      if (image.isEmpty()) return undefined
-      return image.toDataURL()
-    } catch {
-      return undefined
-    }
+    return undefined
   }
 }

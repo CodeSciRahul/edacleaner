@@ -60,33 +60,38 @@ export function FolderBreakdownPanel({
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-section-title text-foreground">{t('storage.breakdown.title')}</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-chart-disk/12 via-transparent to-transparent"
+          aria-hidden="true"
+        />
+
         {isLoading ? (
-          <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+          <div className="relative z-10 grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
             <div className="mx-auto h-[280px] w-[280px] animate-pulse rounded-full bg-muted/50" />
             <div className="space-y-3 py-4">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-12 animate-pulse rounded-lg bg-muted/40" />
+                <div key={i} className="h-12 animate-pulse rounded-xl bg-muted/40" />
               ))}
             </div>
           </div>
         ) : segments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <FolderTree className="h-6 w-6" />
+          <div className="relative z-10 flex flex-col items-center justify-center px-6 py-16 text-center">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-chart-disk/10 text-chart-disk ring-1 ring-chart-disk/20">
+              <FolderTree className="h-6 w-6" strokeWidth={1.85} />
             </div>
-            <p className="text-sm font-medium text-foreground">{t('storage.breakdown.empty')}</p>
-            <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+            <p className="text-sm font-semibold text-foreground">{t('storage.breakdown.empty')}</p>
+            <p className="mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
               {t('storage.breakdown.select')}
             </p>
           </div>
         ) : (
-          <div className="grid gap-2 p-4 lg:grid-cols-[minmax(240px,0.95fr)_minmax(0,1.15fr)] lg:gap-6 lg:p-6">
-            <div className="relative flex items-center justify-center rounded-xl bg-gradient-to-b from-muted/40 to-transparent p-2">
+          <div className="relative z-10 grid gap-2 p-4 lg:grid-cols-[minmax(240px,0.95fr)_minmax(0,1.15fr)] lg:gap-6 lg:p-6">
+            <div className="relative flex items-center justify-center rounded-2xl bg-gradient-to-b from-muted/50 to-transparent p-3 ring-1 ring-border/50">
               <FolderBreakdownChart
                 segments={segments}
                 centerLabel={driveLabel?.split(' ')[0] ?? t('storage.breakdown.drive')}
@@ -98,7 +103,7 @@ export function FolderBreakdownPanel({
 
             <div className="flex min-h-0 flex-col">
               <div className="mb-3 flex items-center justify-between px-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t('storage.breakdown.folders')}
                 </p>
                 <p className="text-xs tabular-nums text-muted-foreground">
@@ -117,10 +122,10 @@ export function FolderBreakdownPanel({
                           if (segment.path) onOpenCategory?.(segment)
                         }}
                         className={cn(
-                          'group flex w-full items-center gap-3 rounded-xl border border-border/70 bg-muted/20 px-3 py-2.5 text-left',
-                          'transition-all duration-150',
+                          'group flex w-full items-center gap-3 rounded-xl border border-border/70 bg-background/50 px-3 py-2.5 text-left',
+                          'shadow-sm transition-all duration-150',
                           clickable &&
-                            'cursor-pointer hover:-translate-y-px hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                            'cursor-pointer hover:-translate-y-px hover:border-chart-disk/40 hover:bg-chart-disk/5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                           !clickable && 'cursor-default opacity-90'
                         )}
                         style={{ animationDelay: `${index * 40}ms` }}
