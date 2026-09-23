@@ -17,6 +17,13 @@ export const spacing = {
 export const layout = {
   sidebarWidth: '260px',
   sidebarCollapsedWidth: '68px',
+  /**
+   * Collapsed sidebar + titlebar brand column on macOS: room for native traffic
+   * lights (≈16+54) plus the brand / expand control.
+   */
+  sidebarCollapsedWidthMac: '120px',
+  /** Left inset so header content clears native traffic lights. */
+  macTrafficLightInset: '76px',
   toolbarHeight: '64px',
   titlebarHeight: '44px',
   contentPadding: '24px',

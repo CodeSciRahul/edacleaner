@@ -10,7 +10,8 @@ import {
   getRendererPath,
   createSplashWindow,
   closeSplashWindow,
-  SPLASH_MIN_VISIBLE_MS
+  SPLASH_MIN_VISIBLE_MS,
+  ensureNativeWindowButtons
 } from '@main/windows'
 
 export class WindowManager {
@@ -42,6 +43,7 @@ export class WindowManager {
       title: config.name
     })
 
+    ensureNativeWindowButtons(window)
     window.setMenuBarVisibility(false)
     window.removeMenu()
 
@@ -166,6 +168,7 @@ export class WindowManager {
       getAuthWindowOptions(preloadPath, this.getMainWindow())
     )
 
+    ensureNativeWindowButtons(window)
     window.setMenuBarVisibility(false)
     window.removeMenu()
 

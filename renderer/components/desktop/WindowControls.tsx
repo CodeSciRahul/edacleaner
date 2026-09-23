@@ -1,5 +1,6 @@
 import { Minus, Square, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { isMacOS } from '@/utils/platform'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useWindowControls } from '@/hooks/useWindowControls'
 
@@ -29,13 +30,21 @@ interface WindowControlsProps {
   showMaximize?: boolean
 }
 
+/**
+ * Custom Win/Linux caption buttons. On macOS the native traffic lights are used
+ * instead — this component renders nothing there.
+ */
 export function WindowControls({
   tone = 'default',
   showMaximize = true
-}: WindowControlsProps): React.ReactElement {
+}: WindowControlsProps): React.ReactElement | null {
   const { t } = useTranslation()
   const { maximized, minimize, toggleMaximize, close } = useWindowControls()
   const light = tone === 'light'
+
+  if (isMacOS()) {
+    return null
+  }
 
   return (
     <div className="app-no-drag flex h-full shrink-0 items-stretch" role="group" aria-label={t('window.controls')}>

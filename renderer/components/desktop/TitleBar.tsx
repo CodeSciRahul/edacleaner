@@ -1,6 +1,7 @@
 import { PanelLeftClose } from 'lucide-react'
 import { APP_NAME } from '@shared/constants'
 import { cn } from '@/utils/cn'
+import { isMacOS } from '@/utils/platform'
 import { useUiStore } from '@/store/ui-store'
 import { useTranslation } from '@/i18n/useTranslation'
 import { WindowControls } from '@/components/desktop/WindowControls'
@@ -30,12 +31,16 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
   const collapsed = useUiStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
   const { toggleMaximize } = useWindowControls()
+  const mac = isMacOS()
 
   if (variant === 'overlay') {
     return (
       <header className="flex h-titlebar shrink-0 select-none bg-gradient-to-b from-white/35 to-transparent">
         <div
-          className="app-drag flex min-w-0 flex-1 items-center px-4"
+          className={cn(
+            'app-drag flex min-w-0 flex-1 items-center pr-4',
+            mac ? 'pl-mac-traffic-lights' : 'pl-4'
+          )}
         >
           {accessory ? <div className="app-no-drag min-w-0">{accessory}</div> : null}
         </div>
@@ -48,7 +53,10 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
     return (
       <header className="flex h-titlebar shrink-0 select-none border-b border-sidebar-border bg-sidebar">
         <div
-          className="app-drag flex min-w-0 flex-1 items-center gap-2.5 px-4"
+          className={cn(
+            'app-drag flex min-w-0 flex-1 items-center gap-2.5 pr-4',
+            mac ? 'pl-mac-traffic-lights' : 'pl-4'
+          )}
           onDoubleClick={toggleMaximize}
         >
           <BrandMark />
@@ -68,7 +76,13 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
         className={cn(
           'app-drag flex h-full items-center border-r border-sidebar-border',
           'transition-[width] duration-300 ease-out',
-          collapsed ? 'w-sidebar-collapsed justify-center px-2' : 'w-sidebar gap-2.5 px-4'
+          collapsed
+            ? mac
+              ? 'w-sidebar-collapsed-mac justify-end gap-0 pl-mac-traffic-lights pr-2'
+              : 'w-sidebar-collapsed justify-center px-2'
+            : mac
+              ? 'w-sidebar gap-2.5 pl-mac-traffic-lights pr-4'
+              : 'w-sidebar gap-2.5 px-4'
         )}
       >
         {collapsed ? (

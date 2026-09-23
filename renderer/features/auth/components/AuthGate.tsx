@@ -2,6 +2,7 @@ import splashLogoLoop from '@/assets/app logo/splash-logo-loop.gif'
 import { WindowControls } from '@/components/desktop/WindowControls'
 import { useTranslation } from '@/i18n/useTranslation'
 import { cn } from '@/utils/cn'
+import { isMacOS } from '@/utils/platform'
 
 interface SplashScreenProps {
   className?: string
@@ -21,6 +22,7 @@ export function SplashScreen({
   showMaximize = true
 }: SplashScreenProps): React.ReactElement {
   const { t } = useTranslation()
+  const mac = isMacOS()
 
   return (
     <div
@@ -34,7 +36,9 @@ export function SplashScreen({
     >
       {withWindowChrome ? (
         <header className="absolute inset-x-0 top-0 z-10 flex h-titlebar shrink-0 select-none">
-          <div className="app-drag min-w-0 flex-1" />
+          <div
+            className={cn('app-drag min-w-0 flex-1', mac && 'pl-mac-traffic-lights')}
+          />
           <WindowControls tone="light" showMaximize={showMaximize} />
         </header>
       ) : null}

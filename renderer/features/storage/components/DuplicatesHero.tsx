@@ -98,7 +98,7 @@ export function DuplicatesHero({
         'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
         featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
-        locked ? 'border-primary/20' : 'border-border'
+        locked ? 'border-primary/20' : 'border-chart-disk/25'
       )}
     >
       <img
@@ -116,14 +116,26 @@ export function DuplicatesHero({
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/90 via-card/55 to-transparent sm:via-card/40"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/92 via-card/60 to-transparent sm:via-card/42"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-chart-disk/15 blur-3xl"
         aria-hidden="true"
       />
 
       <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 max-w-xl space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-600 backdrop-blur-sm dark:text-violet-400">
+            <div
+              className={cn(
+                'inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1',
+                'text-[11px] font-semibold uppercase tracking-wide backdrop-blur-sm',
+                locked
+                  ? 'border-primary/25 bg-primary/10 text-primary'
+                  : 'border-chart-disk/30 bg-chart-disk/10 text-chart-disk'
+              )}
+            >
               {isLoading && !locked ? (
                 <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
               ) : (

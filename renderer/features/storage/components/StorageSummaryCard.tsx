@@ -24,15 +24,16 @@ export function StorageSummaryCard({
   return (
     <article
       className={cn(
-        'group relative flex overflow-hidden rounded-2xl border border-border p-3.5',
-        'shadow-card transition-all duration-150 ease-out',
-        'hover:-translate-y-0.5 hover:shadow-card-hover'
+        'group relative flex min-h-[96px] overflow-hidden rounded-2xl border border-border p-3.5',
+        'shadow-card transition-all duration-200 ease-out',
+        'hover:-translate-y-1 hover:border-primary/30',
+        'hover:shadow-[0_16px_36px_-14px_rgba(37,99,235,0.28)]'
       )}
     >
       <img
         src={visual.bgImage}
         alt=""
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right transition-transform duration-300 group-hover:scale-[1.03]"
         draggable={false}
         aria-hidden="true"
       />
@@ -44,22 +45,26 @@ export function StorageSummaryCard({
         className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/80 via-transparent to-transparent dark:from-card/75"
         aria-hidden="true"
       />
+      <div
+        className="pointer-events-none absolute -right-4 -top-6 h-16 w-16 rounded-full bg-primary/10 blur-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+        aria-hidden="true"
+      />
 
       <div className="relative z-10 flex min-w-0 flex-1 items-start gap-2.5">
         <div
           className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg backdrop-blur-sm',
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm backdrop-blur-sm',
             visual.iconWrapClass
           )}
         >
-          <Icon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+          <Icon className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[11px] font-medium leading-tight text-muted-foreground">
+          <h3 className="truncate text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
             {label}
           </h3>
-          <p className="mt-0.5 truncate text-lg font-semibold tabular-nums tracking-tight text-foreground">
+          <p className="mt-1 truncate text-lg font-semibold tabular-nums tracking-tight text-foreground">
             {value}
           </p>
           {badge}

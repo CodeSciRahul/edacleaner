@@ -49,7 +49,22 @@ export function useLiveBackgroundProcesses() {
 
   const applyUpdate = useCallback(
     (update: BackgroundProcessesUpdate) => {
-      setProcesses(update.processes)
+      setProcesses((prev) => {
+        // Keep previously resolved logos when a live tick briefly omits iconDataUrl
+        const prevByPid = new Map(prev.map((p) => [p.pid, p]))
+        const prevByName = new Map(
+          prev.filter((p) => p.iconDataUrl).map((p) => [p.name.toLowerCase(), p.iconDataUrl!])
+        )
+
+        return update.processes.map((process) => {
+          if (process.iconDataUrl) return process
+          const fromPid = prevByPid.get(process.pid)?.iconDataUrl
+          if (fromPid) return { ...process, iconDataUrl: fromPid }
+          const fromName = prevByName.get(process.name.toLowerCase())
+          if (fromName) return { ...process, iconDataUrl: fromName }
+          return process
+        })
+      })
       setUpdatedAt(update.updatedAt)
       setIsLoading(false)
       setIsFetching(false)

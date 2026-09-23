@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { useTranslation } from '@/i18n/useTranslation'
 
 interface DashboardTopProcessesProps {
-  processes: Array<{ name: string; memoryBytes: number }>
+  processes: Array<{ name: string; memoryBytes: number; iconDataUrl?: string }>
   isLoading: boolean
 }
 

@@ -1,6 +1,7 @@
 import type { BrowserWindowConstructorOptions } from 'electron'
 import { WINDOW_DEFAULTS } from '@shared/constants'
 import { resolveAppIconPath } from '@main/utils/app-icon'
+import { getPlatformWindowChromeOptions } from '@main/windows/window-chrome'
 
 export function getAuthWindowOptions(
   preloadPath: string,
@@ -14,8 +15,7 @@ export function getAuthWindowOptions(
     minWidth: WINDOW_DEFAULTS.AUTH_MIN_WIDTH,
     minHeight: WINDOW_DEFAULTS.AUTH_MIN_HEIGHT,
     show: false,
-    frame: false,
-    titleBarStyle: 'hidden',
+    ...getPlatformWindowChromeOptions(),
     autoHideMenuBar: true,
     maximizable: false,
     backgroundColor: '#d7eaf6',

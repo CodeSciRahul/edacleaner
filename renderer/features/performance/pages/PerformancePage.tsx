@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Power, Layers, Cpu, Activity } from 'lucide-react'
+import { Power, Layers } from 'lucide-react'
 import { TopProcessesTable } from '@/components/desktop/TopProcessesTable'
-import { computePerformanceScore, formatBytes } from '@shared/utils'
+import { computePerformanceScore } from '@shared/utils'
 import { electronService } from '@/services/electron-service'
 import type { BoostResult } from '@shared/interfaces'
 import {
@@ -66,7 +66,7 @@ export function PerformancePage(): React.ReactElement {
   const boostAccess = useFeatureAccess('performance_boost')
   const { data: analysis, isLoading: analysisLoading, refetch: refetchAnalysis } =
     useBoostAnalysis(boostAccess.allowed)
-  const { data: snapshot, isLoading: snapshotLoading } = useBoostSnapshot(boostAccess.allowed)
+  const { data: snapshot } = useBoostSnapshot(boostAccess.allowed)
   const { data: startupList, isLoading: startupLoading } = useStartupApps(boostAccess.allowed)
   const runBoost = useRunBoost()
   const cancelBoost = useCancelBoost()
@@ -188,7 +188,7 @@ export function PerformancePage(): React.ReactElement {
       value: startupLoading ? '…' : `${startupEnabledCount}`,
       actionLabel: t('performance.startupAction'),
       onAction: () => navigate('/startup-apps'),
-      accentClass: 'bg-warning/15 text-warning'
+      accent: 'startup'
     },
     {
       id: 'background',
@@ -198,31 +198,7 @@ export function PerformancePage(): React.ReactElement {
       value: analysisLoading ? '…' : `${backgroundCount}`,
       actionLabel: t('performance.bgAction'),
       onAction: () => navigate('/background-apps'),
-      accentClass: 'bg-primary/15 text-primary'
-    },
-    {
-      id: 'ram',
-      icon: Cpu,
-      title: t('performance.ramTitle'),
-      description: t('performance.ramDesc'),
-      value: snapshotLoading && !analysis ? '…' : formatBytes(recoverableEstimate),
-      actionLabel: t('performance.bgAction'),
-      onAction: () => navigate('/background-apps'),
-      accentClass: 'bg-chart-ram/15 text-chart-ram'
-    },
-    {
-      id: 'disk',
-      icon: Activity,
-      title: t('performance.diskTitle'),
-      description: analysis?.diskPressure?.mountPath ?? t('performance.diskDesc'),
-      value: analysis?.diskPressure
-        ? formatBytes(analysis.diskPressure.freeBytes)
-        : snapshotLoading
-          ? '…'
-          : 'N/A',
-      actionLabel: t('common.refresh'),
-      onAction: () => void refetchAnalysis(),
-      accentClass: 'bg-chart-disk/15 text-chart-disk'
+      accent: 'background'
     }
   ]
 
@@ -351,7 +327,8 @@ export function PerformancePage(): React.ReactElement {
                 processes={topProcesses.map((p) => ({
                   name: p.name,
                   memoryBytes: p.memoryBytes,
-                  cpu: Number(p.cpuPercent.toFixed(1))
+                  cpu: Number(p.cpuPercent.toFixed(1)),
+                  iconDataUrl: p.iconDataUrl
                 }))}
                 previewCount={4}
                 locked={false}

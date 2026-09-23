@@ -36,7 +36,7 @@ export function StorageSummaryCards({
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="h-[88px] animate-pulse rounded-2xl border border-border bg-muted/40"
+            className="h-[96px] animate-pulse rounded-2xl border border-border bg-muted/40"
           />
         ))}
       </section>
@@ -76,11 +76,13 @@ export function StorageSummaryCards({
       badge: (
         <span
           className={cn(
-            'mt-1.5 inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium',
+            'mt-1.5 inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold',
             capacityStatusClass[totals.overallStatus]
           )}
         >
-          {totals.driveCount} drive{totals.driveCount === 1 ? '' : 's'}
+          {totals.driveCount === 1
+            ? t('storage.summary.driveCountOne')
+            : t('storage.summary.driveCountMany', { count: totals.driveCount })}
         </span>
       )
     }

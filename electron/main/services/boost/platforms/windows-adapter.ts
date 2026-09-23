@@ -60,11 +60,28 @@ export class WindowsBoostAdapter implements PlatformBoostAdapter {
   async listProcesses(limit = 25): Promise<BoostProcessInfo[]> {
     try {
       const fetchCount = Math.max(limit * 2, 120)
-      const { stdout } = await runCommand('powershell.exe', [
-        '-NoProfile',
-        '-Command',
-        `Get-Process | Sort-Object -Property WorkingSet64 -Descending | Select-Object -First ${fetchCount} Id,ProcessName,WorkingSet64,CPU,Path | ConvertTo-Json -Compress`
-      ])
+      // Enrich Path via Win32_Process — Get-Process.Path is often empty for many apps.
+      const { stdout } = await runCommand(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-Command',
+          [
+            `$ErrorActionPreference='SilentlyContinue';`,
+            `$pathByPid=@{};`,
+            `Get-CimInstance Win32_Process | ForEach-Object {`,
+            `  if ($_.ExecutablePath) { $pathByPid[[int]$_.ProcessId]=[string]$_.ExecutablePath }`,
+            `};`,
+            `Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First ${fetchCount} |`,
+            `ForEach-Object {`,
+            `  $p=$_.Path;`,
+            `  if (-not $p) { $p=$pathByPid[[int]$_.Id] };`,
+            `  [pscustomobject]@{Id=$_.Id;ProcessName=$_.ProcessName;WorkingSet64=$_.WorkingSet64;CPU=$_.CPU;Path=$p}`,
+            `} | ConvertTo-Json -Compress`
+          ].join(' ')
+        ],
+        { timeoutMs: 20_000 }
+      )
 
       const parsed = JSON.parse(stdout.trim() || '[]') as
         | Array<{
@@ -98,7 +115,7 @@ export class WindowsBoostAdapter implements PlatformBoostAdapter {
             memoryBytes: Number(row.WorkingSet64) || 0,
             cpuPercent: Number(row.CPU) || 0,
             path: exePath,
-            safeToTerminate: !isProtectedProcess(name, pid)
+            safeToTerminate: !isProtectedProcess(name, pid, exePath)
           } satisfies BoostProcessInfo
         })
         .filter((p) => p.pid > 0)
