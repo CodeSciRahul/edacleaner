@@ -101,10 +101,25 @@ export interface StorageUsageResult {
   analyzedBytes: number
 }
 
+/** Filesystem deletion risk — assigned by the main-process Safety Engine. */
+export type FileSafetyRiskLevel = 'SAFE' | 'CAUTION' | 'HIGH_RISK' | 'PROTECTED'
+
+export interface FileSafetyInfo {
+  riskLevel: FileSafetyRiskLevel
+  deletionAllowed: boolean
+  reason: string
+  ruleId: string | null
+  category: string | null
+  regeneratable: boolean
+  recoverable: boolean
+  viaSymlink: boolean
+}
+
 export interface LargeFile {
   name: string
   path: string
   sizeBytes: number
+  safety: FileSafetyInfo
 }
 
 export interface FindLargeFilesOptions {
@@ -116,6 +131,8 @@ export interface FindLargeFilesOptions {
 export interface DuplicateGroup {
   name: string
   paths: string[]
+  /** Parallel to `paths` — safety for each duplicate location. */
+  pathSafety: FileSafetyInfo[]
   copies: number
   sizeBytes: number
 }
@@ -129,6 +146,8 @@ export interface FindDuplicatesOptions {
 export interface DeleteFilesResult {
   deleted: string[]
   failed: Array<{ path: string; error: string }>
+  /** Paths refused by the Safety Engine (never sent to trash). */
+  blocked?: Array<{ path: string; reason: string; ruleId?: string | null }>
 }
 
 /** Progress while moving large / duplicate files to trash. */

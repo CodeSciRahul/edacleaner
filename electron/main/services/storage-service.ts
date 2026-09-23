@@ -16,6 +16,7 @@ import type {
   StorageSegment,
   StorageUsageResult
 } from '@shared/interfaces'
+import { getSafetyEngine, toFileSafetyInfo } from '@main/services/safety'
 
 type CheckDiskSpaceFn = (directoryPath: string) => Promise<{
   diskPath: string
@@ -95,8 +96,12 @@ const SKIP_DIR_NAMES = new Set(
 
 const DEFAULT_LARGE_MIN_BYTES = 100 * 1024 * 1024
 const DEFAULT_DUPLICATE_MIN_BYTES = 1024 * 1024
+/** Compact defaults for dashboard / smart-scan previews. */
 const DEFAULT_LARGE_LIMIT = 25
 const DEFAULT_DUPLICATE_LIMIT = 20
+/** Hard caps so a full home crawl cannot flood IPC / renderer memory. */
+const MAX_LARGE_RESULTS = 5_000
+const MAX_DUPLICATE_RESULTS = 1_000
 const MAX_SCAN_FILES = 40_000
 const HASH_SAMPLE_BYTES = 2 * 1024 * 1024
 
@@ -518,7 +523,11 @@ export class StorageService {
   async findLargeFiles(options: FindLargeFilesOptions = {}): Promise<LargeFile[]> {
     const rootPath = options.rootPath ?? app.getPath('home')
     const minBytes = options.minBytes ?? DEFAULT_LARGE_MIN_BYTES
-    const limit = options.limit ?? DEFAULT_LARGE_LIMIT
+    const limit = Math.min(
+      Math.max(1, options.limit ?? DEFAULT_LARGE_LIMIT),
+      MAX_LARGE_RESULTS
+    )
+    const safety = getSafetyEngine()
 
     const files = await crawlFiles(rootPath, 10)
     const largeFiles: LargeFile[] = []
@@ -528,10 +537,14 @@ export class StorageService {
         const info = await stat(filePath)
         if (!info.isFile() || info.size < minBytes) continue
 
+        // Lexical classify at scan time (fast). Delete path re-checks with realpath.
+        const safetyInfo = toFileSafetyInfo(safety.evaluateLexical(filePath))
+
         largeFiles.push({
           name: basename(filePath),
           path: filePath,
-          sizeBytes: info.size
+          sizeBytes: info.size,
+          safety: safetyInfo
         })
       } catch {
         // skip
@@ -544,7 +557,10 @@ export class StorageService {
   async findDuplicates(options: FindDuplicatesOptions = {}): Promise<DuplicateGroup[]> {
     const rootPath = options.rootPath ?? app.getPath('home')
     const minBytes = options.minBytes ?? DEFAULT_DUPLICATE_MIN_BYTES
-    const limit = options.limit ?? DEFAULT_DUPLICATE_LIMIT
+    const limit = Math.min(
+      Math.max(1, options.limit ?? DEFAULT_DUPLICATE_LIMIT),
+      MAX_DUPLICATE_RESULTS
+    )
 
     const files = await crawlFiles(rootPath, 8)
     const bySize = new Map<number, string[]>()
@@ -580,12 +596,17 @@ export class StorageService {
     }
 
     const groups: DuplicateGroup[] = []
+    const safety = getSafetyEngine()
 
     for (const group of byHash.values()) {
       if (group.paths.length < 2) continue
+      const pathSafety = group.paths.map((p) =>
+        toFileSafetyInfo(safety.evaluateLexical(p))
+      )
       groups.push({
         name: basename(group.paths[0]),
         paths: group.paths,
+        pathSafety,
         copies: group.paths.length,
         sizeBytes: group.sizeBytes
       })
@@ -616,8 +637,10 @@ export class StorageService {
   ): Promise<DeleteFilesResult> {
     const deleted: string[] = []
     const failed: Array<{ path: string; error: string }> = []
+    const blocked: Array<{ path: string; reason: string; ruleId?: string | null }> = []
     const uniquePaths = [...new Set(filePaths.filter((p) => typeof p === 'string' && p.length > 0))]
     const total = uniquePaths.length
+    const safety = getSafetyEngine()
 
     for (let i = 0; i < uniquePaths.length; i++) {
       const filePath = uniquePaths[i]
@@ -638,7 +661,22 @@ export class StorageService {
       })
 
       try {
-        await shell.trashItem(filePath)
+        // TOCTOU: re-stat + re-classify immediately before trash
+        const decision = await safety.assertDeletable(filePath, { permanent: false })
+        if (!decision.deletionAllowed) {
+          blocked.push({
+            path: filePath,
+            reason: decision.reason,
+            ruleId: decision.ruleId
+          })
+          failed.push({
+            path: filePath,
+            error: decision.reason
+          })
+          continue
+        }
+
+        await shell.trashItem(decision.realPath || filePath)
         deleted.push(filePath)
       } catch (err) {
         failed.push({
@@ -653,14 +691,16 @@ export class StorageService {
       message:
         deleted.length > 0
           ? `Moved ${deleted.length} item(s) to trash`
-          : 'No files were moved',
+          : blocked.length > 0
+            ? 'Protected files were not moved'
+            : 'No files were moved',
       percent: 100,
       currentIndex: total,
       total,
       deletedSoFar: deleted.length
     })
 
-    return { deleted, failed }
+    return { deleted, failed, blocked }
   }
 
   getDefaultScanRoot(): string {

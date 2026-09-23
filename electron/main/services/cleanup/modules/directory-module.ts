@@ -2,6 +2,7 @@ import {
   cleanDirectoryContents,
   estimateDirectoryStats
 } from '@main/services/boost/fs-utils'
+import { getSafetyEngine } from '@main/services/safety'
 import type {
   CleanupModule,
   CleanupModuleCleanResult,
@@ -56,6 +57,13 @@ async function cleanDirectoryTargets(
     if (target.kind !== 'directory') continue
     if (isBroadCacheRoot(target.path)) {
       errors.push(`Skipped broad root: ${target.path}`)
+      continue
+    }
+
+    const safety = getSafetyEngine()
+    const decision = await safety.assertDeletable(target.path, { permanent: true })
+    if (!decision.deletionAllowed) {
+      errors.push(`Protected: ${decision.reason}`)
       continue
     }
 

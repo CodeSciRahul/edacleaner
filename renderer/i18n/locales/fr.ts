@@ -859,6 +859,16 @@ export const fr: Record<TranslationKey, string> = {
   'storage.deleting.row': 'Vers la corbeille…',
   'storage.deleting.rowShort': 'Suppression…',
   'storage.deleting.queued': 'En attente…',
+  'storage.list.showing': 'Affichage de {{visible}} sur {{total}}',
+  'storage.list.loadingMore': 'Chargement…',
+  'storage.list.end': 'Tous les éléments sont chargés',
+  'storage.safety.protected': 'Protégé',
+  'storage.safety.highRisk': 'Risque élevé',
+  'storage.safety.caution': 'Peut être nécessaire',
+  'storage.safety.blockedNotice':
+    '{{count}} élément(s) protégé(s) ont été ignorés pour protéger votre système.',
+  'storage.safety.selectSkipped':
+    'Les éléments protégés n’ont pas été sélectionnés afin d’éviter une suppression accidentelle.',
   'storage.copy.copied': 'Copié',
   'storage.copy.failed': 'Impossible de copier le chemin.',
   'storage.drivesError': 'Impossible de charger les disques',

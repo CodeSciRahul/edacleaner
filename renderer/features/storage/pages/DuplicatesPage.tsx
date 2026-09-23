@@ -15,12 +15,22 @@ import { StorageSubnav } from '@/features/storage/components/StorageSubnav'
 import { StorageFilterBar, storageFilterSelectClassName, storageFilterSelectWrapClassName } from '@/features/storage/components/StorageFilterBar'
 import { FileTypeIcon } from '@/features/storage/components/FileTypeIcon'
 import {
+  SafetyRiskBadge,
+  isDeletableSafety
+} from '@/features/storage/components/SafetyRiskBadge'
+import {
   useDeleteFiles,
   useDeleteFilesProgress,
   useDuplicates,
   useRevealInFolder,
   confirmMoveToTrash
 } from '@/features/storage/hooks/useStorageData'
+import { useInfiniteScrollReveal } from '@/features/storage/hooks/useInfiniteScrollReveal'
+import {
+  STORAGE_LIST_PAGE_SIZE,
+  STORAGE_PAGE_DUPLICATES_LIMIT
+} from '@/features/storage/lib/list-limits'
+import type { FileSafetyInfo } from '@shared/interfaces'
 import { getFileCategory, type FileCategory } from '@/features/storage/lib/file-type'
 import { formatBytes } from '@shared/utils'
 import { cn } from '@/utils/cn'
@@ -45,7 +55,7 @@ export function DuplicatesPage(): React.ReactElement {
   const { t } = useTranslation()
   const access = useFeatureAccess('duplicates')
   const { data: groups = [], isLoading, isError, error, refetch, isFetching } = useDuplicates(
-    undefined,
+    { limit: STORAGE_PAGE_DUPLICATES_LIMIT },
     access.allowed
   )
   const reveal = useRevealInFolder()
@@ -92,10 +102,26 @@ export function DuplicatesPage(): React.ReactElement {
 
     let list = groups
       .map((group) => {
-        const paths = group.paths.filter(
-          (p) => !omittedSet.has(p) || pendingSet.has(p)
-        )
-        return { ...group, paths, copies: paths.length }
+        const kept: string[] = []
+        const keptSafety: FileSafetyInfo[] = []
+        group.paths.forEach((p, i) => {
+          if (!omittedSet.has(p) || pendingSet.has(p)) {
+            kept.push(p)
+            keptSafety.push(
+              group.pathSafety?.[i] ?? {
+                riskLevel: 'SAFE',
+                deletionAllowed: true,
+                reason: '',
+                ruleId: null,
+                category: null,
+                regeneratable: false,
+                recoverable: true,
+                viaSymlink: false
+              }
+            )
+          }
+        })
+        return { ...group, paths: kept, pathSafety: keptSafety, copies: kept.length }
       })
       .filter((group) => {
         if (group.paths.length === 0) return false
@@ -151,16 +177,60 @@ export function DuplicatesPage(): React.ReactElement {
     0
   )
 
+  const listResetKey = [
+    query,
+    pathFilter,
+    category,
+    sizeFilter,
+    minCopies,
+    sortKey,
+    omittedPaths.length,
+    groups.length
+  ].join('|')
+
+  const {
+    visibleItems: visibleGroups,
+    sentinelRef,
+    hasMore,
+    visibleCount,
+    total: filteredTotal
+  } = useInfiniteScrollReveal(filtered, {
+    pageSize: STORAGE_LIST_PAGE_SIZE,
+    resetKey: listResetKey
+  })
+
+  const pathSafetyLookup = useMemo(() => {
+    const map = new Map<string, FileSafetyInfo>()
+    for (const group of filtered) {
+      group.paths.forEach((p, i) => {
+        if (group.pathSafety?.[i]) map.set(p, group.pathSafety[i])
+      })
+    }
+    return map
+  }, [filtered])
+
   const togglePath = (path: string): void => {
+    const safety = pathSafetyLookup.get(path)
+    if (safety && !isDeletableSafety(safety)) return
     setSelected((prev) =>
       prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
     )
   }
 
   const selectAllExceptKeep = (): void => {
-    const extras = filtered.flatMap((g) => g.paths.slice(1))
+    const extras = filtered.flatMap((g) =>
+      g.paths
+        .slice(1)
+        .filter((_p, idx) => isDeletableSafety(g.pathSafety?.[idx + 1]))
+    )
+    const skipped =
+      filtered.flatMap((g) => g.paths.slice(1)).length - extras.length
     setSelected((prev) => [...new Set([...prev, ...extras])])
-    setNotice(`Selected ${extras.length} duplicate copy(ies), keeping originals.`)
+    setNotice(
+      skipped > 0
+        ? t('storage.safety.selectSkipped')
+        : `Selected ${extras.length} duplicate copy(ies), keeping originals.`
+    )
   }
 
   const clearSelection = (): void => {
@@ -225,10 +295,20 @@ export function DuplicatesPage(): React.ReactElement {
           durationMs: Date.now() - startedAt
         })
         setSelected((prev) => prev.filter((p) => !result.deleted.includes(p)))
-        setNotice(`Moved ${result.deleted.length} duplicate(s) to trash.`)
+        const blockedCount = result.blocked?.length ?? 0
+        const blockedMsg =
+          blockedCount > 0
+            ? ` ${t('storage.safety.blockedNotice', { count: blockedCount })}`
+            : ''
+        setNotice(`Moved ${result.deleted.length} duplicate(s) to trash.${blockedMsg}`)
         await finishDeleteUi(result.deleted)
       } else {
-        setNotice(result.failed[0]?.error ?? 'No files were deleted.')
+        const blockedCount = result.blocked?.length ?? 0
+        setNotice(
+          blockedCount > 0
+            ? t('storage.safety.blockedNotice', { count: blockedCount })
+            : (result.failed[0]?.error ?? 'No files were deleted.')
+        )
         setPendingDeletePaths([])
         setHeldGroups([])
       }
@@ -328,7 +408,11 @@ export function DuplicatesPage(): React.ReactElement {
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span>
-                <strong className="text-foreground">{filtered.length}</strong> groups
+                {t('storage.list.showing', {
+                  visible: visibleCount,
+                  total: filteredTotal
+                })}
+                {groups.length !== filtered.length ? ` · ${groups.length} scanned` : ''}
               </span>
               <span>·</span>
               <span>
@@ -367,7 +451,7 @@ export function DuplicatesPage(): React.ReactElement {
               />
             ) : (
               <div className="space-y-3">
-                {filtered.map((group) => (
+                {visibleGroups.map((group) => (
                   <DuplicateGroupCard
                     key={`${group.name}-${group.paths[0]}`}
                     group={group}
@@ -383,6 +467,17 @@ export function DuplicatesPage(): React.ReactElement {
                     keepLabel={t('duplicates.keep')}
                   />
                 ))}
+                <div
+                  ref={sentinelRef}
+                  className="flex items-center justify-center rounded-xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground"
+                  aria-hidden={!hasMore}
+                >
+                  {hasMore
+                    ? t('storage.list.loadingMore')
+                    : filteredTotal > STORAGE_LIST_PAGE_SIZE
+                      ? t('storage.list.end')
+                      : null}
+                </div>
               </div>
             )}
           </>
@@ -448,6 +543,16 @@ function DuplicateGroupCard({
           const deleting = inBatch && (!mutatePending || deletingPath === path)
           const queued = inBatch && mutatePending && deletingPath !== path
           const name = path.split(/[/\\]/).pop() ?? path
+          const safety = group.pathSafety?.[index]
+          const canDelete = isDeletableSafety(safety)
+          const riskLabel =
+            safety?.riskLevel === 'PROTECTED'
+              ? t('storage.safety.protected')
+              : safety?.riskLevel === 'HIGH_RISK'
+                ? t('storage.safety.highRisk')
+                : safety?.riskLevel === 'CAUTION'
+                  ? t('storage.safety.caution')
+                  : ''
 
           return (
             <li
@@ -456,14 +561,15 @@ function DuplicateGroupCard({
                 'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/40',
                 isSelected && 'bg-primary/5',
                 deleting && 'bg-destructive/5 ring-1 ring-inset ring-destructive/20',
-                queued && 'opacity-60'
+                queued && 'opacity-60',
+                !canDelete && 'bg-muted/20'
               )}
             >
               <input
                 type="checkbox"
                 className="rounded border-border"
                 checked={isSelected}
-                disabled={actionsDisabled}
+                disabled={actionsDisabled || !canDelete}
                 onChange={() => onToggle(path)}
                 aria-label={`Select ${name}`}
               />
@@ -479,6 +585,7 @@ function DuplicateGroupCard({
                       Duplicate
                     </Badge>
                   )}
+                  {safety ? <SafetyRiskBadge safety={safety} label={riskLabel} /> : null}
                   {deleting ? (
                     <Badge className="gap-1 border-0 bg-destructive/10 text-destructive text-[10px]">
                       <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
@@ -490,6 +597,14 @@ function DuplicateGroupCard({
                     </Badge>
                   ) : null}
                 </div>
+                {safety && safety.riskLevel !== 'SAFE' ? (
+                  <p
+                    className="line-clamp-1 text-[11px] text-muted-foreground"
+                    title={safety.reason}
+                  >
+                    {safety.reason}
+                  </p>
+                ) : null}
                 <p className="truncate text-xs text-muted-foreground" title={path}>
                   {path}
                 </p>

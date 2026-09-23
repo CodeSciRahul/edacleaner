@@ -824,6 +824,16 @@ export const en = {
   'storage.deleting.row': 'Moving to trash…',
   'storage.deleting.rowShort': 'Deleting…',
   'storage.deleting.queued': 'Waiting…',
+  'storage.list.showing': 'Showing {{visible}} of {{total}}',
+  'storage.list.loadingMore': 'Loading more…',
+  'storage.list.end': 'All items loaded',
+  'storage.safety.protected': 'Protected',
+  'storage.safety.highRisk': 'High risk',
+  'storage.safety.caution': 'May be needed',
+  'storage.safety.blockedNotice':
+    '{{count}} protected item(s) were skipped to keep your system safe.',
+  'storage.safety.selectSkipped':
+    'Protected items were left unselected so they cannot be deleted by mistake.',
   'storage.copy.copied': 'Copied',
   'storage.copy.failed': 'Could not copy path.',
   'storage.drivesError': 'Could not load drives',

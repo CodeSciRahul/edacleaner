@@ -855,6 +855,16 @@ export const de: Record<TranslationKey, string> = {
   'storage.deleting.row': 'In den Papierkorb…',
   'storage.deleting.rowShort': 'Löschen…',
   'storage.deleting.queued': 'Wartend…',
+  'storage.list.showing': '{{visible}} von {{total}} angezeigt',
+  'storage.list.loadingMore': 'Weitere werden geladen…',
+  'storage.list.end': 'Alle Einträge geladen',
+  'storage.safety.protected': 'Geschützt',
+  'storage.safety.highRisk': 'Hohes Risiko',
+  'storage.safety.caution': 'Möglicherweise benötigt',
+  'storage.safety.blockedNotice':
+    '{{count}} geschützte Element(e) wurden übersprungen, um Ihr System zu schützen.',
+  'storage.safety.selectSkipped':
+    'Geschützte Elemente wurden nicht ausgewählt, damit sie nicht versehentlich gelöscht werden.',
   'storage.copy.copied': 'Kopiert',
   'storage.copy.failed': 'Pfad konnte nicht kopiert werden.',
   'storage.drivesError': 'Laufwerke konnten nicht geladen werden',
