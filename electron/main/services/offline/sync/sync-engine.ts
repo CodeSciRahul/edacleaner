@@ -1,4 +1,5 @@
 import { createLogger } from '@main/utils/logger'
+import { chromiumFetch } from '@main/utils/chromium-fetch'
 import { connectivityService } from '../connectivity-service'
 import { queueService } from '../queue/queue-service'
 import type {
@@ -450,7 +451,7 @@ export class SyncEngine {
         url: item.url
       })
 
-      return await fetch(item.url, init)
+      return await chromiumFetch(item.url, init)
     } finally {
       clearTimeout(timer)
     }

@@ -1,24 +1,24 @@
 import { net } from 'electron'
-import dns from 'dns/promises'
 import { createLogger } from '@main/utils/logger'
 import type { NetworkStatus, NetworkStatusSnapshot } from '@shared/interfaces'
 
 const log = createLogger('Connectivity')
 
-const DEFAULT_PROBE_HOST = 'dns.google'
 const DEFAULT_POLL_MS = 15_000
 
 export type ConnectivityListener = (snapshot: NetworkStatusSnapshot) => void
 
 /**
  * Cross-platform connectivity probing.
- * Uses Electron net.isOnline() plus an optional DNS probe for a stronger signal.
+ * Uses Electron `net.isOnline()` only — no Node dns/c-ares and no Chromium
+ * `net.fetch` probe. Periodic HTTP probes previously correlated with
+ * FATAL NOTREACHED crashes on some macOS / nested-Electron environments;
+ * probe failure was already treated as soft-online, so status is unchanged.
  */
 export class ConnectivityService {
   private status: NetworkStatus = 'unknown'
   private lastCheckedAt = 0
   private lastError: string | null = null
-  private probeHost = DEFAULT_PROBE_HOST
   private pollTimer: NodeJS.Timeout | null = null
   private readonly listeners = new Set<ConnectivityListener>()
   private checking = false
@@ -69,25 +69,7 @@ export class ConnectivityService {
 
     try {
       const electronOnline = net.isOnline()
-      if (!electronOnline) {
-        this.applyStatus('offline', null)
-        return this.getSnapshot()
-      }
-
-      try {
-        await dns.lookup(this.probeHost)
-        this.applyStatus('online', null)
-      } catch (error) {
-        // Chromium reports online but DNS probe failed — soft-online for captive
-        // portals / DNS blockers so local tools and cached auth still work.
-        const message = error instanceof Error ? error.message : String(error)
-        log.warn('DNS probe failed — treating as online via Chromium signal', {
-          host: this.probeHost,
-          error: message
-        })
-        this.applyStatus('online', message)
-      }
-
+      this.applyStatus(electronOnline ? 'online' : 'offline', null)
       return this.getSnapshot()
     } finally {
       this.checking = false

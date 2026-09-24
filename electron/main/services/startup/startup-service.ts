@@ -37,6 +37,10 @@ function extractIconPath(location: string): string | null {
 }
 
 async function tryGetIconDataUrl(location: string): Promise<string | undefined> {
+  // macOS 26 IconServices can SIGTRAP Electron while NSWorkspace resolves
+  // application icons. The renderer already has a safe fallback icon.
+  if (process.platform === 'darwin') return undefined
+
   const iconPath = extractIconPath(location)
   if (!iconPath) return undefined
 

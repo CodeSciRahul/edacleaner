@@ -23,6 +23,11 @@ export function extractIconPath(location: string): string | null {
 }
 
 export async function tryGetIconDataUrl(location: string): Promise<string | undefined> {
+  // macOS 26 IconServices can SIGTRAP Electron when NSWorkspace resolves app
+  // icons from worker threads (the crash stack points at ISIconFactory).
+  // Let the renderer use its fallback icon instead.
+  if (process.platform === 'darwin') return undefined
+
   const iconPath = extractIconPath(location)
   if (!iconPath) return undefined
 

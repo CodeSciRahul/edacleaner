@@ -1,4 +1,4 @@
-import type { BrowserWindow, BrowserWindowConstructorOptions } from 'electron'
+import type { BrowserWindowConstructorOptions } from 'electron'
 
 /** Matches renderer `h-titlebar` (44px). */
 const TITLEBAR_HEIGHT_PX = 44
@@ -7,7 +7,14 @@ const TRAFFIC_LIGHT_SIZE_PX = 14
 
 /**
  * Platform-specific BrowserWindow chrome.
- * macOS: native traffic lights via hiddenInset (custom Win/Linux controls stay in the renderer).
+ *
+ * On macOS, `hiddenInset` already creates a native titled window whose title
+ * bar is overlaid by the web content. Do not combine it with `frame: false` or
+ * manually force the native buttons visible: changing maximizable state while
+ * that unsupported combination is active can trip Chromium/AppKit checks.
+ *
+ * Windows and Linux continue to use the frameless window with renderer-owned
+ * caption buttons.
  */
 export function getPlatformWindowChromeOptions(): Pick<
   BrowserWindowConstructorOptions,
@@ -15,7 +22,6 @@ export function getPlatformWindowChromeOptions(): Pick<
 > {
   if (process.platform === 'darwin') {
     return {
-      frame: false,
       titleBarStyle: 'hiddenInset',
       trafficLightPosition: {
         x: 16,
@@ -28,10 +34,4 @@ export function getPlatformWindowChromeOptions(): Pick<
     frame: false,
     titleBarStyle: 'hidden'
   }
-}
-
-/** Ensure traffic lights remain visible when using a frameless window on macOS. */
-export function ensureNativeWindowButtons(window: BrowserWindow): void {
-  if (process.platform !== 'darwin' || window.isDestroyed()) return
-  window.setWindowButtonVisibility(true)
 }
