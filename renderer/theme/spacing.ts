@@ -18,12 +18,15 @@ export const layout = {
   sidebarWidth: '260px',
   sidebarCollapsedWidth: '68px',
   /**
-   * Collapsed sidebar + titlebar brand column on macOS: room for native traffic
-   * lights (≈16+54) plus the brand / expand control.
+   * Collapsed sidebar width when brand shares a row with traffic lights
+   * (legacy horizontal-inset layouts). App chrome on macOS stacks brand below
+   * the lights, so the normal collapsed width is used there.
    */
   sidebarCollapsedWidthMac: '120px',
-  /** Left inset so header content clears native traffic lights. */
+  /** Left inset so single-row headers clear native traffic lights. */
   macTrafficLightInset: '76px',
+  /** Reserved top row for native macOS traffic lights in the app titlebar. */
+  macTrafficLightRow: '36px',
   toolbarHeight: '64px',
   titlebarHeight: '44px',
   contentPadding: '24px',

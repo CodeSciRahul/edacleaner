@@ -1,4 +1,5 @@
 import { createLogger } from '@main/utils/logger'
+import { chromiumFetch } from '@main/utils/chromium-fetch'
 import { connectivityService } from '@main/services/offline/connectivity-service'
 import { queueService } from '@main/services/offline/queue'
 import type { ApiRequestConfig, ApiClientResponse } from '@shared/interfaces'
@@ -378,7 +379,8 @@ export class ApiClient {
           typeof config.data === 'string' ? config.data : JSON.stringify(config.data)
       }
 
-      const response = await fetch(url, init)
+      // Chromium net.fetch — Node undici/c-ares can FATAL on some macOS builds.
+      const response = await chromiumFetch(url, init)
       const rawText = await response.text()
       let parsed: unknown = null
 

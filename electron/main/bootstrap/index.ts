@@ -12,6 +12,11 @@ import { createLogger } from '@main/utils/logger'
 const log = createLogger('Bootstrap')
 
 export async function bootstrap(): Promise<void> {
+  // Cursor/VS Code inject these into integrated terminals; clear so any child
+  // Electron processes we spawn do not inherit run-as-node behavior.
+  delete process.env.ELECTRON_RUN_AS_NODE
+  delete process.env.ELECTRON_EXEC_PATH
+
   const config = configManager.get()
 
   // Must run before ready — ensures deep links reopen this process instead of a second copy.

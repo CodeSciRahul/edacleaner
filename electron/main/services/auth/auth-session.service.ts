@@ -511,8 +511,12 @@ export class AuthSessionService {
   private async onConnectivityRestored(): Promise<void> {
     if (!this.isAuthenticated()) return
     log.info('Connectivity restored — refreshing tokens and subscription')
-    await this.refreshTokens()
-    await this.synchronizeSession('connectivity-restored')
+    try {
+      await this.refreshTokens()
+      await this.synchronizeSession('connectivity-restored')
+    } catch (error) {
+      log.warn('Connectivity-restored session refresh failed', error)
+    }
   }
 
   private async doRefreshTokens(): Promise<boolean> {

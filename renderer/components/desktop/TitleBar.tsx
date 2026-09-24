@@ -26,6 +26,29 @@ function BrandMark({ size = 'sm' }: { size?: 'sm' | 'md' }): React.ReactElement 
   )
 }
 
+function SidebarCollapseButton({
+  onClick,
+  label
+}: {
+  onClick: () => void
+  label: string
+}): React.ReactElement {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        'app-no-drag flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground',
+        'transition-colors duration-150 hover:bg-sidebar-hover hover:text-foreground',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+      )}
+    >
+      <PanelLeftClose className="h-3.5 w-3.5" aria-hidden="true" />
+    </button>
+  )
+}
+
 export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): React.ReactElement {
   const { t } = useTranslation()
   const collapsed = useUiStore((state) => state.sidebarCollapsed)
@@ -70,19 +93,74 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
     )
   }
 
+  // App chrome: on macOS, keep a clear traffic-light row and put branding under it
+  // so the logo never collides with the native close / minimize / zoom buttons.
+  if (mac) {
+    return (
+      <header className="flex shrink-0 select-none border-b border-sidebar-border bg-sidebar">
+        <div
+          className={cn(
+            'app-drag flex flex-col border-r border-sidebar-border',
+            'transition-[width] duration-300 ease-out',
+            collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
+          )}
+        >
+          <div className="h-traffic-lights shrink-0" aria-hidden="true" />
+          <div
+            className={cn(
+              'flex h-titlebar items-center',
+              collapsed ? 'justify-center px-2' : 'gap-2.5 px-4'
+            )}
+          >
+            {collapsed ? (
+              <button
+                type="button"
+                className={cn(
+                  'app-no-drag flex items-center justify-center rounded-md',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                )}
+                aria-label={t('sidebar.expand')}
+                onClick={toggleSidebar}
+              >
+                <BrandMark size="md" />
+              </button>
+            ) : (
+              <>
+                <BrandMark size="md" />
+                <p className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-none tracking-tight text-foreground">
+                  {APP_NAME}
+                </p>
+                <SidebarCollapseButton onClick={toggleSidebar} label={t('sidebar.collapse')} />
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="app-drag flex min-w-0 flex-1 flex-col">
+          <div className="h-traffic-lights shrink-0" aria-hidden="true" />
+          <div
+            className="flex h-titlebar min-w-0 flex-1 items-center"
+            onDoubleClick={toggleMaximize}
+          >
+            {accessory ? (
+              <div className="app-no-drag flex min-w-0 flex-1 items-center px-4">{accessory}</div>
+            ) : (
+              <div className="min-w-0 flex-1" />
+            )}
+            <WindowControls />
+          </div>
+        </div>
+      </header>
+    )
+  }
+
   return (
     <header className="flex h-titlebar shrink-0 select-none border-b border-sidebar-border bg-sidebar">
       <div
         className={cn(
           'app-drag flex h-full items-center border-r border-sidebar-border',
           'transition-[width] duration-300 ease-out',
-          collapsed
-            ? mac
-              ? 'w-sidebar-collapsed-mac justify-end gap-0 pl-mac-traffic-lights pr-2'
-              : 'w-sidebar-collapsed justify-center px-2'
-            : mac
-              ? 'w-sidebar gap-2.5 pl-mac-traffic-lights pr-4'
-              : 'w-sidebar gap-2.5 px-4'
+          collapsed ? 'w-sidebar-collapsed justify-center px-2' : 'w-sidebar gap-2.5 px-4'
         )}
       >
         {collapsed ? (
@@ -103,18 +181,7 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
             <p className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-none tracking-tight text-foreground">
               {APP_NAME}
             </p>
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              aria-label={t('sidebar.collapse')}
-              className={cn(
-                'app-no-drag flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground',
-                'transition-colors duration-150 hover:bg-sidebar-hover hover:text-foreground',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-              )}
-            >
-              <PanelLeftClose className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
+            <SidebarCollapseButton onClick={toggleSidebar} label={t('sidebar.collapse')} />
           </>
         )}
       </div>

@@ -5,8 +5,5 @@ export {
   closeSplashWindow,
   SPLASH_MIN_VISIBLE_MS
 } from './splash-window'
-export {
-  getPlatformWindowChromeOptions,
-  ensureNativeWindowButtons
-} from './window-chrome'
+export { getPlatformWindowChromeOptions } from './window-chrome'
 

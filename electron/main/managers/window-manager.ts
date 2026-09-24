@@ -10,8 +10,7 @@ import {
   getRendererPath,
   createSplashWindow,
   closeSplashWindow,
-  SPLASH_MIN_VISIBLE_MS,
-  ensureNativeWindowButtons
+  SPLASH_MIN_VISIBLE_MS
 } from '@main/windows'
 
 export class WindowManager {
@@ -43,7 +42,6 @@ export class WindowManager {
       title: config.name
     })
 
-    ensureNativeWindowButtons(window)
     window.setMenuBarVisibility(false)
     window.removeMenu()
 
@@ -66,7 +64,10 @@ export class WindowManager {
       window.loadFile(getRendererPath())
     }
 
-    if (config.featureFlags.enableDevTools) {
+    // Opt-in only: auto-opening detach DevTools inside Cursor/VS Code (nested
+    // Electron) has caused Chromium FATAL NOTREACHED process exits. Use
+    // Ctrl/Cmd+Shift+I (toolkit shortcut) or EDA_OPEN_DEVTOOLS=1 instead.
+    if (config.featureFlags.enableDevTools && process.env.EDA_OPEN_DEVTOOLS === '1') {
       window.webContents.openDevTools({ mode: 'detach' })
     }
 
@@ -168,7 +169,6 @@ export class WindowManager {
       getAuthWindowOptions(preloadPath, this.getMainWindow())
     )
 
-    ensureNativeWindowButtons(window)
     window.setMenuBarVisibility(false)
     window.removeMenu()
 
@@ -270,7 +270,13 @@ export class WindowManager {
     if (window.isFullScreen()) window.setFullScreen(false)
 
     const fitted = this.fitWindowToWorkArea(size)
-    window.setMaximizable(false)
+    // Electron 33 can hit an AppKit NOTREACHED assertion on macOS when
+    // setMaximizable() mutates a hiddenInset window after it is visible.
+    // Keep the native green traffic light enabled there; fixed sizing and the
+    // aspect ratio still preserve the onboarding artwork.
+    if (process.platform !== 'darwin') {
+      window.setMaximizable(false)
+    }
     window.setMinimumSize(fitted.minWidth, fitted.minHeight)
     window.setSize(fitted.width, fitted.height)
     window.setAspectRatio(size.ratio)
@@ -343,7 +349,9 @@ export class WindowManager {
   private applyAppLayout(window: BrowserWindow): void {
     if (window.isMaximized()) window.unmaximize()
     window.setAspectRatio(0)
-    window.setMaximizable(true)
+    if (process.platform !== 'darwin') {
+      window.setMaximizable(true)
+    }
     window.setMinimumSize(WINDOW_DEFAULTS.MIN_WIDTH, WINDOW_DEFAULTS.MIN_HEIGHT)
     window.setSize(WINDOW_DEFAULTS.WIDTH, WINDOW_DEFAULTS.HEIGHT)
     window.center()
