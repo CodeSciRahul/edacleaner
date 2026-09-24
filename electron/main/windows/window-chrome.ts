@@ -1,7 +1,10 @@
 import type { BrowserWindowConstructorOptions } from 'electron'
 
-/** Matches renderer `h-titlebar` (44px). */
-const TITLEBAR_HEIGHT_PX = 44
+/**
+ * Matches renderer `h-traffic-lights` (36px). App titlebar stacks branding
+ * under this row so the logo never shares space with the native buttons.
+ */
+const TRAFFIC_LIGHT_ROW_PX = 36
 /** Approximate macOS traffic-light diameter for vertical centering. */
 const TRAFFIC_LIGHT_SIZE_PX = 14
 
@@ -25,7 +28,7 @@ export function getPlatformWindowChromeOptions(): Pick<
       titleBarStyle: 'hiddenInset',
       trafficLightPosition: {
         x: 16,
-        y: Math.round((TITLEBAR_HEIGHT_PX - TRAFFIC_LIGHT_SIZE_PX) / 2)
+        y: Math.round((TRAFFIC_LIGHT_ROW_PX - TRAFFIC_LIGHT_SIZE_PX) / 2)
       }
     }
   }

@@ -1,6 +1,5 @@
 import { PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { isMacOS } from '@/utils/platform'
 import { useUiStore } from '@/store/ui-store'
 import { sidebarNavItems } from '@/components/layout/sidebar-nav'
 import { SidebarNavItem } from '@/components/layout/SidebarNavItem'
@@ -12,7 +11,6 @@ export function Sidebar(): React.ReactElement {
   const collapsed = useUiStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
   const { t } = useTranslation()
-  const mac = isMacOS()
 
   return (
     <aside
@@ -20,11 +18,9 @@ export function Sidebar(): React.ReactElement {
       className={cn(
         'relative flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar',
         'transition-[width] duration-300 ease-out',
-        collapsed
-          ? mac
-            ? 'w-sidebar-collapsed-mac'
-            : 'w-sidebar-collapsed'
-          : 'w-sidebar'
+        // macOS app titlebar stacks brand under traffic lights, so the sidebar
+        // can use the normal collapsed width (no horizontal traffic-light inset).
+        collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
       )}
     >
       <nav className="sidebar-scroll flex-1 space-y-0.5 overflow-y-auto px-2 py-2" aria-label={t('sidebar.navPrimary')}>

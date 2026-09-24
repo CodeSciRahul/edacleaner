@@ -11,6 +11,17 @@ export function getAppPlatform(): string {
   }
 }
 
+function guessMacFromNavigator(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const platform = navigator.platform || ''
+  const ua = navigator.userAgent || ''
+  return /Mac|iPhone|iPad|iPod/i.test(platform) || /Macintosh|Mac OS X/i.test(ua)
+}
+
 export function isMacOS(): boolean {
-  return getAppPlatform() === 'darwin'
+  const platform = getAppPlatform()
+  if (platform === 'darwin') return true
+  if (platform !== 'unknown') return false
+  // Preload missing / late — still keep chrome clear of native traffic lights.
+  return guessMacFromNavigator()
 }
