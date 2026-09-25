@@ -1,12 +1,17 @@
 import type { BrowserWindowConstructorOptions } from 'electron'
 
 /**
- * Matches renderer `h-traffic-lights` (36px). App titlebar stacks branding
- * under this row so the logo never shares space with the native buttons.
+ * Matches renderer `h-titlebar` (44px). Traffic lights sit in the left sidebar
+ * rail cell of that single-height titlebar (branding is in the Sidebar below).
  */
-const TRAFFIC_LIGHT_ROW_PX = 36
+const TITLEBAR_HEIGHT_PX = 44
 /** Approximate macOS traffic-light diameter for vertical centering. */
 const TRAFFIC_LIGHT_SIZE_PX = 14
+/**
+ * Horizontal inset so the three lights fit inside the collapsed sidebar rail
+ * (~68px) without widening it.
+ */
+const TRAFFIC_LIGHT_X_PX = 12
 
 /**
  * Platform-specific BrowserWindow chrome.
@@ -27,8 +32,8 @@ export function getPlatformWindowChromeOptions(): Pick<
     return {
       titleBarStyle: 'hiddenInset',
       trafficLightPosition: {
-        x: 16,
-        y: Math.round((TRAFFIC_LIGHT_ROW_PX - TRAFFIC_LIGHT_SIZE_PX) / 2)
+        x: TRAFFIC_LIGHT_X_PX,
+        y: Math.round((TITLEBAR_HEIGHT_PX - TRAFFIC_LIGHT_SIZE_PX) / 2)
       }
     }
   }

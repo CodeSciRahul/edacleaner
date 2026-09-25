@@ -89,9 +89,7 @@ module.exports = {
       },
       height: {
         toolbar: '64px',
-        titlebar: '44px',
-        /** Native macOS traffic-light row above app branding. */
-        'traffic-lights': '36px'
+        titlebar: '44px'
       },
       boxShadow: {
         card: '0 1px 3px 0 rgb(0 0 0 / 0.05)',
