@@ -12,7 +12,7 @@ export function HomePage(): React.ReactElement {
 
   return (
     <>
-      <div className="space-y-7 p-content-pad">
+      <div className="space-y-6 p-content-pad">
         <DashboardHero
           analytics={analytics}
           hasHistory={hasHistory}

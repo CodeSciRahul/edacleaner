@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ScanSearch, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, ScanSearch } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { StatusCard } from '@/components/desktop/StatusCard'
 import { cn } from '@/utils/cn'
@@ -34,6 +34,40 @@ import { appendSmartScanActivity } from '@/features/reports/lib/activity-history
 import { useTranslation } from '@/i18n/useTranslation'
 
 const AREA_ORDER: SmartScanAreaId[] = ['cleanup', 'storage', 'performance', 'security']
+
+const AREA_ACCENT: Record<
+  SmartScanAreaId,
+  {
+    wash: string
+    orb: string
+    ringHover: string
+  }
+> = {
+  cleanup: {
+    wash: 'from-chart-disk/20 via-chart-disk/5 to-transparent',
+    orb: 'bg-chart-disk/20',
+    ringHover:
+      'hover:border-chart-disk/40 hover:shadow-[0_18px_40px_-16px_rgba(139,92,246,0.35)]'
+  },
+  storage: {
+    wash: 'from-warning/20 via-warning/5 to-transparent',
+    orb: 'bg-warning/20',
+    ringHover:
+      'hover:border-warning/40 hover:shadow-[0_18px_40px_-16px_rgba(245,158,11,0.35)]'
+  },
+  performance: {
+    wash: 'from-primary/20 via-primary/5 to-transparent',
+    orb: 'bg-primary/20',
+    ringHover:
+      'hover:border-primary/40 hover:shadow-[0_18px_40px_-16px_rgba(37,99,235,0.35)]'
+  },
+  security: {
+    wash: 'from-success/20 via-success/5 to-transparent',
+    orb: 'bg-success/20',
+    ringHover:
+      'hover:border-success/40 hover:shadow-[0_18px_40px_-16px_rgba(34,197,94,0.35)]'
+  }
+}
 
 export function SmartScanPage(): React.ReactElement {
   const { t } = useTranslation()
@@ -102,14 +136,6 @@ export function SmartScanPage(): React.ReactElement {
   }, [isScanning, scanned, result, hydrated, hasHistory])
 
   const status = useMemo(() => {
-    if (isScanning) {
-      return {
-        icon: ScanSearch,
-        status: 'good' as const,
-        title: t('smartScan.status.scanningTitle'),
-        message: progress?.message ?? t('smartScan.status.scanningMsg')
-      }
-    }
     if (runScan.isError) {
       return {
         icon: ScanSearch,
@@ -118,26 +144,19 @@ export function SmartScanPage(): React.ReactElement {
         message: t('smartScan.status.pausedMsg')
       }
     }
-    if (result) {
+    if (result && restoredFromHistory) {
       return {
-        icon: CheckCircle2,
+        icon: ScanSearch,
         status: 'good' as const,
         title: result.summaryTitle,
-        message: restoredFromHistory
-          ? t('smartScan.status.lastScanned', {
-              message: result.summaryMessage,
-              when: formatRelativeScanTime(result.scannedAt)
-            })
-          : result.summaryMessage
+        message: t('smartScan.status.lastScanned', {
+          message: result.summaryMessage,
+          when: formatRelativeScanTime(result.scannedAt)
+        })
       }
     }
-    return {
-      icon: ScanSearch,
-      status: 'good' as const,
-      title: t('smartScan.status.readyTitle'),
-      message: t('smartScan.status.readyMsg')
-    }
-  }, [isScanning, progress?.message, runScan.isError, result, restoredFromHistory, t])
+    return null
+  }, [runScan.isError, result, restoredFromHistory, t])
 
   const cleanupMetric =
     result?.areas.find((a) => a.id === 'cleanup')?.metricValue ??
@@ -150,8 +169,6 @@ export function SmartScanPage(): React.ReactElement {
     (result && result.estimatedBootSeconds > 0
       ? `−${result.estimatedBootSeconds} sec`
       : t('smartScan.onTrack'))
-
-  const showStatusCard = scanned || isScanning || runScan.isError
 
   return (
     <>
@@ -166,7 +183,7 @@ export function SmartScanPage(): React.ReactElement {
         cancelPending={cancelScan.isPending}
       />
 
-      <div className="space-y-5 p-content-pad">
+      <div className="space-y-6 p-content-pad">
         <SmartScanHero
           phase={heroPhase}
           result={result}
@@ -178,7 +195,7 @@ export function SmartScanPage(): React.ReactElement {
           onCancel={() => void handleCancel()}
         />
 
-        {showStatusCard ? (
+        {status ? (
           <StatusCard
             icon={status.icon}
             title={status.title}
@@ -190,7 +207,11 @@ export function SmartScanPage(): React.ReactElement {
         {scanned && result ? (
           <>
             <section aria-label={t('smartScan.results')}>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mb-4">
+                <h2 className="text-section-title text-foreground">{t('smartScan.results')}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t('smartScan.areasHint')}</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <SmartScanMetricCard
                   metricId="reclaimable"
                   title={t('smartScan.reclaimable')}
@@ -222,11 +243,15 @@ export function SmartScanPage(): React.ReactElement {
               </div>
             </section>
 
-            <section aria-label={t('smartScan.areas')} className="space-y-3">
-              <h2 className="text-sm font-semibold text-foreground">{t('smartScan.areas')}</h2>
-              <div className="space-y-2">
+            <section aria-label={t('smartScan.areas')} className="space-y-4">
+              <div>
+                <h2 className="text-section-title text-foreground">{t('smartScan.areas')}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t('smartScan.areasHint')}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
                 {result.areas.map((area) => {
                   const Icon = smartScanAreaIcons[area.id]
+                  const accent = AREA_ACCENT[area.id]
 
                   return (
                     <button
@@ -234,40 +259,64 @@ export function SmartScanPage(): React.ReactElement {
                       type="button"
                       onClick={() => navigate(area.href)}
                       className={cn(
-                        'flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-left',
-                        'outline-none transition-all duration-150 ease-out',
-                        'hover:border-primary/30 hover:bg-accent/30 hover:shadow-sm',
+                        'group relative flex overflow-hidden rounded-2xl border border-border bg-card p-4 text-left shadow-card',
+                        'outline-none transition-all duration-200 ease-out hover:-translate-y-1',
                         'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                        'animate-in fade-in-0 slide-in-from-bottom-1 duration-300'
+                        'animate-in fade-in-0 slide-in-from-bottom-1 duration-300',
+                        accent.ringHover
                       )}
                     >
                       <div
                         className={cn(
-                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                          smartScanStatusStyles[area.status]
+                          'pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b',
+                          accent.wash
                         )}
-                      >
-                        <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                      </div>
+                        aria-hidden="true"
+                      />
+                      <div
+                        className={cn(
+                          'pointer-events-none absolute -right-6 -top-8 h-20 w-20 rounded-full blur-2xl opacity-70',
+                          'transition-opacity duration-200 group-hover:opacity-100',
+                          accent.orb
+                        )}
+                        aria-hidden="true"
+                      />
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-foreground">
-                            {t(smartScanAreaLabelKey(area.id))}
-                          </p>
-                          <Badge
-                            variant="outline"
-                            className={cn('border-0 text-[10px]', smartScanStatusStyles[area.status])}
-                          >
-                            {t(smartScanStatusLabelKey(area.status))}
-                          </Badge>
+                      <div className="relative z-10 flex w-full items-start gap-3">
+                        <div
+                          className={cn(
+                            'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm',
+                            smartScanStatusStyles[area.status]
+                          )}
+                        >
+                          <Icon className="h-5 w-5" strokeWidth={1.85} aria-hidden="true" />
                         </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {t(smartScanAreaDescKey(area.id))}
-                        </p>
-                      </div>
 
-                      <p className="shrink-0 text-sm font-medium text-foreground">{area.finding}</p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">
+                              {t(smartScanAreaLabelKey(area.id))}
+                            </p>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                'border-0 text-[10px]',
+                                smartScanStatusStyles[area.status]
+                              )}
+                            >
+                              {t(smartScanStatusLabelKey(area.status))}
+                            </Badge>
+                          </div>
+                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                            {t(smartScanAreaDescKey(area.id))}
+                          </p>
+                          <p className="mt-2 text-sm font-medium text-foreground">{area.finding}</p>
+                        </div>
+
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/60 text-muted-foreground opacity-0 shadow-sm transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100">
+                          <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                        </span>
+                      </div>
                     </button>
                   )
                 })}

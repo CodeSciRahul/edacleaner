@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
-import { CheckCircle2, FileBarChart2, Sparkles } from 'lucide-react'
-import { StatusCard } from '@/components/desktop/StatusCard'
+import { FileBarChart2 } from 'lucide-react'
 import { formatBytes } from '@shared/utils'
 import { electronService } from '@/services/electron-service'
 import { useReportsHistory } from '@/features/reports/hooks/useReportsHistory'
@@ -31,13 +30,6 @@ const bandDescKey: Record<HealthBand, TranslationKey> = {
   good: 'reports.health.goodDesc',
   fair: 'reports.health.fairDesc',
   attention: 'reports.health.attentionDesc'
-}
-
-const statusCardStatus: Record<HealthBand, 'good' | 'warning' | 'critical'> = {
-  excellent: 'good',
-  good: 'good',
-  fair: 'warning',
-  attention: 'critical'
 }
 
 export function ReportsPage(): React.ReactElement {
@@ -108,21 +100,6 @@ export function ReportsPage(): React.ReactElement {
     return t('reports.hero.hint')
   }, [access.allowed, hasHistory, analytics, t])
 
-  const statusCard = useMemo(() => {
-    if (!analytics) return null
-    return {
-      icon:
-        analytics.healthBand === 'excellent' || analytics.healthBand === 'good'
-          ? Sparkles
-          : analytics.healthBand === 'fair'
-            ? FileBarChart2
-            : CheckCircle2,
-      status: statusCardStatus[analytics.healthBand],
-      title: t(bandTitleKey[analytics.healthBand]),
-      message: t(bandDescKey[analytics.healthBand])
-    }
-  }, [analytics, t])
-
   return (
     <div className="space-y-6 p-content-pad">
       <FeatureLockedCallout feature="cleanup_reports" />
@@ -149,21 +126,20 @@ export function ReportsPage(): React.ReactElement {
             animateKey={animateKey}
           />
 
-          {access.allowed && statusCard ? (
-            <StatusCard
-              icon={statusCard.icon}
-              title={statusCard.title}
-              status={statusCard.status}
-              message={statusCard.message}
-            />
-          ) : null}
-
           {!access.allowed ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <FileBarChart2 className="h-7 w-7" strokeWidth={1.75} aria-hidden="true" />
+            <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center shadow-card">
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/10 to-transparent"
+                aria-hidden="true"
+              />
+              <div
+                className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-primary/10 blur-3xl"
+                aria-hidden="true"
+              />
+              <div className="relative z-10 mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                <FileBarChart2 className="h-6 w-6" strokeWidth={1.85} aria-hidden="true" />
               </div>
-              <div className="max-w-sm space-y-1.5">
+              <div className="relative z-10 max-w-sm space-y-1.5">
                 <p className="text-sm font-semibold text-foreground">
                   {t('entitlements.feature.cleanup_reports')}
                 </p>

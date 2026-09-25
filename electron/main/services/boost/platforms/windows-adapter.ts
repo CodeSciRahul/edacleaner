@@ -18,6 +18,7 @@ import {
   isProtectedProcess,
   runCommand
 } from './exec-utils'
+import { isBenignEmptyTrashError } from './trash-utils'
 import { createLogger } from '@main/utils/logger'
 
 const log = createLogger('boost:win')
@@ -271,6 +272,9 @@ export class WindowsBoostAdapter implements PlatformBoostAdapter {
           detail: 'Recycle Bin empty was cancelled',
           error: message
         }
+      }
+      if (isBenignEmptyTrashError(message)) {
+        return { emptied: true, detail: 'Recycle Bin is already empty' }
       }
       return {
         emptied: false,

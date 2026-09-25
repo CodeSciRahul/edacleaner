@@ -23,44 +23,51 @@ export function CleanupStatsBar({
       icon: HardDrive,
       label: t('cleanup.stats.reclaim'),
       value: formatBytes(reclaimableBytes),
-      accent: 'text-primary'
+      wrap: 'bg-chart-disk/15 text-chart-disk ring-1 ring-chart-disk/20',
+      wash: 'from-chart-disk/15 via-chart-disk/5 to-transparent'
     },
     {
       icon: Files,
       label: t('cleanup.stats.items'),
       value: fileCount.toLocaleString(),
-      accent: 'text-chart-ram'
+      wrap: 'bg-chart-ram/15 text-chart-ram ring-1 ring-chart-ram/20',
+      wash: 'from-chart-ram/15 via-chart-ram/5 to-transparent'
     },
     {
       icon: Layers,
       label: t('cleanup.stats.categories'),
       value: String(categoryCount),
-      accent: 'text-success'
+      wrap: 'bg-success/15 text-success ring-1 ring-success/20',
+      wash: 'from-success/15 via-success/5 to-transparent'
     }
   ]
 
   return (
     <div
-      className={cn(
-        'grid gap-3 sm:grid-cols-3',
-        className
-      )}
+      className={cn('grid gap-3 sm:grid-cols-3', className)}
       aria-label="Cleanup statistics"
     >
-      {stats.map(({ icon: Icon, label, value, accent }) => (
+      {stats.map(({ icon: Icon, label, value, wrap, wash }) => (
         <div
           key={label}
-          className="flex items-center gap-3 rounded-xl border border-border/80 bg-card/80 px-4 py-3 shadow-sm backdrop-blur-sm"
+          className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card px-4 py-3.5 shadow-card"
         >
           <div
             className={cn(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/80',
-              accent
+              'pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b',
+              wash
+            )}
+            aria-hidden="true"
+          />
+          <div
+            className={cn(
+              'relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+              wrap
             )}
           >
             <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
           </div>
-          <div className="min-w-0">
+          <div className="relative z-10 min-w-0">
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               {label}
             </p>

@@ -123,8 +123,12 @@ export function ActivityTimeline({ entries }: ActivityTimelineProps): React.Reac
         <p className="mt-0.5 text-xs text-muted-foreground">{t('reports.activityHint')}</p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-        <ul className="divide-y divide-border">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-primary/8 to-transparent"
+          aria-hidden="true"
+        />
+        <ul className="relative z-10 divide-y divide-border">
           {pageEntries.map((entry, index) => {
             const Icon = kindIcon(entry)
             const resultLine = getResultLine(entry, t)
@@ -147,7 +151,7 @@ export function ActivityTimeline({ entries }: ActivityTimelineProps): React.Reac
                 >
                   <div
                     className={cn(
-                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-black/5 dark:ring-white/10',
                       kindStyles[entry.kind]
                     )}
                   >
@@ -183,12 +187,12 @@ export function ActivityTimeline({ entries }: ActivityTimelineProps): React.Reac
         </ul>
 
         {showPagination ? (
-          <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
+          <div className="relative z-10 flex items-center justify-between gap-3 border-t border-border px-4 py-3">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 gap-1 px-2.5 text-xs"
+              className="h-8 gap-1 rounded-lg border-border/80 bg-background/70 px-2.5 text-xs backdrop-blur-sm"
               disabled={safePage <= 0}
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               aria-label={t('reports.activityPrev')}
@@ -208,7 +212,7 @@ export function ActivityTimeline({ entries }: ActivityTimelineProps): React.Reac
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 gap-1 px-2.5 text-xs"
+              className="h-8 gap-1 rounded-lg border-border/80 bg-background/70 px-2.5 text-xs backdrop-blur-sm"
               disabled={safePage >= pageCount - 1}
               onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
               aria-label={t('reports.activityNext')}

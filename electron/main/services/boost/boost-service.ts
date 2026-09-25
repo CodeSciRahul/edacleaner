@@ -941,11 +941,16 @@ export class BoostService {
     const status: BoostStepResult['status'] =
       hadPartialLocks && bytesFreed === 0 ? 'failed' : 'completed'
 
-    let detail = `Removed ${formatBytes(bytesFreed)} from ${dirs.length} location(s)`
-    if (hadPartialLocks && bytesFreed > 0) {
-      detail += '. A few files in use were safely skipped'
-    } else if (hadPartialLocks && bytesFreed === 0) {
-      detail = 'Files were in use by other apps — nothing was removed this time'
+    let detail: string
+    if (bytesFreed === 0 && !hadPartialLocks) {
+      detail = 'No temporary files to remove — already clear'
+    } else {
+      detail = `Removed ${formatBytes(bytesFreed)} from ${dirs.length} location(s)`
+      if (hadPartialLocks && bytesFreed > 0) {
+        detail += '. A few files in use were safely skipped'
+      } else if (hadPartialLocks && bytesFreed === 0) {
+        detail = 'Files were in use by other apps — nothing was removed this time'
+      }
     }
 
     return {
@@ -1019,11 +1024,16 @@ export class BoostService {
     const status: BoostStepResult['status'] =
       bytesFreed > 0 ? 'completed' : hadPartialLocks ? 'skipped' : 'completed'
 
-    let detail = `Removed ${formatBytes(bytesFreed)} from cache locations`
-    if (status === 'skipped' && hadPartialLocks) {
+    let detail: string
+    if (bytesFreed === 0 && status === 'completed' && !hadPartialLocks) {
+      detail = 'No application caches to remove — already clear'
+    } else if (status === 'skipped' && hadPartialLocks) {
       detail = 'Caches were in use or already clean — skipped safely'
-    } else if (hadPartialLocks && bytesFreed > 0) {
-      detail += '. A few files in use were safely skipped'
+    } else {
+      detail = `Removed ${formatBytes(bytesFreed)} from cache locations`
+      if (hadPartialLocks && bytesFreed > 0) {
+        detail += '. A few files in use were safely skipped'
+      }
     }
 
     return {

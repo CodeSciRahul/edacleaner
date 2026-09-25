@@ -21,7 +21,7 @@ export function DashboardTopProcesses({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-section-title text-foreground">{t('home.processesTitle')}</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">{t('home.processesHint')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('home.processesHint')}</p>
         </div>
         <Button
           size="sm"

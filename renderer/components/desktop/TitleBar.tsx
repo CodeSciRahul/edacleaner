@@ -93,62 +93,30 @@ export function TitleBar({ variant = 'simple', accessory }: TitleBarProps): Reac
     )
   }
 
-  // App chrome: on macOS, keep a clear traffic-light row and put branding under it
-  // so the logo never collides with the native close / minimize / zoom buttons.
+  // App chrome on macOS: single-height titlebar (same as Win/Linux). Native traffic
+  // lights sit in the left rail; branding lives in Sidebar so we don't stack an
+  // empty full-width traffic-light row above content.
   if (mac) {
     return (
-      <header className="flex shrink-0 select-none border-b border-sidebar-border bg-sidebar">
+      <header className="flex h-titlebar shrink-0 select-none bg-sidebar">
         <div
           className={cn(
-            'app-drag flex flex-col border-r border-sidebar-border',
+            'app-drag h-full border-r border-sidebar-border',
             'transition-[width] duration-300 ease-out',
             collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
           )}
+          aria-hidden="true"
+        />
+        <div
+          className="app-drag flex h-full min-w-0 flex-1 items-center border-b border-sidebar-border"
+          onDoubleClick={toggleMaximize}
         >
-          <div className="h-traffic-lights shrink-0" aria-hidden="true" />
-          <div
-            className={cn(
-              'flex h-titlebar items-center',
-              collapsed ? 'justify-center px-2' : 'gap-2.5 px-4'
-            )}
-          >
-            {collapsed ? (
-              <button
-                type="button"
-                className={cn(
-                  'app-no-drag flex items-center justify-center rounded-md',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                )}
-                aria-label={t('sidebar.expand')}
-                onClick={toggleSidebar}
-              >
-                <BrandMark size="md" />
-              </button>
-            ) : (
-              <>
-                <BrandMark size="md" />
-                <p className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-none tracking-tight text-foreground">
-                  {APP_NAME}
-                </p>
-                <SidebarCollapseButton onClick={toggleSidebar} label={t('sidebar.collapse')} />
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="app-drag flex min-w-0 flex-1 flex-col">
-          <div className="h-traffic-lights shrink-0" aria-hidden="true" />
-          <div
-            className="flex h-titlebar min-w-0 flex-1 items-center"
-            onDoubleClick={toggleMaximize}
-          >
-            {accessory ? (
-              <div className="app-no-drag flex min-w-0 flex-1 items-center px-4">{accessory}</div>
-            ) : (
-              <div className="min-w-0 flex-1" />
-            )}
-            <WindowControls />
-          </div>
+          {accessory ? (
+            <div className="app-no-drag flex min-w-0 flex-1 items-center px-4">{accessory}</div>
+          ) : (
+            <div className="min-w-0 flex-1" />
+          )}
+          <WindowControls />
         </div>
       </header>
     )

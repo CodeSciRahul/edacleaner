@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { LucideIcon } from 'lucide-react'
 import {
   ChevronDown,
   Download,
   Eraser,
   FileBarChart2,
+  HardDrive,
+  HeartPulse,
   Loader2,
   Lock,
   ScanSearch,
@@ -12,8 +15,8 @@ import {
   Trash2
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { CircularProgress } from '@/components/desktop/CircularProgress'
 import { cn } from '@/utils/cn'
+import { colors } from '@/theme/colors'
 import { useTranslation } from '@/i18n/useTranslation'
 import { PremiumBadge } from '@/features/entitlements/components/PremiumBadge'
 import { usePlanCheckout } from '@/features/subscription/hooks/usePlanCheckout'
@@ -43,11 +46,11 @@ interface ReportsHeroProps {
   animateKey?: number
 }
 
-const bandColor: Record<HealthBand, 'battery' | 'cpu' | 'network' | 'disk'> = {
-  excellent: 'battery',
-  good: 'cpu',
-  fair: 'network',
-  attention: 'disk'
+const bandStroke: Record<HealthBand, string> = {
+  excellent: colors.semantic.success,
+  good: colors.semantic.success,
+  fair: colors.semantic.warning,
+  attention: colors.semantic.error
 }
 
 const bandChip: Record<HealthBand, string> = {
@@ -62,6 +65,13 @@ const bandBorder: Record<HealthBand, string> = {
   good: 'border-success/25',
   fair: 'border-warning/25',
   attention: 'border-destructive/25'
+}
+
+const bandOrb: Record<HealthBand, string> = {
+  excellent: 'bg-success/15',
+  good: 'bg-success/15',
+  fair: 'bg-warning/15',
+  attention: 'bg-destructive/15'
 }
 
 export function ReportsHero({
@@ -85,12 +95,17 @@ export function ReportsHero({
   const navigate = useNavigate()
   const { startCheckout, checkingOut } = usePlanCheckout()
   const locked = phase === 'locked'
+  const ready = phase === 'ready'
   const displayScore = locked ? null : healthScore
   const displaySpace = locked ? '—' : spaceLabel
   const displayOptimizations = locked ? '—' : optimizationsLabel
   const displayScans = locked ? '—' : scansLabel
-  const borderClass =
-    phase === 'ready' ? bandBorder[healthBand] : locked ? 'border-primary/20' : 'border-border'
+  const borderClass = ready
+    ? bandBorder[healthBand]
+    : locked
+      ? 'border-primary/20'
+      : 'border-border'
+  const orbClass = ready ? bandOrb[healthBand] : 'bg-primary/15'
   const [exportOpen, setExportOpen] = useState(false)
   const exportMenuRef = useRef<HTMLDivElement>(null)
 
@@ -121,58 +136,71 @@ export function ReportsHero({
     onExport?.(format)
   }
 
+  const panelStatus = locked
+    ? t('reports.hero.lockedBadge')
+    : ready
+      ? t('reports.health.title')
+      : t('reports.insights')
+
   return (
     <section
       aria-label={t('reports.hero.overview')}
       className={cn(
-        'relative rounded-2xl border bg-card p-6 shadow-card sm:p-7',
+        'relative overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7',
         featureHeroMinHeightClass,
         'animate-in fade-in-0 duration-300',
         borderClass
       )}
     >
-      <div
-        className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
+      <img
+        src={reportsHeroBgLight}
+        alt=""
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right dark:hidden"
+        draggable={false}
         aria-hidden="true"
-      >
-        <img
-          src={reportsHeroBgLight}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover object-right dark:hidden"
-          draggable={false}
-        />
-        <img
-          src={reportsHeroBgDark}
-          alt=""
-          className="absolute inset-0 hidden h-full w-full object-cover object-right dark:block"
-          draggable={false}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-card/92 via-card/60 to-transparent sm:via-card/42" />
-      </div>
+      />
+      <img
+        src={reportsHeroBgDark}
+        alt=""
+        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-right dark:block"
+        draggable={false}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/92 via-card/62 to-transparent sm:via-card/45"
+        aria-hidden="true"
+      />
+      <div
+        className={cn(
+          'pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full blur-3xl',
+          orbClass
+        )}
+        aria-hidden="true"
+      />
 
       <div className="relative z-10 flex min-h-[inherit] flex-col justify-center gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0 max-w-xl space-y-3">
+        <div className="min-w-0 max-w-xl space-y-3.5">
           <div className="flex flex-wrap items-center gap-2">
             <div
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide backdrop-blur-sm',
                 locked
                   ? 'border-primary/25 bg-primary/10 text-primary'
-                  : phase === 'ready'
+                  : ready
                     ? bandChip[healthBand]
-                    : 'border-border bg-muted/50 text-muted-foreground'
+                    : 'border-primary/25 bg-primary/10 text-primary'
               )}
             >
               {locked ? (
                 <Lock className="h-3 w-3" aria-hidden="true" />
-              ) : phase === 'ready' ? (
+              ) : ready ? (
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
               ) : (
                 <FileBarChart2 className="h-3 w-3" aria-hidden="true" />
               )}
               {locked
                 ? t('reports.hero.lockedBadge')
-                : phase === 'ready'
+                : ready
                   ? t('reports.health.title')
                   : t('reports.insights')}
             </div>
@@ -190,9 +218,24 @@ export function ReportsHero({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <StatPill label={t('reports.spaceRecovered')} value={displaySpace} />
-            <StatPill label={t('reports.optimizations')} value={displayOptimizations} />
-            <StatPill label={t('reports.smartScans')} value={displayScans} />
+            <MetricTile
+              icon={HardDrive}
+              label={t('reports.spaceRecovered')}
+              value={displaySpace}
+              accentClass="bg-chart-disk/15 text-chart-disk"
+            />
+            <MetricTile
+              icon={Sparkles}
+              label={t('reports.optimizations')}
+              value={displayOptimizations}
+              accentClass="bg-warning/15 text-warning"
+            />
+            <MetricTile
+              icon={ScanSearch}
+              label={t('reports.smartScans')}
+              value={displayScans}
+              accentClass="bg-primary/15 text-primary"
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-0.5">
@@ -290,32 +333,106 @@ export function ReportsHero({
         </div>
 
         <div className="flex shrink-0 justify-center lg:justify-end">
-          <div
+          <HealthScorePanel
             key={animateKey}
-            className="inline-flex flex-col items-center rounded-2xl border border-border/60 bg-background/50 px-5 py-4 backdrop-blur-sm animate-in zoom-in-95 duration-500"
-          >
-            <CircularProgress
-              value={displayScore ?? 0}
-              color={bandColor[healthBand]}
-              size={112}
-              strokeWidth={9}
-              className={cn(displayScore == null && 'opacity-40')}
-              label={t('reports.health.score')}
-            />
-          </div>
+            score={displayScore}
+            stroke={ready ? bandStroke[healthBand] : colors.primary[500]}
+            statusLabel={panelStatus}
+            hint={activityHint}
+          />
         </div>
       </div>
     </section>
   )
 }
 
-function StatPill({ label, value }: { label: string; value: string }): React.ReactElement {
+function MetricTile({
+  icon: Icon,
+  label,
+  value,
+  accentClass
+}: {
+  icon: LucideIcon
+  label: string
+  value: string
+  accentClass: string
+}): React.ReactElement {
   return (
-    <div className="rounded-xl border border-border/80 bg-background/60 px-3 py-2 backdrop-blur-sm">
-      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+    <div className="flex min-w-[7.25rem] items-center gap-2.5 rounded-xl border border-border/80 bg-background/60 px-3 py-2 backdrop-blur-sm">
+      <div
+        className={cn(
+          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+          accentClass
+        )}
+      >
+        <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+      </div>
+    </div>
+  )
+}
+
+function HealthScorePanel({
+  score,
+  stroke,
+  statusLabel,
+  hint
+}: {
+  score: number | null
+  stroke: string
+  statusLabel: string
+  hint: string
+}): React.ReactElement {
+  const { t } = useTranslation()
+  const barPct = score == null ? 0 : Math.min(100, Math.max(0, score))
+
+  return (
+    <div
+      className={cn(
+        'relative w-full max-w-[14.5rem] rounded-2xl border border-border/60',
+        'bg-background/55 p-4 backdrop-blur-sm',
+        'animate-in zoom-in-95 duration-500'
+      )}
+    >
+      <div className="mb-3 flex items-center gap-2.5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
+          <HeartPulse className="h-4 w-4" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {t('reports.health.score')}
+          </p>
+          <p className="text-xs font-medium text-foreground">{statusLabel}</p>
+        </div>
+      </div>
+
+      <div className="flex items-end gap-2">
+        <span className="text-4xl font-semibold tabular-nums tracking-tight text-foreground">
+          {score == null ? '—' : score}
+        </span>
+        <span className="mb-1.5 text-xs font-medium text-muted-foreground">/ 100</span>
+      </div>
+
+      <div
+        className="mt-3 h-2 overflow-hidden rounded-full bg-muted/70"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={score ?? undefined}
+        aria-label={t('reports.health.score')}
+      >
+        <div
+          className="h-full rounded-full transition-[width] duration-700 ease-out"
+          style={{ width: `${barPct}%`, backgroundColor: stroke }}
+        />
+      </div>
+
+      <p className="mt-3 text-[11px] leading-snug text-muted-foreground">{hint}</p>
     </div>
   )
 }

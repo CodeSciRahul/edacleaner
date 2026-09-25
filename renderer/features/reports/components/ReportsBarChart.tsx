@@ -36,24 +36,37 @@ export function ReportsBarChart({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-border bg-card p-5 shadow-card transition-shadow duration-200 hover:shadow-md sm:p-6',
+        'group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card',
+        'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-6',
         className
       )}
     >
-      <div className="mb-4">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-primary/8 to-transparent"
+        aria-hidden="true"
+      />
+      <div className="relative z-10 mb-4">
         <h3 className="text-card-title font-medium text-foreground">{title}</h3>
         {subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p> : null}
       </div>
 
       {allZero && emptyMessage ? (
         <div
-          className="flex items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center text-xs text-muted-foreground"
+          className="relative z-10 flex items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-card px-4 text-center text-xs text-muted-foreground"
           style={{ height }}
         >
-          {emptyMessage}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-primary/8 to-transparent"
+            aria-hidden="true"
+          />
+          <span className="relative z-10">{emptyMessage}</span>
         </div>
       ) : (
-        <div className="flex items-end gap-1.5 sm:gap-2" style={{ height }} onMouseLeave={() => setHover(null)}>
+        <div
+          className="relative z-10 flex items-end gap-1.5 sm:gap-2"
+          style={{ height }}
+          onMouseLeave={() => setHover(null)}
+        >
           {data.map((point, index) => {
             const pct = Math.max(6, (point.value / max) * 100)
             const active = hover === index
@@ -89,7 +102,7 @@ export function ReportsBarChart({
         </div>
       )}
 
-      <div className="mt-2 flex justify-between gap-1 text-[10px] text-muted-foreground sm:text-[11px]">
+      <div className="relative z-10 mt-2 flex justify-between gap-1 text-[10px] text-muted-foreground sm:text-[11px]">
         {data.map((point, index) => (
           <span key={`${point.label}-${index}`} className="min-w-0 flex-1 truncate text-center">
             {point.label}
