@@ -31,9 +31,9 @@ export function SmartScanMetricCard({
   return (
     <article
       className={cn(
-        'group relative flex overflow-hidden rounded-2xl border border-border p-3',
-        'shadow-card transition-all duration-150 ease-out',
-        'hover:-translate-y-0.5 hover:shadow-card-hover'
+        'group relative flex min-h-[112px] overflow-hidden rounded-2xl border border-border',
+        'shadow-card transition-all duration-200 ease-out',
+        'hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card-hover'
       )}
     >
       <img
@@ -52,29 +52,37 @@ export function SmartScanMetricCard({
         aria-hidden="true"
       />
 
-      <div className="relative z-10 grid w-full min-w-0 grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-0.5">
-        <div
-          className={cn(
-            'row-span-2 flex h-8 w-8 shrink-0 items-center justify-center self-start rounded-lg backdrop-blur-sm',
-            visual.iconWrapClass
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+      <div className="relative z-10 flex w-full flex-col gap-2.5 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div
+            className={cn(
+              'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl backdrop-blur-sm',
+              visual.iconWrapClass
+            )}
+          >
+            <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+          </div>
+          {showAction ? (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background/55 text-muted-foreground opacity-0 shadow-sm transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100">
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+          ) : null}
         </div>
 
-        <h3 className="min-w-0 self-end truncate text-[11px] font-medium leading-tight text-muted-foreground">
-          {title}
-        </h3>
-
-        <p className="min-w-0 truncate text-base font-semibold tabular-nums tracking-tight text-foreground">
-          {value}
-        </p>
+        <div className="min-w-0">
+          <h3 className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {title}
+          </h3>
+          <p className="mt-1 truncate text-lg font-semibold tabular-nums tracking-tight text-foreground">
+            {value}
+          </p>
+        </div>
 
         {showAction ? (
           <Button
             variant="link"
             size="sm"
-            className="col-start-2 mt-1 h-auto w-fit gap-0.5 p-0 text-[11px] font-medium text-primary hover:text-primary/80"
+            className="mt-auto h-auto w-fit gap-0.5 p-0 text-[11px] font-medium text-primary hover:text-primary/80"
             onClick={onAction}
           >
             {actionLabel}

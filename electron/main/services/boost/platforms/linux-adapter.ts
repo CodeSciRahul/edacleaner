@@ -19,6 +19,7 @@ import {
   runCommand,
   terminateUnixProcesses
 } from './exec-utils'
+import { isBenignEmptyTrashError } from './trash-utils'
 import { createLogger } from '@main/utils/logger'
 import { cleanDirectoryContents } from '../fs-utils'
 
@@ -179,7 +180,12 @@ export class LinuxBoostAdapter implements PlatformBoostAdapter {
     try {
       await runCommand('trash-empty', [], { signal, timeoutMs: 60_000 })
       return { emptied: true, detail: 'Trash emptied via trash-empty' }
-    } catch {
+    } catch (err) {
+      const trashEmptyMessage = err instanceof Error ? err.message : String(err)
+      if (isBenignEmptyTrashError(trashEmptyMessage)) {
+        return { emptied: true, detail: 'Trash is already empty' }
+      }
+
       // Fallback: clear FreeDesktop trash dirs
       const home = homedir()
       const trashDirs = [
@@ -194,6 +200,10 @@ export class LinuxBoostAdapter implements PlatformBoostAdapter {
         const cleaned = await cleanDirectoryContents(dir, signal)
         bytes += cleaned.bytesRemoved
         errors.push(...cleaned.errors.slice(0, 5))
+      }
+
+      if (bytes === 0 && errors.length === 0) {
+        return { emptied: true, detail: 'Trash is already empty' }
       }
 
       if (bytes > 0 || errors.length === 0) {

@@ -19,6 +19,7 @@ import {
   runCommand,
   terminateUnixProcesses
 } from './exec-utils'
+import { isBenignEmptyTrashError } from './trash-utils'
 import { createLogger } from '@main/utils/logger'
 
 const log = createLogger('boost:mac')
@@ -40,6 +41,17 @@ async function pathExists(p: string): Promise<boolean> {
     return true
   } catch {
     return false
+  }
+}
+
+/** Returns true/false when readable; null when Trash is inaccessible (e.g. no FDA). */
+async function isUserTrashEmptyOnDisk(): Promise<boolean | null> {
+  const trashPath = join(homedir(), '.Trash')
+  try {
+    const entries = await readdir(trashPath)
+    return entries.length === 0
+  } catch {
+    return null
   }
 }
 
@@ -161,6 +173,25 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
   }
 
   async emptyTrash(_signal?: AbortSignal): Promise<PlatformTrashResult> {
+    // Prefer a count check so an already-empty Trash is a friendly success,
+    // not a Failed step with a raw Finder/osascript dump.
+    let trashItemCount: number | null = null
+    try {
+      const { stdout } = await runCommand('osascript', [
+        '-e',
+        'tell application "Finder" to count items of trash'
+      ])
+      const count = Number.parseInt(stdout.trim(), 10)
+      if (Number.isFinite(count)) {
+        trashItemCount = count
+        if (count === 0) {
+          return { emptied: true, detail: 'Trash is already empty' }
+        }
+      }
+    } catch {
+      // Count failed (Automation/Finder) — still attempt empty and classify below.
+    }
+
     try {
       await runCommand('osascript', [
         '-e',
@@ -168,11 +199,25 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
       ])
       return { emptied: true, detail: 'Trash emptied' }
     } catch (err) {
-      // Fallback: attempt clearing ~/.Trash contents is intentional no-op here for safety
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      if (isBenignEmptyTrashError(message)) {
+        return { emptied: true, detail: 'Trash is already empty' }
+      }
+
+      // When Finder count was unavailable, a readable empty ~/.Trash is a soft success
+      // (generic Finder errors are common for already-empty Trash). Do not override
+      // when Finder reported items still present — that is a real failure.
+      if (trashItemCount === null) {
+        const emptyOnDisk = await isUserTrashEmptyOnDisk()
+        if (emptyOnDisk === true) {
+          return { emptied: true, detail: 'Trash is already empty' }
+        }
+      }
+
       return {
         emptied: false,
         detail: 'Could not empty Trash (permission or Finder unavailable)',
-        error: err instanceof Error ? err.message : 'Unknown error'
+        error: message
       }
     }
   }

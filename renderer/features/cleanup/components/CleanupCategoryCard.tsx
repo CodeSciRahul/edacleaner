@@ -62,7 +62,7 @@ export function CleanupCategoryCard({
         locked && 'ring-1 ring-primary/20',
         selected
           ? 'border-primary/45 shadow-md shadow-primary/10 ring-1 ring-primary/25'
-          : 'border-border hover:border-border/80 hover:shadow-sm'
+          : 'border-border bg-card shadow-card hover:-translate-y-0.5 hover:border-border/80 hover:shadow-md'
       )}
     >
       <img

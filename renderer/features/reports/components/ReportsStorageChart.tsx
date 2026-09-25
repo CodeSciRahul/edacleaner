@@ -146,11 +146,16 @@ export function ReportsStorageChart({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-border bg-card p-4 shadow-card transition-shadow duration-200 hover:shadow-md sm:p-5',
+        'group relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-card',
+        'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5',
         className
       )}
     >
-      <div className="mb-3 flex items-start justify-between gap-3">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-chart-disk/12 to-transparent"
+        aria-hidden="true"
+      />
+      <div className="relative z-10 mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-card-title font-medium text-foreground">
             {t('reports.trendTitle')}
@@ -163,13 +168,17 @@ export function ReportsStorageChart({
       </div>
 
       {allZero ? (
-        <div className="flex h-[110px] items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center text-xs text-muted-foreground">
-          {t('reports.trendEmpty')}
+        <div className="relative z-10 flex h-[110px] items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-card px-4 text-center text-xs text-muted-foreground">
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-chart-disk/10 to-transparent"
+            aria-hidden="true"
+          />
+          <span className="relative z-10">{t('reports.trendEmpty')}</span>
         </div>
       ) : (
         <div
           ref={containerRef}
-          className="h-[110px] w-full"
+          className="relative z-10 h-[110px] w-full"
           role="img"
           aria-label={t('reports.trendTitle')}
         />

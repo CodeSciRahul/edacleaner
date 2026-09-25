@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
-  CheckCircle2,
   RefreshCw,
   Sparkles,
   CheckCheck
@@ -301,18 +300,14 @@ export function CleanupPage(): React.ReactElement {
           onOptimize={() => void handleClean()}
         />
 
-        <StatusCard
-          icon={
-            scanMutation.isError
-              ? AlertCircle
-              : lastResult && !lastResult.cancelled
-                ? CheckCircle2
-                : Sparkles
-          }
-          title={status.title}
-          status={status.status}
-          message={status.message}
-        />
+        {scanMutation.isError ? (
+          <StatusCard
+            icon={AlertCircle}
+            title={status.title}
+            status={status.status}
+            message={status.message}
+          />
+        ) : null}
 
         {/* Inline scan progress only — clean uses CleanupLoaderModal */}
         {isScanning && progress ? (
@@ -342,7 +337,7 @@ export function CleanupPage(): React.ReactElement {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-section-title text-foreground">{t('cleanup.categories')}</h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {t('cleanup.categoriesHint')}
               </p>
             </div>
@@ -370,19 +365,23 @@ export function CleanupPage(): React.ReactElement {
           </div>
 
           {!scan && !isScanning ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Sparkles className="h-7 w-7" strokeWidth={1.75} aria-hidden="true" />
+            <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center shadow-card">
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-chart-disk/10 to-transparent"
+                aria-hidden="true"
+              />
+              <div className="relative z-10 mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-chart-disk/10 text-chart-disk ring-1 ring-chart-disk/20">
+                <Sparkles className="h-6 w-6" strokeWidth={1.85} aria-hidden="true" />
               </div>
-              <div className="max-w-sm space-y-1.5">
-                <p className="text-sm font-semibold text-foreground">{t('cleanup.emptyTitle')}</p>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {t('cleanup.emptyDesc')}
-                </p>
-              </div>
+              <p className="relative z-10 text-sm font-semibold text-foreground">
+                {t('cleanup.emptyTitle')}
+              </p>
+              <p className="relative z-10 mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
+                {t('cleanup.emptyDesc')}
+              </p>
               <Button
                 size="sm"
-                className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+                className="relative z-10 mt-4 h-9 gap-2 rounded-lg px-4 text-[13px]"
                 onClick={() => void handleScan()}
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -415,8 +414,12 @@ export function CleanupPage(): React.ReactElement {
         </section>
 
         {scan && summary.count > 0 && !busy ? (
-          <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success/25 bg-card/95 px-4 py-3 shadow-lg backdrop-blur-md">
-            <div className="min-w-0">
+          <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-2xl border border-success/30 bg-card/95 px-4 py-3.5 shadow-lg backdrop-blur-md">
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-success/10 to-transparent"
+              aria-hidden="true"
+            />
+            <div className="relative z-10 min-w-0">
               <p className="text-sm font-semibold text-foreground">
                 {t('cleanup.readyReclaim', { label: summary.label })}
               </p>
@@ -424,7 +427,7 @@ export function CleanupPage(): React.ReactElement {
             </div>
             <Button
               size="sm"
-              className="h-9 gap-2 rounded-lg px-4 text-[13px]"
+              className="relative z-10 h-9 gap-2 rounded-lg px-4 text-[13px]"
               onClick={() => void handleClean()}
             >
               <Sparkles className="h-4 w-4" aria-hidden="true" />

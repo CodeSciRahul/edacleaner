@@ -4,7 +4,10 @@ import { resolve } from 'path'
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['electron/main/services/safety/**/*.test.ts'],
+    include: [
+      'electron/main/services/safety/**/*.test.ts',
+      'electron/main/services/boost/**/*.test.ts'
+    ],
     env: {
       VITEST: 'true'
     }

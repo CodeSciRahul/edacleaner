@@ -60,15 +60,24 @@ function IssuesCompareCard({
   const resolvedPct = Math.round((resolved / max) * 100)
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-card transition-shadow duration-200 hover:shadow-md sm:p-6">
-      <div className="mb-5">
+    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-6">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-warning/12 via-warning/4 to-transparent"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-warning/15 blur-2xl opacity-70 transition-opacity duration-200 group-hover:opacity-100"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 mb-5">
         <h3 className="text-card-title font-medium text-foreground">
           {t('reports.issues.title')}
         </h3>
         <p className="mt-0.5 text-xs text-muted-foreground">{t('reports.issues.hint')}</p>
       </div>
 
-      <div className="space-y-5">
+      <div className="relative z-10 space-y-5">
         <CompareRow
           label={t('reports.issues.found')}
           value={found}
@@ -85,8 +94,8 @@ function IssuesCompareCard({
         />
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-border/80 bg-muted/30 px-3 py-2.5">
+      <div className="relative z-10 mt-5 grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-border/80 bg-background/60 px-3 py-2.5 backdrop-blur-sm">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             {t('reports.issues.openNow')}
           </p>
@@ -94,7 +103,7 @@ function IssuesCompareCard({
             {analytics.issuesFoundLatest}
           </p>
         </div>
-        <div className="rounded-xl border border-border/80 bg-muted/30 px-3 py-2.5">
+        <div className="rounded-xl border border-border/80 bg-background/60 px-3 py-2.5 backdrop-blur-sm">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             {t('reports.mix.title')}
           </p>

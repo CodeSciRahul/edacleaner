@@ -32,7 +32,7 @@ export function DashboardLiveSnapshot({
             </span>
             <h2 className="text-section-title text-foreground">{t('home.liveMetrics')}</h2>
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">{t('home.liveMetricsHint')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('home.liveMetricsHint')}</p>
         </div>
         <Button
           size="sm"
