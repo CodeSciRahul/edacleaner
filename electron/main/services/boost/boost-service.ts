@@ -22,7 +22,8 @@ import {
   applyBoostScoreFloor,
   computeBoostScoreBonus,
   computePerformanceScore,
-  formatBytes
+  formatBytes,
+  groupProcessesByApp
 } from '@shared/utils'
 import { cleanDirectoryContents, estimateDirectorySize } from './fs-utils'
 import { createPlatformBoostAdapter } from './platforms/create-adapter'
@@ -71,7 +72,8 @@ function uniquePaths(paths: string[]): string[] {
 }
 
 function filterBackgroundProcesses(processes: BoostProcessInfo[]): BoostProcessInfo[] {
-  return processes
+  const grouped = groupProcessesByApp(processes)
+  return grouped
     .filter((p) => {
       // Always surface this cleaner / Electron runtime so Stop can show as protected+disabled
       if (isSelfCleanerProcess(p.name, p.pid, p.path)) return true
@@ -123,7 +125,7 @@ export class BoostService {
    * Lightweight background-apps list (no temp/cache analyze).
    */
   async listBackgroundProcesses(): Promise<BackgroundProcessesUpdate> {
-    const raw = await this.adapter.listProcesses(100)
+    const raw = await this.adapter.listProcesses(150)
     const withCpu = this.applyCpuPercents(raw)
     const filtered = filterBackgroundProcesses(withCpu)
     const processes = await this.attachProcessIcons(filtered, { waitForMissing: true })
@@ -314,7 +316,7 @@ export class BoostService {
 
   /** Watch tick: reuse icon cache and wait for newly seen exe paths so logos stick. */
   private async listBackgroundProcessesForWatch(): Promise<BackgroundProcessesUpdate> {
-    const raw = await this.adapter.listProcesses(100)
+    const raw = await this.adapter.listProcesses(150)
     const withCpu = this.applyCpuPercents(raw)
     const filtered = filterBackgroundProcesses(withCpu)
     const processes = await this.attachProcessIcons(filtered, { waitForMissing: true })
@@ -430,11 +432,12 @@ export class BoostService {
 
   async getSnapshot(): Promise<BoostSnapshot> {
     const [rawTop, diskPressure] = await Promise.all([
-      this.adapter.listProcesses(10),
+      this.adapter.listProcesses(35),
       this.adapter.getDiskPressure()
     ])
     const withCpu = this.applyCpuPercents(rawTop)
-    const topProcesses = await this.attachProcessIcons(withCpu, { waitForMissing: true })
+    const grouped = groupProcessesByApp(withCpu)
+    const topProcesses = await this.attachProcessIcons(grouped.slice(0, 10), { waitForMissing: true })
 
     return {
       memory: getMemoryInfo(),

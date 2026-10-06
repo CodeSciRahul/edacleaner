@@ -226,7 +226,7 @@ export function PerformancePage(): React.ReactElement {
     if (suggestions.length > 0) {
       const top = suggestions.slice(0, AUTO_STOP_PROCESS_LIMIT)
       const names = top
-        .map((p) => p.name)
+        .map((p) => p.name.replace(/\.exe$/i, ''))
         .slice(0, 3)
         .join(', ')
       const more = top.length > 3 ? ` (+${top.length - 3} more)` : ''
@@ -239,7 +239,9 @@ export function PerformancePage(): React.ReactElement {
       })
       if (confirmApps.response === 2) return
       if (confirmApps.response === 1) {
-        terminateProcessIds = top.map((p) => p.pid)
+        terminateProcessIds = top.flatMap((p) =>
+          p.pids && p.pids.length > 0 ? p.pids : [p.pid]
+        )
       }
     }
 

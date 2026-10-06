@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { electronService } from '@/services/electron-service'
 import { formatBytes } from '@shared/utils'
 import type { BoostProcessInfo } from '@shared/interfaces'
+import { groupProcessesByApp } from '@shared/utils'
 
 export interface DashboardMetrics {
   cpu: number
@@ -71,9 +72,7 @@ export function useDashboardMetrics() {
 function mapTopProcesses(
   processes: BoostProcessInfo[]
 ): Array<{ name: string; memoryBytes: number; iconDataUrl?: string }> {
-  return processes
-    .slice()
-    .sort((a, b) => b.memoryBytes - a.memoryBytes)
+  return groupProcessesByApp(processes)
     .slice(0, 5)
     .map((p) => ({
       name: p.name || p.path || `PID ${p.pid}`,
