@@ -184,6 +184,10 @@ export interface BoostProcessInfo {
   iconDataUrl?: string
   /** True when terminating this process is considered relatively safe (never system-critical). */
   safeToTerminate: boolean
+  /** All process IDs belonging to this application when grouped. */
+  pids?: number[]
+  /** Number of OS processes grouped under this application. */
+  processCount?: number
 }
 
 export interface BackgroundProcessesUpdate {

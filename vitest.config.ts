@@ -6,7 +6,8 @@ export default defineConfig({
     environment: 'node',
     include: [
       'electron/main/services/safety/**/*.test.ts',
-      'electron/main/services/boost/**/*.test.ts'
+      'electron/main/services/boost/**/*.test.ts',
+      'shared/**/*.test.ts'
     ],
     env: {
       VITEST: 'true'

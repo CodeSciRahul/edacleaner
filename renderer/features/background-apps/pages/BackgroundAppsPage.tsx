@@ -9,7 +9,7 @@ import {
   Shield
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { formatBytes } from '@shared/utils'
+import { formatBytes, groupProcessesByApp } from '@shared/utils'
 import { cn } from '@/utils/cn'
 import {
   useLiveBackgroundProcesses,
@@ -63,29 +63,37 @@ export function BackgroundAppsPage(): React.ReactElement {
     null
   )
 
+  const uniqueApps = useMemo(() => groupProcessesByApp(apps), [apps])
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    let list = apps.filter((app) => {
+    let list = uniqueApps.filter((app) => {
       if (statusFilter === 'safe' && !app.safeToTerminate) return false
       if (!q) return true
-      return app.name.toLowerCase().includes(q) || String(app.pid).includes(q)
+      const matchesName =
+        app.name.toLowerCase().includes(q) || displayName(app.name).toLowerCase().includes(q)
+      const matchesPid =
+        String(app.pid).includes(q) || (app.pids?.some((pid) => String(pid).includes(q)) ?? false)
+      return matchesName || matchesPid
     })
 
     list = [...list].sort((a, b) => {
       if (sortKey === 'cpu') return b.cpuPercent - a.cpuPercent || a.name.localeCompare(b.name)
-      if (sortKey === 'name') return a.name.localeCompare(b.name)
+      if (sortKey === 'name') return displayName(a.name).localeCompare(displayName(b.name))
       return b.memoryBytes - a.memoryBytes || a.name.localeCompare(b.name)
     })
 
     return list
-  }, [apps, query, statusFilter, sortKey])
+  }, [uniqueApps, query, statusFilter, sortKey])
 
   const totalMemory = useMemo(
-    () => apps.reduce((sum, app) => sum + app.memoryBytes, 0),
-    [apps]
+    () => uniqueApps.reduce((sum, app) => sum + app.memoryBytes, 0),
+    [uniqueApps]
   )
 
-  const handleStop = async (targets: Array<{ pid: number; name: string }>): Promise<void> => {
+  const handleStop = async (
+    targets: Array<{ pid: number; name: string; pids?: number[] }>
+  ): Promise<void> => {
     if (!access.guard()) return
     setNotice(null)
     const result = await stopProcesses.mutateAsync(targets)
@@ -121,7 +129,7 @@ export function BackgroundAppsPage(): React.ReactElement {
         isRefreshing={isFetching}
         isLive={isLive}
         accessAllowed={access.allowed}
-        listedCount={apps.length}
+        listedCount={uniqueApps.length}
         memoryBytes={totalMemory}
         onRefresh={() => {
           setNotice(null)
@@ -256,12 +264,18 @@ export function BackgroundAppsPage(): React.ReactElement {
                 {visibleApps.map((app) => {
                   const stopping =
                     stopProcesses.isPending &&
-                    (stopProcesses.variables?.some((target) => target.pid === app.pid) ?? false)
+                    (stopProcesses.variables?.some((target) => {
+                      if (target.pid === app.pid) return true
+                      if (app.pids?.includes(target.pid)) return true
+                      if (target.pids?.some((p) => app.pids?.includes(p) || p === app.pid)) return true
+                      return false
+                    }) ?? false)
                   const appLabel = displayName(app.name)
                   const canStop = app.safeToTerminate
                   const hasIcon = Boolean(app.iconDataUrl)
                   const cpu =
                     app.cpuPercent > 0 && app.cpuPercent <= 400 ? app.cpuPercent : null
+                  const procCount = app.pids?.length ?? app.processCount ?? 1
 
                   return (
                     <tr
@@ -286,7 +300,9 @@ export function BackgroundAppsPage(): React.ReactElement {
                               {appLabel}
                             </p>
                             <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                              PID {app.pid}
+                              {procCount > 1
+                                ? `PID ${app.pid} · ${procCount} processes`
+                                : `PID ${app.pid}`}
                             </p>
                           </div>
                         </div>
@@ -324,7 +340,7 @@ export function BackgroundAppsPage(): React.ReactElement {
                           onClick={() => {
                             if (!access.guard()) return
                             if (!canStop) return
-                            void handleStop([{ pid: app.pid, name: app.name }])
+                            void handleStop([{ pid: app.pid, name: appLabel, pids: app.pids }])
                           }}
                         >
                           <Square className="h-3 w-3" aria-hidden="true" />
@@ -343,6 +359,7 @@ export function BackgroundAppsPage(): React.ReactElement {
                 <div className="divide-y divide-border/70">
                   {teaserApps.map((app) => {
                     const appLabel = displayName(app.name)
+                    const procCount = app.pids?.length ?? app.processCount ?? 1
                     return (
                       <div
                         key={`teaser-${app.pid}`}
@@ -361,7 +378,8 @@ export function BackgroundAppsPage(): React.ReactElement {
                             {appLabel}
                           </p>
                           <p className="truncate text-[11px] text-muted-foreground">
-                            {formatBytes(app.memoryBytes)} · PID {app.pid}
+                            {formatBytes(app.memoryBytes)} ·{' '}
+                            {procCount > 1 ? `${procCount} processes · ` : ''}PID {app.pid}
                           </p>
                         </div>
                       </div>

@@ -6,6 +6,7 @@ export {
   type PerformanceScoreInput,
   type BoostScoreBonusInput
 } from './performance-score'
+export { groupProcessesByApp, getAppIdentityKey } from './process-grouping'
 
 export function formatBytes(bytes: number, decimals = 2): string {
   if (bytes === 0) return '0 Bytes'

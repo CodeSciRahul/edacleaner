@@ -8,6 +8,7 @@ import type {
   BoostProgressEvent,
   BoostResult
 } from '@shared/interfaces'
+import { groupProcessesByApp } from '@shared/utils'
 
 export const boostKeys = {
   analysis: ['boost', 'analysis'] as const,
@@ -49,6 +50,8 @@ export function useLiveBackgroundProcesses() {
 
   const applyUpdate = useCallback(
     (update: BackgroundProcessesUpdate) => {
+      const groupedProcesses = groupProcessesByApp(update.processes)
+
       setProcesses((prev) => {
         // Keep previously resolved logos when a live tick briefly omits iconDataUrl
         const prevByPid = new Map(prev.map((p) => [p.pid, p]))
@@ -56,7 +59,7 @@ export function useLiveBackgroundProcesses() {
           prev.filter((p) => p.iconDataUrl).map((p) => [p.name.toLowerCase(), p.iconDataUrl!])
         )
 
-        return update.processes.map((process) => {
+        return groupedProcesses.map((process) => {
           if (process.iconDataUrl) return process
           const fromPid = prevByPid.get(process.pid)?.iconDataUrl
           if (fromPid) return { ...process, iconDataUrl: fromPid }
@@ -70,7 +73,10 @@ export function useLiveBackgroundProcesses() {
       setIsFetching(false)
       setIsError(false)
       setError(null)
-      queryClient.setQueryData(boostKeys.processes, update)
+      queryClient.setQueryData(boostKeys.processes, {
+        ...update,
+        processes: groupedProcesses
+      })
     },
     [queryClient]
   )
@@ -181,7 +187,9 @@ export function useStopBackgroundProcesses() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (targets: Array<{ pid: number; name: string }>) => {
+    mutationFn: async (
+      targets: Array<{ pid: number; name: string; pids?: number[] }>
+    ) => {
       if (targets.length === 0) {
         return {
           cancelled: true as const,
@@ -192,9 +200,17 @@ export function useStopBackgroundProcesses() {
         }
       }
 
+      const allPids = Array.from(
+        new Set(
+          targets.flatMap((t) => (t.pids && t.pids.length > 0 ? t.pids : [t.pid]))
+        )
+      )
+
       const label =
         targets.length === 1
-          ? `"${targets[0].name}" (PID ${targets[0].pid})`
+          ? targets[0].pids && targets[0].pids.length > 1
+            ? `"${targets[0].name}" (${targets[0].pids.length} processes)`
+            : `"${targets[0].name}" (PID ${targets[0].pid})`
           : `${targets.length} background apps`
 
       const confirmed = await electronService.dialog().message({
@@ -216,7 +232,7 @@ export function useStopBackgroundProcesses() {
         }
       }
 
-      const result = await electronService.boost().terminateProcesses(targets.map((t) => t.pid))
+      const result = await electronService.boost().terminateProcesses(allPids)
       return { ...result, cancelled: false as const }
     },
     onSuccess: (result) => {
