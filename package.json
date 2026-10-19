@@ -12,6 +12,8 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev.mjs",
+    "dev:onboarding": "VITE_FORCE_ONBOARDING=ready node scripts/dev.mjs",
+    "dev:onboarding:hero": "VITE_FORCE_ONBOARDING=hero node scripts/dev.mjs",
     "prebuild": "npm run generate:app-icons",
     "build": "npm run typecheck && electron-vite build",
     "preview": "electron-vite preview",
@@ -34,6 +36,7 @@
     "dist:all": "npm run build && electron-builder -mwl --config build/electron-builder.config.js",
     "publish:release": "node scripts/publish-release.mjs",
     "publish:release:yes": "node scripts/publish-release.mjs --yes",
+    "publish:release:all": "node scripts/publish-release.mjs --yes --require-all-os",
     "generate:app-icons": "node scripts/generate-app-icons.mjs",
     "generate:splash-gif": "node scripts/generate-splash-gif.mjs"
   },
