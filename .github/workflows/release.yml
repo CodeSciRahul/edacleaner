@@ -29,7 +29,7 @@ permissions:
   contents: read
 
 jobs:
-  build-and-publish:
+  build:
     name: Build (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -214,23 +214,46 @@ jobs:
             !release/**/*.blockmap
             !release/**/*.yml
             !release/**/*.yaml
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
 
-      - name: Decide whether to publish
-        id: publish
+  publish:
+    name: Publish Release (All OS)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name != 'workflow_dispatch' || inputs.publish != false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all installer artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: eda-cleaner-*-${{ github.sha }}
+          path: release
+          merge-multiple: true
+
+      - name: List downloaded installers
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.publish }}" = "false" ]; then
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          fi
+          echo "Downloaded release artifacts for all OS:"
+          ls -lh release/
 
-      - name: Publish to version API
-        if: steps.publish.outputs.enabled == 'true'
-        run: npm run publish:release:yes
+      - name: Publish all installers to S3 and Version API
+        run: npm run publish:release:all
         env:
           PUBLISH_RELEASE: '1'
+          REQUIRE_ALL_OS: 'true'
           SERVER_API_BASE_URL: ${{ secrets.SERVER_API_BASE_URL }}
-          RELEASE_TYPE: ${{ env.RELEASE_TYPE }}
+          RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'stable' }}

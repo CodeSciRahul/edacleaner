@@ -14,7 +14,9 @@ interface OnboardingFlowProps {
 
 function planLabel(session: AuthSessionSnapshot | null, fallback: string): string {
   const plan = session?.subscription?.currentPlan?.trim()
-  if (!plan) return fallback
+  if (!plan) {
+    return import.meta.env.VITE_FORCE_ONBOARDING === 'ready' ? 'Premium' : fallback
+  }
   return plan.charAt(0).toUpperCase() + plan.slice(1)
 }
 
@@ -33,13 +35,18 @@ export function OnboardingFlow({
   const beginAccount = useOnboardingStore((s) => s.beginAccount)
   const closePlans = useOnboardingStore((s) => s.closePlans)
   const complete = useOnboardingStore((s) => s.complete)
-  const hasPaidPlan = sessionHasPaidPlan(session)
+  const isForcedReady = import.meta.env.VITE_FORCE_ONBOARDING === 'ready'
+  const hasPaidPlan = sessionHasPaidPlan(session) || isForcedReady
 
   useEffect(() => {
+    if (isForcedReady) {
+      setStep('ready')
+      return
+    }
     if (!authenticated) return
     closePlans()
     setStep('ready')
-  }, [authenticated, closePlans, setStep])
+  }, [authenticated, closePlans, isForcedReady, setStep])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {

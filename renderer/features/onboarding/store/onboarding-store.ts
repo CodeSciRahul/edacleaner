@@ -55,6 +55,7 @@ interface OnboardingState {
   openPlans: () => void
   closePlans: () => void
   complete: () => void
+  showScreen: (step?: OnboardingStep) => void
   markFlowActive: () => void
   skipForExistingSession: () => void
 }
@@ -98,6 +99,11 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({ completed: true, flowActive: false, plansOpen: false, step: 'hero' })
   },
 
+  showScreen: (step: OnboardingStep = 'ready') => {
+    writePersisted(false, step)
+    set({ completed: false, flowActive: true, step, plansOpen: false })
+  },
+
   markFlowActive: () => {
     if (get().flowActive) return
     if (get().completed) {
@@ -113,3 +119,12 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({ completed: true, flowActive: false, plansOpen: false })
   }
 }))
+
+if (typeof window !== 'undefined') {
+  ;(window as unknown as Record<string, unknown>).__showOnboarding = (
+    step: OnboardingStep = 'ready'
+  ) => {
+    useOnboardingStore.getState().showScreen(step)
+  }
+}
+

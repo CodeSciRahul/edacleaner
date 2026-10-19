@@ -360,6 +360,11 @@ async function main() {
     process.env.PUBLISH_RELEASE === '1' ||
     process.env.PUBLISH_RELEASE === 'true'
 
+  const requireAllOs =
+    args.has('--require-all-os') ||
+    process.env.REQUIRE_ALL_OS === '1' ||
+    process.env.REQUIRE_ALL_OS === 'true'
+
   const canPrompt = Boolean(process.stdin.isTTY && process.stdout.isTTY)
   const apiBase = resolveApiBaseUrl()
   const packageVersion = readPackageVersion()
@@ -390,6 +395,19 @@ async function main() {
     console.log('Then confirm the installer exists, e.g.:')
     console.log('  dir release')
     process.exit(0)
+  }
+
+  if (requireAllOs) {
+    const presentPlatforms = new Set(artifacts.map((a) => a.platform))
+    const missing = ['windows', 'macos', 'linux'].filter((p) => !presentPlatforms.has(p))
+    if (missing.length > 0) {
+      console.error('')
+      console.error(
+        `Error: --require-all-os is enabled, but installers for the following OS are missing: ${missing.join(', ')}`
+      )
+      console.error('All OS installers (windows, macos, linux) must be present in release/ before publishing.')
+      process.exit(1)
+    }
   }
 
   console.log(`Found ${artifacts.length} installer(s):`)
@@ -496,6 +514,17 @@ async function main() {
     // Parallel CI jobs (win/mac/linux) may race on first create — retry as append on conflict.
     const exists = await versionExists(apiBase, version)
 
+    function logCleanup(cleanup) {
+      if (!cleanup) return
+      if (cleanup.deletedVersionsCount > 0 || cleanup.deletedFilesCount > 0) {
+        console.log(
+          `  cleanup: removed previous version(s) [${cleanup.deletedVersionNames.join(', ')}] and deleted ${cleanup.deletedFilesCount} file(s) from S3`
+        )
+      } else {
+        console.log('  cleanup: no previous version files needed to be deleted from S3')
+      }
+    }
+
     if (exists) {
       console.log(`Version ${version} already exists — appending/updating files...`)
       const res = await axios.post(
@@ -509,6 +538,7 @@ async function main() {
       console.log('')
       console.log(`Updated version ${version}`)
       console.log(`  files : ${res.data?.data?.files?.length ?? files.length}`)
+      logCleanup(res.data?.data?.cleanup)
     } else {
       console.log(`Creating version ${version}...`)
       try {
@@ -530,6 +560,7 @@ async function main() {
         console.log(`  type   : ${releaseType}`)
         console.log(`  files  : ${files.length}`)
         console.log(`  published: ${publishYes}`)
+        logCleanup(res.data?.data?.cleanup)
       } catch (err) {
         const status = axios.isAxiosError(err) ? err.response?.status : undefined
         if (status !== 409 && status !== 400) throw err
@@ -548,6 +579,7 @@ async function main() {
         console.log('')
         console.log(`Updated version ${version}`)
         console.log(`  files : ${res.data?.data?.files?.length ?? files.length}`)
+        logCleanup(res.data?.data?.cleanup)
       }
     }
 
