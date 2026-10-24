@@ -155,5 +155,20 @@ module.exports = {
 
   deb: {
     priority: 'optional'
+  },
+
+  rpm: {
+    fpm: [
+      '--rpm-rpmbuild-define',
+      '__spec_install_post %{nil}',
+      '--rpm-rpmbuild-define',
+      '__os_install_post %{nil}',
+      '--rpm-rpmbuild-define',
+      '_build_id_links none',
+      '--rpm-rpmbuild-define',
+      'debug_package %{nil}',
+      '--rpm-rpmbuild-define',
+      '_missing_build_ids_terminate_build 0'
+    ]
   }
 }
