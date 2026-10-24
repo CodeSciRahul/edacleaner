@@ -14,13 +14,13 @@ import type {
   PlatformTrashResult
 } from './platform-adapter'
 import {
-  classifyStartupImpact,
   getSelfProcessIds,
   isProtectedProcess,
   runCommand,
   terminateUnixProcesses
 } from './exec-utils'
 import { isBenignEmptyTrashError } from './trash-utils'
+import { MacosStartupAdapter } from '@main/services/startup/platforms/macos-adapter'
 import { createLogger } from '@main/utils/logger'
 
 const log = createLogger('boost:mac')
@@ -106,31 +106,22 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
   }
 
   async listStartupApps(): Promise<BoostStartupAppInfo[]> {
-    const apps: BoostStartupAppInfo[] = []
-    const agentsDir = join(homedir(), 'Library', 'LaunchAgents')
-
-    if (await pathExists(agentsDir)) {
-      try {
-        const entries = await readdir(agentsDir)
-        for (const entry of entries) {
-          if (!entry.endsWith('.plist')) continue
-          const name = entry.replace(/\.plist$/i, '')
-          apps.push({
-            id: `mac-launchagent:${entry}`,
-            name,
-            path: join(agentsDir, entry),
-            impact: classifyStartupImpact(name),
-            enabled: true,
-            canDisable: false,
-            source: 'LaunchAgents'
-          })
-        }
-      } catch (err) {
-        log.warn('listStartupApps failed', err)
-      }
+    try {
+      const adapter = new MacosStartupAdapter()
+      const entries = await adapter.listEntries()
+      return entries.map((entry) => ({
+        id: entry.id,
+        name: entry.name,
+        path: entry.location,
+        impact: entry.impact,
+        enabled: entry.enabled,
+        canDisable: entry.canToggle,
+        source: entry.source
+      }))
+    } catch (err) {
+      log.warn('listStartupApps failed', err)
+      return []
     }
-
-    return apps
   }
 
   async getDiskPressure(): Promise<BoostDiskPressure | null> {
