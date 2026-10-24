@@ -14,12 +14,13 @@ import type {
   PlatformTrashResult
 } from './platform-adapter'
 import {
-  classifyStartupImpact,
+  getSelfProcessIds,
   isProtectedProcess,
   runCommand,
   terminateUnixProcesses
 } from './exec-utils'
 import { isBenignEmptyTrashError } from './trash-utils'
+import { MacosStartupAdapter } from '@main/services/startup/platforms/macos-adapter'
 import { createLogger } from '@main/utils/logger'
 
 const log = createLogger('boost:mac')
@@ -72,8 +73,8 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
 
   async listProcesses(limit = 25): Promise<BoostProcessInfo[]> {
     try {
-      // command= includes argv[0] path when available
-      const { stdout } = await runCommand('ps', ['-axo', 'pid=,rss=,pcpu=,command='])
+      // comm= gives the clean binary path (without arguments) preserving spaces
+      const { stdout } = await runCommand('ps', ['-axo', 'pid=,rss=,pcpu=,comm='])
       const processes: BoostProcessInfo[] = []
 
       for (const line of stdout.split('\n')) {
@@ -84,9 +85,9 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
         const pid = Number(match[1])
         const rssKb = Number(match[2])
         const cpu = Number(match[3])
-        const command = match[4].trim()
-        const exePath = command.startsWith('/') ? command.split(/\s+/)[0] : undefined
-        const name = exePath ? exePath.split('/').pop() || command : command.split(/\s+/)[0] || command
+        const comm = match[4].trim()
+        const exePath = comm.startsWith('/') ? comm : undefined
+        const name = exePath ? exePath.split('/').pop() || comm : comm
         processes.push({
           pid,
           name,
@@ -105,31 +106,22 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
   }
 
   async listStartupApps(): Promise<BoostStartupAppInfo[]> {
-    const apps: BoostStartupAppInfo[] = []
-    const agentsDir = join(homedir(), 'Library', 'LaunchAgents')
-
-    if (await pathExists(agentsDir)) {
-      try {
-        const entries = await readdir(agentsDir)
-        for (const entry of entries) {
-          if (!entry.endsWith('.plist')) continue
-          const name = entry.replace(/\.plist$/i, '')
-          apps.push({
-            id: `mac-launchagent:${entry}`,
-            name,
-            path: join(agentsDir, entry),
-            impact: classifyStartupImpact(name),
-            enabled: true,
-            canDisable: false,
-            source: 'LaunchAgents'
-          })
-        }
-      } catch (err) {
-        log.warn('listStartupApps failed', err)
-      }
+    try {
+      const adapter = new MacosStartupAdapter()
+      const entries = await adapter.listEntries()
+      return entries.map((entry) => ({
+        id: entry.id,
+        name: entry.name,
+        path: entry.location,
+        impact: entry.impact,
+        enabled: entry.enabled,
+        canDisable: entry.canToggle,
+        source: entry.source
+      }))
+    } catch (err) {
+      log.warn('listStartupApps failed', err)
+      return []
     }
-
-    return apps
   }
 
   async getDiskPressure(): Promise<BoostDiskPressure | null> {
@@ -246,9 +238,10 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
   ): Promise<PlatformTerminateResult> {
     const allowed: number[] = []
     const failed: Array<{ pid: number; error: string }> = []
+    const selfPids = getSelfProcessIds()
 
     for (const pid of pids) {
-      if (isProtectedProcess(`pid-${pid}`, pid)) {
+      if (selfPids.has(pid) || isProtectedProcess(`pid-${pid}`, pid)) {
         failed.push({ pid, error: 'Protected process' })
         continue
       }

@@ -30,6 +30,15 @@ import { PerformancePremiumUpsell } from '@/features/performance/components/Perf
 const BOOST_SCORE_HOLD_MS = 5 * 60 * 1000
 const AUTO_STOP_PROCESS_LIMIT = 5
 
+function isProtectedCleanerApp(name: string): boolean {
+  const lower = name.toLowerCase()
+  return (
+    (lower.includes('eda') && lower.includes('clean')) ||
+    lower.includes('electron') ||
+    lower === 'eda'
+  )
+}
+
 interface BoostScoreHold {
   score: number
   delta: number
@@ -133,7 +142,9 @@ export function PerformancePage(): React.ReactElement {
 
   const recoverableEstimate = useMemo(() => {
     if (!analysis) return 0
-    return analysis.processSuggestions.reduce((sum, p) => sum + p.memoryBytes, 0)
+    return analysis.processSuggestions
+      .filter((p) => p.safeToTerminate && !isProtectedCleanerApp(p.name))
+      .reduce((sum, p) => sum + p.memoryBytes, 0)
   }, [analysis])
 
   const status = useMemo(() => {
@@ -222,7 +233,9 @@ export function PerformancePage(): React.ReactElement {
     }
 
     let terminateProcessIds: number[] = []
-    const suggestions = analysis?.processSuggestions ?? []
+    const suggestions = (analysis?.processSuggestions ?? []).filter(
+      (p) => p.safeToTerminate && !isProtectedCleanerApp(p.name)
+    )
     if (suggestions.length > 0) {
       const top = suggestions.slice(0, AUTO_STOP_PROCESS_LIMIT)
       const names = top

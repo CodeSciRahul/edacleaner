@@ -22,7 +22,10 @@ const PROTECTED_NAME_PATTERNS = [
   'amd',
   'intelgraphics',
   'rthdcpl',
-  'audioendpointbuilder'
+  'audioendpointbuilder',
+  'edacleaner',
+  'eda cleaner',
+  'electron'
 ]
 
 export function classifyStartupImpact(

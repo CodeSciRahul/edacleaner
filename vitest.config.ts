@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       'electron/main/services/safety/**/*.test.ts',
       'electron/main/services/boost/**/*.test.ts',
+      'electron/main/services/startup/**/*.test.ts',
       'shared/**/*.test.ts'
     ],
     env: {

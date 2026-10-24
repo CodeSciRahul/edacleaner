@@ -390,10 +390,6 @@ export function BackgroundAppsPage(): React.ReactElement {
             ) : null}
           </div>
         )}
-
-        <div className="relative z-10 border-t border-border/80 px-4 py-3 text-xs text-muted-foreground sm:px-5">
-          {t('backgroundApps.footerHint')}
-        </div>
       </div>
     </div>
   )
