@@ -29,6 +29,10 @@ const APPROVED_TASK =
   'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupTask'
 const APPROVED_RUN_HKLM =
   'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run'
+const APPROVED_FOLDER_HKLM =
+  'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupFolder'
+const APPROVED_TASK_HKLM =
+  'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupTask'
 
 async function pathExists(p: string): Promise<boolean> {
   try {
@@ -139,15 +143,61 @@ function approvedOriginalName(map: Map<string, boolean>, name: string): string |
   return undefined
 }
 
-function friendlyTaskName(raw: string): string {
-  // UWP: "WhatsAppDesktop_..._WhatsAppDesktop" or package_taskId
-  const cleaned = raw.replace(/_[a-z0-9]{13,}(_|$)/gi, '_').replace(/_+/g, ' ').trim()
-  if (cleaned.length >= 3 && cleaned.length < raw.length) return cleaned
-  const parts = raw.split('_').filter(Boolean)
-  if (parts.length >= 2) {
-    const last = parts[parts.length - 1]
-    if (last.length > 2 && !/^[a-z0-9]{13,}$/i.test(last)) return last
-    return parts[0]
+export function friendlyRegistryName(name: string): string {
+  const lower = name.toLowerCase()
+  if (lower === 'com.squirrel.teams.teams' || lower === 'teams') return 'Microsoft Teams'
+  if (lower === 'com.squirrel.discord.discord') return 'Discord'
+  if (lower === 'com.squirrel.slack.slack') return 'Slack'
+  if (lower === 'onedrive' || lower === 'onedrivesetup') return 'Microsoft OneDrive'
+  if (lower === 'spotify') return 'Spotify'
+  if (lower === 'steam') return 'Steam'
+  return name
+}
+
+export function friendlyTaskName(raw: string): string {
+  const lower = raw.toLowerCase()
+  if (
+    lower.startsWith('microsoftteams') ||
+    lower.startsWith('msteams') ||
+    lower.includes('microsoft.teams')
+  ) {
+    return 'Microsoft Teams'
+  }
+  if (lower.startsWith('whatsapp')) {
+    return 'WhatsApp'
+  }
+  if (lower.startsWith('spotify')) {
+    return 'Spotify'
+  }
+  if (lower.startsWith('telegram')) {
+    return 'Telegram'
+  }
+  if (lower.startsWith('discord')) {
+    return 'Discord'
+  }
+  if (lower.startsWith('slack')) {
+    return 'Slack'
+  }
+  if (lower.startsWith('onedrive') || lower.startsWith('microsoft.onedrive')) {
+    return 'Microsoft OneDrive'
+  }
+  if (lower.startsWith('cortana')) {
+    return 'Cortana'
+  }
+  if (lower.startsWith('skype')) {
+    return 'Skype'
+  }
+
+  // Generic MSIX format: PackageName_PublisherId!AppId or PackageName_PublisherId
+  let name = raw
+  const exclIdx = name.indexOf('!')
+  if (exclIdx !== -1) {
+    name = name.slice(0, exclIdx)
+  }
+  name = name.replace(/_[a-z0-9]{13,}$/i, '')
+  const spaced = name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[-_.]+/g, ' ').trim()
+  if (spaced.length >= 2) {
+    return spaced
   }
   return raw
 }
@@ -229,11 +279,20 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
       entries.push(entry)
     }
 
-    const [approvedRun, approvedFolder, approvedTask, approvedRunHklm] = await Promise.all([
+    const [
+      approvedRun,
+      approvedFolder,
+      approvedTask,
+      approvedRunHklm,
+      approvedFolderHklm,
+      approvedTaskHklm
+    ] = await Promise.all([
       queryApprovedMap(APPROVED_RUN),
       queryApprovedMap(APPROVED_FOLDER),
       queryApprovedMap(APPROVED_TASK),
-      queryApprovedMap(APPROVED_RUN_HKLM)
+      queryApprovedMap(APPROVED_RUN_HKLM),
+      queryApprovedMap(APPROVED_FOLDER_HKLM),
+      queryApprovedMap(APPROVED_TASK_HKLM)
     ])
 
     const enabledHkcuNames = new Set<string>()
@@ -253,18 +312,22 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
       const rows = await queryRegValues(key)
       for (const row of rows) {
         if (opts.trackHkcu) enabledHkcuNames.add(row.name.toLowerCase())
+        const displayName = friendlyRegistryName(row.name)
         const protectedReason =
-          opts.protectedReason ?? isProtectedStartupName(row.name) ?? undefined
+          opts.protectedReason ??
+          isProtectedStartupName(displayName) ??
+          isProtectedStartupName(row.name) ??
+          undefined
         const enabled = approvedEnabled(opts.approved, row.name, true)
         pushUnique({
           id: encodeId([opts.idPrefix, row.name]),
-          name: row.name,
+          name: displayName,
           location: row.command,
           source: opts.source,
           sourceKind: opts.sourceKind,
           enabled,
           canToggle: opts.canToggle && !protectedReason,
-          impact: classifyStartupImpact(row.name),
+          impact: classifyStartupImpact(displayName),
           details: `Registry: ${key}\\${row.name}`,
           protectedReason:
             protectedReason ??
@@ -421,7 +484,11 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
             location: fullPath,
             source: 'Common Startup folder',
             sourceKind: 'startup-folder',
-            enabled: approvedEnabled(approvedFolder, file, true),
+            enabled: approvedEnabled(
+              approvedFolderHklm.size > 0 ? approvedFolderHklm : approvedFolder,
+              file,
+              true
+            ),
             canToggle: false,
             impact: classifyStartupImpact(name),
             details: fullPath,
@@ -433,8 +500,16 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
       }
     }
 
-    // UWP / Store StartupTasks (WhatsApp, etc.) via StartupApproved\StartupTask
-    for (const [rawName, enabled] of approvedTask) {
+    // UWP / Store StartupTasks (Microsoft Teams, WhatsApp, etc.) via StartupApproved\StartupTask
+    const combinedTasks = new Map<string, boolean>()
+    for (const [k, v] of approvedTaskHklm) {
+      combinedTasks.set(k, v)
+    }
+    for (const [k, v] of approvedTask) {
+      combinedTasks.set(k, v)
+    }
+
+    for (const [rawName, enabled] of combinedTasks) {
       const display = friendlyTaskName(rawName)
       if (seenNames.has(display.toLowerCase()) || seenNames.has(rawName.toLowerCase())) continue
       const protectedReason = isProtectedStartupName(display)
@@ -467,7 +542,7 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
       if (duplicateCommand) continue
 
       const protectedReason = isProtectedStartupName(display)
-      const isMicrosoft = /microsoft/i.test(task.path) || /microsoft/i.test(task.action)
+      const isWindowsSystemTask = task.path.toLowerCase().includes('\\microsoft\\windows')
       pushUnique({
         id: encodeId(['schtask', task.path, task.name]),
         name: display,
@@ -475,12 +550,12 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
         source: 'Task Scheduler (Logon)',
         sourceKind: 'scheduled-task',
         enabled: task.enabled,
-        canToggle: !protectedReason && !isMicrosoft,
+        canToggle: !protectedReason && !isWindowsSystemTask,
         impact: classifyStartupImpact(display),
         details: `Scheduled task: ${fullId}`,
         protectedReason:
           protectedReason ??
-          (isMicrosoft ? 'Microsoft scheduled task is protected' : undefined)
+          (isWindowsSystemTask ? 'Windows system task is protected' : undefined)
       })
     }
 

@@ -1,6 +1,6 @@
 import { homedir } from 'os'
 import { join } from 'path'
-import { access, readdir, readFile } from 'fs/promises'
+import { access } from 'fs/promises'
 import checkDiskSpaceImport from 'check-disk-space'
 import type {
   BoostDiskPressure,
@@ -14,13 +14,13 @@ import type {
   PlatformTrashResult
 } from './platform-adapter'
 import {
-  classifyStartupImpact,
   getSelfProcessIds,
   isProtectedProcess,
   runCommand,
   terminateUnixProcesses
 } from './exec-utils'
 import { isBenignEmptyTrashError } from './trash-utils'
+import { LinuxStartupAdapter } from '@main/services/startup/platforms/linux-adapter'
 import { createLogger } from '@main/utils/logger'
 import { cleanDirectoryContents } from '../fs-utils'
 
@@ -95,44 +95,22 @@ export class LinuxBoostAdapter implements PlatformBoostAdapter {
   }
 
   async listStartupApps(): Promise<BoostStartupAppInfo[]> {
-    const apps: BoostStartupAppInfo[] = []
-    const autostartDir = join(homedir(), '.config', 'autostart')
-
-    if (!(await pathExists(autostartDir))) return apps
-
     try {
-      const entries = await readdir(autostartDir)
-      for (const entry of entries) {
-        if (!entry.endsWith('.desktop')) continue
-        const fullPath = join(autostartDir, entry)
-        let name = entry.replace(/\.desktop$/i, '')
-        let enabled = true
-
-        try {
-          const content = await readFile(fullPath, 'utf-8')
-          const nameMatch = content.match(/^Name=(.+)$/m)
-          const hiddenMatch = content.match(/^Hidden=(.+)$/m)
-          if (nameMatch) name = nameMatch[1].trim()
-          if (hiddenMatch?.[1]?.toLowerCase() === 'true') enabled = false
-        } catch {
-          // use filename
-        }
-
-        apps.push({
-          id: `linux-autostart:${entry}`,
-          name,
-          path: fullPath,
-          impact: classifyStartupImpact(name),
-          enabled,
-          canDisable: false,
-          source: 'autostart'
-        })
-      }
+      const startupAdapter = new LinuxStartupAdapter()
+      const entries = await startupAdapter.listEntries()
+      return entries.map((e) => ({
+        id: e.id,
+        name: e.name,
+        path: e.location,
+        impact: e.impact,
+        enabled: e.enabled,
+        canDisable: e.canToggle,
+        source: e.source
+      }))
     } catch (err) {
-      log.warn('listStartupApps failed', err)
+      log.warn('listStartupApps failed', err instanceof Error ? err.message : err)
+      return []
     }
-
-    return apps
   }
 
   async getDiskPressure(): Promise<BoostDiskPressure | null> {

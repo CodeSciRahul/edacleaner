@@ -14,12 +14,12 @@ import type {
   PlatformTrashResult
 } from './platform-adapter'
 import {
-  classifyStartupImpact,
   getSelfProcessIds,
   isProtectedProcess,
   runCommand
 } from './exec-utils'
 import { isBenignEmptyTrashError } from './trash-utils'
+import { WindowsStartupAdapter } from '@main/services/startup/platforms/windows-adapter'
 import { createLogger } from '@main/utils/logger'
 
 const log = createLogger('boost:win')
@@ -129,74 +129,22 @@ export class WindowsBoostAdapter implements PlatformBoostAdapter {
   }
 
   async listStartupApps(): Promise<BoostStartupAppInfo[]> {
-    const apps: BoostStartupAppInfo[] = []
-    const registryKeys = [
-      {
-        key: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run',
-        source: 'HKCU Run'
-      },
-      {
-        key: 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run',
-        source: 'HKLM Run'
-      }
-    ]
-
-    for (const { key, source } of registryKeys) {
-      try {
-        const { stdout } = await runCommand('reg', ['query', key], { timeoutMs: 10_000 })
-        for (const line of stdout.split(/\r?\n/)) {
-          // Example: "    OneDrive    REG_SZ    C:\...\OneDrive.exe"
-          const match = line.match(/^\s+(\S+)\s+REG_\w+\s+(.+)$/)
-          if (!match) continue
-
-          const name = match[1]
-          const command = match[2].trim()
-          apps.push({
-            id: `win-run:${source}:${name}`,
-            name,
-            path: command,
-            impact: classifyStartupImpact(name),
-            enabled: true,
-            canDisable: false,
-            source
-          })
-        }
-      } catch (err) {
-        log.warn(`listStartupApps registry failed for ${key}`, err instanceof Error ? err.message : err)
-      }
+    try {
+      const startupAdapter = new WindowsStartupAdapter()
+      const entries = await startupAdapter.listEntries()
+      return entries.map((e) => ({
+        id: e.id,
+        name: e.name,
+        path: e.location,
+        impact: e.impact,
+        enabled: e.enabled,
+        canDisable: e.canToggle,
+        source: e.source
+      }))
+    } catch (err) {
+      log.warn('listStartupApps failed', err instanceof Error ? err.message : err)
+      return []
     }
-
-    const startupDir = join(
-      process.env.APPDATA ?? homedir(),
-      'Microsoft',
-      'Windows',
-      'Start Menu',
-      'Programs',
-      'Startup'
-    )
-
-    if (await pathExists(startupDir)) {
-      try {
-        const { readdir } = await import('fs/promises')
-        const entries = await readdir(startupDir)
-        for (const entry of entries) {
-          if (entry.startsWith('.')) continue
-          apps.push({
-            id: `win-startup-folder:${entry}`,
-            name: entry.replace(/\.(lnk|exe|bat|cmd)$/i, ''),
-            path: join(startupDir, entry),
-            impact: classifyStartupImpact(entry),
-            enabled: true,
-            canDisable: false,
-            source: 'Startup folder'
-          })
-        }
-      } catch (err) {
-        log.warn('listStartupApps folder failed', err instanceof Error ? err.message : err)
-      }
-    }
-
-    return apps
   }
 
   async getDiskPressure(): Promise<BoostDiskPressure | null> {
