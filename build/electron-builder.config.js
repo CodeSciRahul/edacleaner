@@ -1,5 +1,14 @@
+const path = require('path')
+
+// Prepend build/bin to PATH so fpm uses our rpmbuild shim when building RPMs (fixes RPM 6+ compatibility)
+const shimBinDir = path.resolve(__dirname, 'bin')
+if (!process.env.PATH || !process.env.PATH.split(path.delimiter).includes(shimBinDir)) {
+  process.env.PATH = `${shimBinDir}${path.delimiter}${process.env.PATH || ''}`
+}
+
 /**
  * Developer ID + notarytool credentials.
+
  *
  * Prefer MAC_SIGNING_ENABLED=true (CI imports the .p12 into a keychain itself and
  * leaves CSC_LINK unset). That avoids an electron-builder 25.x bug where

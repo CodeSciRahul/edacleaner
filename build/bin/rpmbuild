@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+const { spawnSync } = require('child_process')
+const fs = require('fs')
+const path = require('path')
+
+const thisDir = path.resolve(__dirname)
+
+function findRealRpmbuild() {
+  const pathDirs = (process.env.PATH || '').split(path.delimiter)
+  for (const dir of pathDirs) {
+    if (!dir) continue
+    try {
+      if (path.resolve(dir) === thisDir) continue
+      const candidate = path.join(dir, 'rpmbuild')
+      if (fs.existsSync(candidate)) {
+        const stat = fs.statSync(candidate)
+        if (stat.isFile()) return candidate
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const standardLocations = [
+    '/opt/homebrew/bin/rpmbuild',
+    '/usr/local/bin/rpmbuild',
+    '/usr/bin/rpmbuild'
+  ]
+  for (const loc of standardLocations) {
+    try {
+      if (fs.existsSync(loc) && path.resolve(loc) !== path.resolve(__filename)) {
+        return loc
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null
+}
+
+const realRpmbuild = findRealRpmbuild()
+if (!realRpmbuild) {
+  console.error('[rpmbuild-shim] Could not find real rpmbuild in PATH or standard locations.')
+  process.exit(1)
+}
+
+const originalArgs = process.argv.slice(2)
+let buildRoot = null
+let hasExplicitBuildRoot = false
+
+for (let i = 0; i < originalArgs.length; i++) {
+  const arg = originalArgs[i]
+  if (arg === '--buildroot' || arg.startsWith('--buildroot=')) {
+    hasExplicitBuildRoot = true
+    break
+  }
+  if (arg === '--define' && i + 1 < originalArgs.length) {
+    const nextArg = originalArgs[i + 1]
+    const match = nextArg.match(/^buildroot\s+(.+)$/)
+    if (match) {
+      buildRoot = match[1].trim()
+    }
+  } else if (arg.startsWith('--define=buildroot ')) {
+    buildRoot = arg.substring('--define=buildroot '.length).trim()
+  }
+}
+
+const finalArgs = [...originalArgs]
+if (!hasExplicitBuildRoot && buildRoot) {
+  // In RPM 6+, --define buildroot <dir> is overridden by internal defaults.
+  // We must inject --buildroot <dir> so RPM 6+ packages files from the staged directory.
+  finalArgs.unshift('--buildroot', buildRoot)
+}
+
+const res = spawnSync(realRpmbuild, finalArgs, {
+  stdio: 'inherit',
+  env: process.env
+})
+
+if (res.error) {
+  console.error('[rpmbuild-shim] Failed to execute rpmbuild:', res.error)
+  process.exit(1)
+}
+
+process.exit(res.status ?? 0)
