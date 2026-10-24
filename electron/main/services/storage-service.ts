@@ -1,8 +1,9 @@
 import { app, shell } from 'electron'
 import { createHash } from 'crypto'
-import { createReadStream } from 'fs'
+import { createReadStream, realpathSync } from 'fs'
 import { access, lstat, readdir, stat } from 'fs/promises'
 import { basename, join, normalize, resolve, sep } from 'path'
+import { execSync } from 'child_process'
 import { fdir } from 'fdir'
 import checkDiskSpaceImport from 'check-disk-space'
 import type {
@@ -142,13 +143,24 @@ async function pathExists(targetPath: string): Promise<boolean> {
 
 /** True when targetPath lives on the given mount (drive letter / volume). */
 function isPathOnMount(targetPath: string, mountPath: string): boolean {
-  const absTarget = resolve(normalize(targetPath))
-  const absMount = resolve(normalize(mountPath))
+  let absTarget = resolve(normalize(targetPath))
+  let absMount = resolve(normalize(mountPath))
 
   if (process.platform === 'win32') {
     const targetRoot = absTarget.slice(0, 2).toLowerCase()
     const mountRoot = absMount.slice(0, 2).toLowerCase()
     return Boolean(targetRoot.match(/^[a-z]:$/)) && targetRoot === mountRoot
+  }
+
+  try {
+    absMount = realpathSync(absMount)
+  } catch {
+    // keep as is
+  }
+  try {
+    absTarget = realpathSync(absTarget)
+  } catch {
+    // keep as is
   }
 
   if (absMount === sep || absMount === '/') {
@@ -206,8 +218,160 @@ async function listMountChildren(...parents: string[]): Promise<string[]> {
 }
 
 async function listDarwinRoots(): Promise<string[]> {
-  const volumes = await listMountChildren('/Volumes')
-  return volumes.length > 0 ? volumes : ['/']
+  return ['/']
+}
+
+async function listDarwinDrives(): Promise<DriveInfo[]> {
+  const drives: DriveInfo[] = []
+  const seenContainers = new Set<string>()
+  const seenMounts = new Set<string>(['/'])
+
+  // Read mount points to check options like 'nobrowse' and 'local'
+  const mounts: Array<{ dev: string; mountPoint: string; options: string[] }> = []
+  try {
+    const raw = execSync('mount', { encoding: 'utf8', timeout: 3000 })
+    for (const line of raw.split('\n')) {
+      const m = line.match(/^(.+?)\s+on\s+(.+?)\s+\((.+?)\)$/)
+      if (m) {
+        mounts.push({
+          dev: m[1],
+          mountPoint: m[2],
+          options: m[3].split(',').map((s) => s.trim().toLowerCase())
+        })
+      }
+    }
+  } catch {
+    // If mount command fails, proceed with diskutil / checkDiskSpace
+  }
+
+  function getDiskUtilInfo(target: string): Record<string, any> | null {
+    try {
+      const raw = execSync(
+        `diskutil info -plist ${JSON.stringify(target)} | plutil -convert json -o - -`,
+        {
+          encoding: 'utf8',
+          timeout: 3000
+        }
+      )
+      return JSON.parse(raw)
+    } catch {
+      return null
+    }
+  }
+
+  // 1. Primary Root Drive '/' (Macintosh HD)
+  try {
+    const rootSpace = await checkDiskSpace('/')
+    const rootInfo = getDiskUtilInfo('/')
+    const label = rootInfo?.VolumeName || 'Macintosh HD'
+    if (rootInfo?.APFSContainerReference) {
+      seenContainers.add(rootInfo.APFSContainerReference.toLowerCase())
+    }
+
+    const totalBytes = rootSpace.size
+    const freeBytes = rootSpace.free
+    const usedBytes = Math.max(0, totalBytes - freeBytes)
+
+    if (totalBytes > 0) {
+      drives.push({
+        label,
+        mountPath: '/',
+        usedBytes,
+        totalBytes,
+        freeBytes
+      })
+    }
+  } catch {
+    // Root space query failed
+  }
+
+  // 2. Scan /Volumes for genuine external / secondary drives
+  let volumeNames: string[] = []
+  try {
+    volumeNames = await readdir('/Volumes')
+  } catch {
+    volumeNames = []
+  }
+
+  const SYSTEM_VOLUME_NAMES = new Set([
+    'recovery',
+    'preboot',
+    'vm',
+    'update',
+    'xart',
+    'hardware',
+    'iscpreboot'
+  ])
+
+  for (const name of volumeNames) {
+    if (name.startsWith('.')) continue
+    const vPath = join('/Volumes', name)
+
+    // Check if it's a symlink to / or an already seen mount
+    try {
+      const real = realpathSync(vPath)
+      if (real === '/' || seenMounts.has(real) || seenMounts.has(vPath)) continue
+    } catch {
+      continue
+    }
+
+    // Check mount options from 'mount' command if available
+    const mountInfo = mounts.find((m) => m.mountPoint === vPath)
+    if (mountInfo) {
+      // Skip nobrowse mounts (macOS marks system volumes, Recovery, etc. as nobrowse)
+      if (mountInfo.options.includes('nobrowse')) continue
+      // Only include local filesystems (skip network shares, autofs)
+      if (!mountInfo.options.includes('local')) continue
+    }
+
+    if (SYSTEM_VOLUME_NAMES.has(name.toLowerCase())) continue
+
+    const info = getDiskUtilInfo(vPath)
+    if (info) {
+      // Skip Disk Images (.dmg, .iso, sparse images)
+      const protocol = (info.BusProtocol || info.Protocol || '').toLowerCase()
+      if (protocol.includes('disk image')) continue
+
+      // Skip internal APFS volumes that belong to the same container as the root drive
+      if (
+        info.APFSContainerReference &&
+        seenContainers.has(info.APFSContainerReference.toLowerCase())
+      ) {
+        continue
+      }
+
+      // Skip OS internal media / system helper roles
+      if (info.OSInternalMedia) continue
+      if (SYSTEM_VOLUME_NAMES.has((info.VolumeName || '').toLowerCase())) continue
+    }
+
+    try {
+      const space = await checkDiskSpace(vPath)
+      if (space.size <= 0) continue
+
+      const totalBytes = space.size
+      const freeBytes = space.free
+      const usedBytes = Math.max(0, totalBytes - freeBytes)
+      const label = info?.VolumeName || driveLabel(vPath)
+
+      if (info?.APFSContainerReference) {
+        seenContainers.add(info.APFSContainerReference.toLowerCase())
+      }
+      seenMounts.add(vPath)
+
+      drives.push({
+        label,
+        mountPath: vPath,
+        usedBytes,
+        totalBytes,
+        freeBytes
+      })
+    } catch {
+      // Skip unreadable volume
+    }
+  }
+
+  return drives
 }
 
 async function listLinuxRoots(): Promise<string[]> {
@@ -360,8 +524,30 @@ async function hashFile(filePath: string, sizeBytes: number): Promise<string> {
   })
 }
 
+function isSystemDrive(drive: DriveInfo): boolean {
+  if (process.platform === 'win32') {
+    const sysDrive = (process.env.SystemDrive || 'C:').toUpperCase().replace(/[/\\]+$/, '')
+    const driveRoot = drive.mountPath.toUpperCase().replace(/[/\\]+$/, '')
+    return driveRoot === sysDrive || driveRoot.startsWith(sysDrive)
+  }
+  return drive.mountPath === '/'
+}
+
 export class StorageService {
   async getDrives(): Promise<DriveInfo[]> {
+    if (process.platform === 'darwin') {
+      const darwinDrives = await listDarwinDrives()
+      if (darwinDrives.length > 0) {
+        return darwinDrives.sort((a, b) => {
+          const aSys = isSystemDrive(a)
+          const bSys = isSystemDrive(b)
+          if (aSys && !bSys) return -1
+          if (!aSys && bSys) return 1
+          return a.label.localeCompare(b.label)
+        })
+      }
+    }
+
     const roots = await listDriveRoots()
     const drives: DriveInfo[] = []
     const seenDisks = new Set<string>()
@@ -397,7 +583,13 @@ export class StorageService {
       }
     }
 
-    return drives.sort((a, b) => a.label.localeCompare(b.label))
+    return drives.sort((a, b) => {
+      const aSys = isSystemDrive(a)
+      const bSys = isSystemDrive(b)
+      if (aSys && !bSys) return -1
+      if (!aSys && bSys) return 1
+      return a.label.localeCompare(b.label)
+    })
   }
 
   async analyzeUsage(mountPath?: string): Promise<StorageUsageResult> {

@@ -8,6 +8,7 @@ export default defineConfig({
       'electron/main/services/safety/**/*.test.ts',
       'electron/main/services/boost/**/*.test.ts',
       'electron/main/services/startup/**/*.test.ts',
+      'electron/main/services/storage/**/*.test.ts',
       'shared/**/*.test.ts'
     ],
     env: {
