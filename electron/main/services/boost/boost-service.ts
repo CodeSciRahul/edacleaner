@@ -83,6 +83,7 @@ function filterBackgroundProcesses(processes: BoostProcessInfo[]): BoostProcessI
       // Strictly mark EDA Cleaner and self processes as protected
       if (
         isSelfCleanerProcess(p.name, p.pid, p.path) ||
+        isProtectedProcess(p.name, p.pid, p.path) ||
         selfPids.has(p.pid) ||
         (p.pids?.some((pid) => selfPids.has(pid)) ?? false)
       ) {

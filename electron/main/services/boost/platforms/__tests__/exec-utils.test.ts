@@ -34,4 +34,12 @@ describe('exec-utils process protection', () => {
     expect(isSelfCleanerProcess('Slack', 99999, '/Applications/Slack.app')).toBe(false)
     expect(isSelfCleanerProcess('Spotify.exe', 99999, 'C:\\Program Files\\Spotify\\Spotify.exe')).toBe(false)
   })
+
+  it('protects dev servers and shells from being terminated', () => {
+    expect(isProtectedProcess('node', 99999)).toBe(true)
+    expect(isProtectedProcess('vite', 99999)).toBe(true)
+    expect(isProtectedProcess('npm', 99999)).toBe(true)
+    expect(isProtectedProcess('zsh', 99999)).toBe(true)
+    expect(isProtectedProcess('bash', 99999)).toBe(true)
+  })
 })

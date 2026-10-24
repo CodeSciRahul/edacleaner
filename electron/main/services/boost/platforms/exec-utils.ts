@@ -76,7 +76,32 @@ export const PROTECTED_PROCESS_NAMES = new Set(
     'eda cleaner',
     'eda-cleaner',
     'edacleaner',
-    'eda_cleaner'
+    'eda_cleaner',
+    // Development runtimes & build tools (never terminate dev servers or build pipelines)
+    'node',
+    'npm',
+    'npx',
+    'pnpm',
+    'yarn',
+    'bun',
+    'deno',
+    'vite',
+    'electron-vite',
+    'esbuild',
+    'git',
+    // Shells & Terminals
+    'zsh',
+    'bash',
+    'sh',
+    'fish',
+    'terminal',
+    'iterm2',
+    'warp',
+    // Code editors & IDEs
+    'code',
+    'cursor',
+    'antigravity',
+    'antigravity ide'
   ].map((n) => n.toLowerCase())
 )
 
@@ -113,13 +138,52 @@ function selfAppPathHints(): string[] {
   return hints
 }
 
+let cachedAncestorPids: Set<number> | null = null
+
+function getAncestorProcessIds(): Set<number> {
+  if (cachedAncestorPids) return cachedAncestorPids
+  const ancestors = new Set<number>()
+
+  if (typeof process !== 'undefined') {
+    if (process.ppid && process.ppid > 1) {
+      ancestors.add(process.ppid)
+    }
+
+    if (process.platform === 'darwin' || process.platform === 'linux') {
+      let current = process.pid
+      while (current > 1) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { execSync } = require('child_process') as typeof import('child_process')
+          const out = execSync(`ps -o ppid= -p ${current}`, {
+            encoding: 'utf8',
+            timeout: 1000
+          }).trim()
+          const ppid = parseInt(out, 10)
+          if (!ppid || ppid <= 1 || ancestors.has(ppid)) break
+          ancestors.add(ppid)
+          current = ppid
+        } catch {
+          break
+        }
+      }
+    }
+  }
+
+  cachedAncestorPids = ancestors
+  return ancestors
+}
+
 /**
- * Collect all PIDs belonging to this application (main process, renderers, GPU, workers).
+ * Collect all PIDs belonging to this application (main process, renderers, GPU, workers, ancestors).
  */
 export function getSelfProcessIds(): Set<number> {
   const pids = new Set<number>()
   if (typeof process !== 'undefined' && process.pid) {
     pids.add(process.pid)
+  }
+  for (const pid of getAncestorProcessIds()) {
+    pids.add(pid)
   }
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -160,7 +224,11 @@ export function isSelfCleanerProcess(
     nameLower.includes('eda-cleaner') ||
     nameLower.includes('eda_cleaner') ||
     (nameLower.includes('eda') && nameLower.includes('clean')) ||
-    base === 'eda'
+    base === 'eda' ||
+    base === 'node' ||
+    base === 'vite' ||
+    base === 'npm' ||
+    base === 'electron-vite'
   ) {
     return true
   }

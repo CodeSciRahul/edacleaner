@@ -35,7 +35,13 @@ function isProtectedCleanerApp(name: string): boolean {
   return (
     (lower.includes('eda') && lower.includes('clean')) ||
     lower.includes('electron') ||
-    lower === 'eda'
+    lower === 'eda' ||
+    lower.includes('node') ||
+    lower.includes('vite') ||
+    lower.includes('npm') ||
+    lower.includes('pnpm') ||
+    lower.includes('yarn') ||
+    lower.includes('bun')
   )
 }
 
