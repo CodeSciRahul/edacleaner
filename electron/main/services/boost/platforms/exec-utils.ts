@@ -88,6 +88,10 @@ function normalizeProcessBaseName(name: string): string {
 function selfAppPathHints(): string[] {
   const hints = ['edacleaner', 'eda cleaner', 'eda-cleaner', 'eda_cleaner']
   try {
+    if (typeof process !== 'undefined') {
+      if (process.execPath) hints.push(process.execPath.toLowerCase())
+      if (typeof process.cwd === 'function') hints.push(process.cwd().toLowerCase())
+    }
     // Lazy require — unit tests / non-Electron contexts may not have app ready
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { app } = require('electron') as typeof import('electron')
@@ -110,6 +114,29 @@ function selfAppPathHints(): string[] {
 }
 
 /**
+ * Collect all PIDs belonging to this application (main process, renderers, GPU, workers).
+ */
+export function getSelfProcessIds(): Set<number> {
+  const pids = new Set<number>()
+  if (typeof process !== 'undefined' && process.pid) {
+    pids.add(process.pid)
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { app } = require('electron') as typeof import('electron')
+    if (app && typeof app.getAppMetrics === 'function') {
+      const metrics = app.getAppMetrics()
+      for (const m of metrics) {
+        if (m.pid) pids.add(m.pid)
+      }
+    }
+  } catch {
+    // electron unavailable
+  }
+  return pids
+}
+
+/**
  * True for EDA Cleaner / Electron runtime processes that must never be stopped
  * from inside the cleaner UI.
  */
@@ -119,31 +146,50 @@ export function isSelfCleanerProcess(
   exePath?: string
 ): boolean {
   if (pid === process.pid) return true
+  if (getSelfProcessIds().has(pid)) return true
 
+  const nameLower = name.toLowerCase()
   const base = normalizeProcessBaseName(name)
   if (
     base === 'electron' ||
     base.startsWith('electron-') ||
     base.startsWith('electron ') ||
-    (base.includes('eda') && base.includes('clean'))
+    nameLower.includes('electron') ||
+    nameLower.includes('edacleaner') ||
+    nameLower.includes('eda cleaner') ||
+    nameLower.includes('eda-cleaner') ||
+    nameLower.includes('eda_cleaner') ||
+    (nameLower.includes('eda') && nameLower.includes('clean')) ||
+    base === 'eda'
   ) {
     return true
   }
 
   const pathLower = (exePath ?? '').toLowerCase().replace(/\\/g, '/')
-  if (!pathLower) return false
+  if (pathLower) {
+    for (const hint of selfAppPathHints()) {
+      const normalizedHint = hint.replace(/\\/g, '/')
+      if (normalizedHint && pathLower.includes(normalizedHint)) return true
+    }
 
-  for (const hint of selfAppPathHints()) {
-    const normalizedHint = hint.replace(/\\/g, '/')
-    if (normalizedHint && pathLower.includes(normalizedHint)) return true
-  }
+    if (
+      pathLower.includes('edacleaner') ||
+      pathLower.includes('eda cleaner') ||
+      pathLower.includes('eda-cleaner') ||
+      pathLower.includes('eda_cleaner')
+    ) {
+      return true
+    }
 
-  // Dev: electron binary running this repo
-  if (
-    pathLower.includes('electron') &&
-    (pathLower.includes('edacleaner') || pathLower.includes('eda-cleaner'))
-  ) {
-    return true
+    // Dev: electron binary running this repo
+    if (
+      pathLower.includes('electron') &&
+      (pathLower.includes('edacleaner') ||
+        pathLower.includes('eda-cleaner') ||
+        pathLower.includes('eda_cleaner'))
+    ) {
+      return true
+    }
   }
 
   return false
@@ -155,6 +201,7 @@ export function isProtectedProcess(
   exePath?: string
 ): boolean {
   if (pid === process.pid || pid === 0 || pid === 4) return true
+  if (getSelfProcessIds().has(pid)) return true
   if (isSelfCleanerProcess(name, pid, exePath)) return true
 
   const base = normalizeProcessBaseName(name)

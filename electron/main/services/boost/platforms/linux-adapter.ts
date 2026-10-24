@@ -15,6 +15,7 @@ import type {
 } from './platform-adapter'
 import {
   classifyStartupImpact,
+  getSelfProcessIds,
   isProtectedProcess,
   runCommand,
   terminateUnixProcesses
@@ -250,9 +251,10 @@ export class LinuxBoostAdapter implements PlatformBoostAdapter {
   ): Promise<PlatformTerminateResult> {
     const allowed: number[] = []
     const failed: Array<{ pid: number; error: string }> = []
+    const selfPids = getSelfProcessIds()
 
     for (const pid of pids) {
-      if (isProtectedProcess(`pid-${pid}`, pid)) {
+      if (selfPids.has(pid) || isProtectedProcess(`pid-${pid}`, pid)) {
         failed.push({ pid, error: 'Protected process' })
         continue
       }

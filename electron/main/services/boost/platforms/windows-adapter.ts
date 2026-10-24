@@ -15,6 +15,7 @@ import type {
 } from './platform-adapter'
 import {
   classifyStartupImpact,
+  getSelfProcessIds,
   isProtectedProcess,
   runCommand
 } from './exec-utils'
@@ -303,10 +304,11 @@ export class WindowsBoostAdapter implements PlatformBoostAdapter {
   ): Promise<PlatformTerminateResult> {
     const failed: Array<{ pid: number; error: string }> = []
     let terminated = 0
+    const selfPids = getSelfProcessIds()
 
     for (const pid of pids) {
       if (signal?.aborted) break
-      if (isProtectedProcess(`pid-${pid}`, pid)) {
+      if (selfPids.has(pid) || isProtectedProcess(`pid-${pid}`, pid)) {
         failed.push({ pid, error: 'Protected process' })
         continue
       }

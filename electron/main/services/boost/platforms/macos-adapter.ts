@@ -15,6 +15,7 @@ import type {
 } from './platform-adapter'
 import {
   classifyStartupImpact,
+  getSelfProcessIds,
   isProtectedProcess,
   runCommand,
   terminateUnixProcesses
@@ -72,8 +73,8 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
 
   async listProcesses(limit = 25): Promise<BoostProcessInfo[]> {
     try {
-      // command= includes argv[0] path when available
-      const { stdout } = await runCommand('ps', ['-axo', 'pid=,rss=,pcpu=,command='])
+      // comm= gives the clean binary path (without arguments) preserving spaces
+      const { stdout } = await runCommand('ps', ['-axo', 'pid=,rss=,pcpu=,comm='])
       const processes: BoostProcessInfo[] = []
 
       for (const line of stdout.split('\n')) {
@@ -84,9 +85,9 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
         const pid = Number(match[1])
         const rssKb = Number(match[2])
         const cpu = Number(match[3])
-        const command = match[4].trim()
-        const exePath = command.startsWith('/') ? command.split(/\s+/)[0] : undefined
-        const name = exePath ? exePath.split('/').pop() || command : command.split(/\s+/)[0] || command
+        const comm = match[4].trim()
+        const exePath = comm.startsWith('/') ? comm : undefined
+        const name = exePath ? exePath.split('/').pop() || comm : comm
         processes.push({
           pid,
           name,
@@ -246,9 +247,10 @@ export class MacosBoostAdapter implements PlatformBoostAdapter {
   ): Promise<PlatformTerminateResult> {
     const allowed: number[] = []
     const failed: Array<{ pid: number; error: string }> = []
+    const selfPids = getSelfProcessIds()
 
     for (const pid of pids) {
-      if (isProtectedProcess(`pid-${pid}`, pid)) {
+      if (selfPids.has(pid) || isProtectedProcess(`pid-${pid}`, pid)) {
         failed.push({ pid, error: 'Protected process' })
         continue
       }

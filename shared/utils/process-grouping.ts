@@ -41,6 +41,15 @@ export function getAppIdentityKey(process: { name: string; path?: string }): str
  * - Marks safeToTerminate as true ONLY if all processes are safe
  * - Preserves icons
  */
+function isProtectedAppBaseName(name: string): boolean {
+  const lower = name.toLowerCase()
+  return (
+    (lower.includes('eda') && lower.includes('clean')) ||
+    lower.includes('electron') ||
+    lower === 'eda'
+  )
+}
+
 export function groupProcessesByApp(processes: BoostProcessInfo[]): BoostProcessInfo[] {
   if (!Array.isArray(processes) || processes.length === 0) {
     return []
@@ -63,8 +72,10 @@ export function groupProcessesByApp(processes: BoostProcessInfo[]): BoostProcess
   for (const group of groups.values()) {
     if (group.length === 1) {
       const single = group[0]
+      const isProtected = isProtectedAppBaseName(single.name)
       aggregated.push({
         ...single,
+        safeToTerminate: isProtected ? false : single.safeToTerminate,
         pids: single.pids && single.pids.length > 0 ? single.pids : [single.pid],
         processCount: single.processCount ?? 1
       })
@@ -96,8 +107,11 @@ export function groupProcessesByApp(processes: BoostProcessInfo[]): BoostProcess
       new Set(group.flatMap((p) => (p.pids && p.pids.length > 0 ? p.pids : [p.pid])))
     )
 
-    // Only safe to terminate if EVERY process in the group is safe to terminate
-    const allSafe = group.every((p) => p.safeToTerminate)
+    // Only safe to terminate if EVERY process in the group is safe to terminate AND not cleaner
+    const isProtected =
+      isProtectedAppBaseName(cleanName) ||
+      group.some((p) => isProtectedAppBaseName(p.name))
+    const allSafe = !isProtected && group.every((p) => p.safeToTerminate)
 
     // Best path: primary's path, or first defined path
     const path = primary.path ?? group.find((p) => p.path)?.path

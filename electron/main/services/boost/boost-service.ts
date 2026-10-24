@@ -27,7 +27,11 @@ import {
 } from '@shared/utils'
 import { cleanDirectoryContents, estimateDirectorySize } from './fs-utils'
 import { createPlatformBoostAdapter } from './platforms/create-adapter'
-import { isProtectedProcess, isSelfCleanerProcess } from './platforms/exec-utils'
+import {
+  getSelfProcessIds,
+  isProtectedProcess,
+  isSelfCleanerProcess
+} from './platforms/exec-utils'
 import type { PlatformBoostAdapter } from './platforms/platform-adapter'
 
 const log = createLogger('BoostService')
@@ -73,10 +77,28 @@ function uniquePaths(paths: string[]): string[] {
 
 function filterBackgroundProcesses(processes: BoostProcessInfo[]): BoostProcessInfo[] {
   const grouped = groupProcessesByApp(processes)
+  const selfPids = getSelfProcessIds()
   return grouped
+    .map((p) => {
+      // Strictly mark EDA Cleaner and self processes as protected
+      if (
+        isSelfCleanerProcess(p.name, p.pid, p.path) ||
+        selfPids.has(p.pid) ||
+        (p.pids?.some((pid) => selfPids.has(pid)) ?? false)
+      ) {
+        return { ...p, safeToTerminate: false }
+      }
+      return p
+    })
     .filter((p) => {
       // Always surface this cleaner / Electron runtime so Stop can show as protected+disabled
-      if (isSelfCleanerProcess(p.name, p.pid, p.path)) return true
+      if (
+        isSelfCleanerProcess(p.name, p.pid, p.path) ||
+        selfPids.has(p.pid) ||
+        (p.pids?.some((pid) => selfPids.has(pid)) ?? false)
+      ) {
+        return true
+      }
       return p.safeToTerminate && p.memoryBytes >= MIN_BACKGROUND_PROCESS_BYTES
     })
     .slice(0, MAX_BACKGROUND_PROCESSES)
@@ -385,9 +407,18 @@ export class BoostService {
     const allowed: number[] = []
     const skipped: Array<{ pid: number; reason: string }> = []
 
+    const selfPids = getSelfProcessIds()
     for (const pid of requested) {
+      if (selfPids.has(pid)) {
+        skipped.push({ pid, reason: 'Protected cleaner process' })
+        continue
+      }
+
       const info = byPid.get(pid)
-      if (isProtectedProcess(info?.name ?? `pid-${pid}`, pid, info?.path)) {
+      if (
+        isProtectedProcess(info?.name ?? `pid-${pid}`, pid, info?.path) ||
+        isSelfCleanerProcess(info?.name ?? `pid-${pid}`, pid, info?.path)
+      ) {
         skipped.push({
           pid,
           reason: info
@@ -517,9 +548,17 @@ export class BoostService {
       })
     }
 
-    // Prefer user apps with meaningful memory use; keep enough entries that
-    // lighter apps (e.g. WhatsApp) still appear — not only the top few browsers/IDEs.
-    const processSuggestions = filterBackgroundProcesses(this.applyCpuPercents(processes))
+    // Prefer user apps with meaningful memory use; exclude self-cleaner and protected apps
+    const backgroundList = filterBackgroundProcesses(this.applyCpuPercents(processes))
+    const selfPids = getSelfProcessIds()
+    const processSuggestions = backgroundList.filter(
+      (p) =>
+        p.safeToTerminate &&
+        !isSelfCleanerProcess(p.name, p.pid, p.path) &&
+        !isProtectedProcess(p.name, p.pid, p.path) &&
+        !selfPids.has(p.pid) &&
+        !(p.pids?.some((id) => selfPids.has(id)) ?? false)
+    )
     if (processSuggestions.length > 0) {
       availableOperations.push('terminate-processes')
     }
@@ -722,10 +761,7 @@ export class BoostService {
           message: 'Stopping selected background processes…',
           percent: 75
         })
-        const term = await this.adapter.terminateProcesses(
-          opts.terminateProcessIds,
-          signal
-        )
+        const term = await this.terminateProcesses(opts.terminateProcessIds)
         processesTerminated = term.terminated
         steps.push({
           id: 'terminate-processes',
