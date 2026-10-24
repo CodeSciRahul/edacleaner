@@ -2,7 +2,7 @@
 
 This document describes the purpose of each directory in the EDA Cleaner project. The application follows a layered architecture with strict separation between the Electron main process, preload bridge, and React renderer.
 
-## Architecture Overview
+## Architecture Overvie
 
 ```
 React Renderer (renderer/)
