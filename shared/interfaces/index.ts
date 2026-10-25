@@ -319,7 +319,7 @@ export interface StartupAppEntry {
   source: string
   sourceKind: StartupSourceKind
   enabled: boolean
-  /** False for read-only / protected / machine-wide entries */
+  /** False for protected entries that must not be changed */
   canToggle: boolean
   impact: StartupImpact
   /** Optional data URL from app.getFileIcon */

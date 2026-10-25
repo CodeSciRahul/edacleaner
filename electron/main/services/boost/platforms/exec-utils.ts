@@ -110,30 +110,67 @@ function normalizeProcessBaseName(name: string): string {
   return base.replace(/\.(exe|bin)$/i, '').toLowerCase()
 }
 
+/** Substrings that identify this app. Never use a bare "/" or a drive root. */
+const SELF_APP_PATH_MARKERS = ['edacleaner', 'eda cleaner', 'eda-cleaner', 'eda_cleaner']
+
+function pathContainsSelfApp(value: string): boolean {
+  const normalized = value.replace(/\\/g, '/').toLowerCase()
+  return SELF_APP_PATH_MARKERS.some((marker) => normalized.includes(marker))
+}
+
+/**
+ * Finder-launched macOS builds report cwd as "/". Windows GUI launches can report
+ * "C:\". Those hints match every absolute process path and mark every background
+ * app as this cleaner, which also hides the Boost "stop background apps" prompt.
+ */
+function isSpecificPathHint(hint: string): boolean {
+  const normalized = hint.replace(/\\/g, '/').replace(/\/+$/, '').trim().toLowerCase()
+  if (!normalized || normalized === '/' || normalized === '.' || normalized === '..') {
+    return false
+  }
+  const segments = normalized.split('/').filter(Boolean)
+  if (segments.length < 2) return false
+  if (/^[a-z]:$/.test(segments[0]) && segments.length < 3) return false
+  return true
+}
+
 function selfAppPathHints(): string[] {
-  const hints = ['edacleaner', 'eda cleaner', 'eda-cleaner', 'eda_cleaner']
+  const hints = [...SELF_APP_PATH_MARKERS]
+  const candidates: string[] = []
   try {
     if (typeof process !== 'undefined') {
-      if (process.execPath) hints.push(process.execPath.toLowerCase())
-      if (typeof process.cwd === 'function') hints.push(process.cwd().toLowerCase())
+      if (process.execPath) candidates.push(process.execPath)
+      // Packaged apps launched from Finder/Explorer have a root cwd. Only trust
+      // cwd when it is clearly this repo or app bundle.
+      if (typeof process.cwd === 'function') {
+        const cwd = process.cwd()
+        if (pathContainsSelfApp(cwd)) candidates.push(cwd)
+      }
     }
     // Lazy require — unit tests / non-Electron contexts may not have app ready
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { app } = require('electron') as typeof import('electron')
     if (app && typeof app.getPath === 'function') {
       try {
-        hints.push(app.getPath('exe').toLowerCase())
+        candidates.push(app.getPath('exe'))
       } catch {
         // ignore
       }
+    }
+    if (app && typeof app.getAppPath === 'function') {
       try {
-        hints.push(app.getAppPath().toLowerCase())
+        const appPath = app.getAppPath()
+        if (pathContainsSelfApp(appPath)) candidates.push(appPath)
       } catch {
         // ignore
       }
     }
   } catch {
     // electron unavailable
+  }
+
+  for (const candidate of candidates) {
+    if (isSpecificPathHint(candidate)) hints.push(candidate.toLowerCase())
   }
   return hints
 }

@@ -23,16 +23,73 @@ const HKLM_RUN_WOW = 'HKLM\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVe
 
 const APPROVED_RUN =
   'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run'
+const APPROVED_RUN32 =
+  'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run32'
 const APPROVED_FOLDER =
   'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupFolder'
 const APPROVED_TASK =
   'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupTask'
 const APPROVED_RUN_HKLM =
   'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run'
+const APPROVED_RUN32_HKLM =
+  'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run32'
 const APPROVED_FOLDER_HKLM =
   'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupFolder'
 const APPROVED_TASK_HKLM =
   'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupTask'
+
+/** 100-ns ticks between 1601-01-01 and the Unix epoch. */
+const FILETIME_EPOCH_OFFSET_MS = 11644473600000n
+
+/**
+ * 12-byte StartupApproved blob. Windows ignores a disabled flag (0x03) when the
+ * following FILETIME is zero, so a disable always carries the current time.
+ */
+export function buildStartupApprovedHex(enabled: boolean, at: Date = new Date()): string {
+  const status = Buffer.from(enabled ? [0x02, 0x00, 0x00, 0x00] : [0x03, 0x00, 0x00, 0x00])
+  const timestamp = Buffer.alloc(8)
+  if (!enabled) {
+    const ticks = (BigInt(at.getTime()) + FILETIME_EPOCH_OFFSET_MS) * 10000n
+    timestamp.writeBigUInt64LE(ticks)
+  }
+  return Buffer.concat([status, timestamp]).toString('hex')
+}
+
+/** 0x02 / 0x00 = enabled Run item, 0x06 = enabled Startup folder item, 0x03 = disabled. */
+export function isStartupApprovedEnabled(statusByte: number): boolean {
+  return statusByte === 0x00 || statusByte === 0x02 || statusByte === 0x06
+}
+
+function approvedKeyFor(idPrefix: string): string {
+  if (idPrefix === 'hkcu-run-wow' || idPrefix === 'hklm-run-wow') return APPROVED_RUN32
+  if (idPrefix === 'startup-folder' || idPrefix === 'common-startup-folder') return APPROVED_FOLDER
+  if (idPrefix === 'uwp-task') return APPROVED_TASK
+  return APPROVED_RUN
+}
+
+function machineApprovedKey(userKey: string): string | undefined {
+  if (userKey === APPROVED_RUN) return APPROVED_RUN_HKLM
+  if (userKey === APPROVED_RUN32) return APPROVED_RUN32_HKLM
+  if (userKey === APPROVED_FOLDER) return APPROVED_FOLDER_HKLM
+  if (userKey === APPROVED_TASK) return APPROVED_TASK_HKLM
+  return undefined
+}
+
+/** User StartupApproved values override the machine map for the same name. */
+function overlayApproved(
+  base: Map<string, boolean>,
+  override: Map<string, boolean>
+): Map<string, boolean> {
+  const merged = new Map(base)
+  for (const [name, enabled] of override) {
+    const lower = name.toLowerCase()
+    for (const existing of merged.keys()) {
+      if (existing.toLowerCase() === lower) merged.delete(existing)
+    }
+    merged.set(name, enabled)
+  }
+  return merged
+}
 
 async function pathExists(p: string): Promise<boolean> {
   try {
@@ -84,20 +141,29 @@ function parseRegQuery(stdout: string): Array<{ name: string; command: string }>
   return rows
 }
 
-/** Parse StartupApproved REG_BINARY rows → enabled flag (2/0 = on, 3 = off). */
-function parseApprovedBinary(stdout: string): Map<string, boolean> {
+/**
+ * Parse StartupApproved REG_BINARY rows.
+ * `reg query` prints hex either as `03000000...` or as space-separated bytes.
+ * Keep original casing — required to toggle the same registry value.
+ */
+export function parseStartupApprovedOutput(stdout: string): Map<string, boolean> {
   const map = new Map<string, boolean>()
-  for (const line of stdout.split(/\r?\n/)) {
-    const match = line.match(/^\s+(.+?)\s+REG_BINARY\s+([0-9A-Fa-f]{2}(?:\s+[0-9A-Fa-f]{2})*)\s*$/i)
+  const lines = stdout.split(/\r?\n/)
+  for (let i = 0; i < lines.length; i += 1) {
+    let line = lines[i]
+    // reg.exe wraps long binary values onto the next indented hex-only line
+    while (i + 1 < lines.length && /^\s+[0-9A-Fa-f]{2}(?:\s*[0-9A-Fa-f]{2})+\s*$/.test(lines[i + 1])) {
+      i += 1
+      line += lines[i].trim()
+    }
+    const match = line.match(/^\s+(.+?)\s+REG_BINARY\s+([0-9A-Fa-f\s]+)\s*$/i)
     if (!match) continue
     const name = match[1].trim()
     if (!name || name.startsWith('PS')) continue
     const hex = match[2].replace(/\s+/g, '')
-    if (hex.length < 2) continue
+    if (!/^[0-9a-f]+$/i.test(hex) || hex.length < 2 || hex.length % 2 !== 0) continue
     const status = parseInt(hex.slice(0, 2), 16)
-    // Windows Settings: 0x02 enabled, 0x03 disabled; 0x00 treated as enabled
-    // Keep original casing — required to toggle the same registry value.
-    map.set(name, status === 0x02 || status === 0x00)
+    map.set(name, isStartupApprovedEnabled(status))
   }
   return map
 }
@@ -114,7 +180,7 @@ async function queryRegValues(key: string): Promise<Array<{ name: string; comman
 async function queryApprovedMap(key: string): Promise<Map<string, boolean>> {
   try {
     const { stdout } = await runCommand('reg', ['query', key], { timeoutMs: 10_000 })
-    return parseApprovedBinary(stdout)
+    return parseStartupApprovedOutput(stdout)
   } catch {
     return new Map()
   }
@@ -255,9 +321,7 @@ $rows | ConvertTo-Json -Compress
 }
 
 async function setApprovedEnabled(key: string, valueName: string, enabled: boolean): Promise<void> {
-  const statusByte = enabled ? '02' : '03'
-  // 12-byte blob: status DWORD + FILETIME (zeros fine for Settings compatibility)
-  const hex = `${statusByte}0000000000000000000000`
+  const hex = buildStartupApprovedHex(enabled)
   await runCommand(
     'reg',
     ['add', key, '/v', valueName, '/t', 'REG_BINARY', '/d', hex, '/f'],
@@ -281,16 +345,20 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
 
     const [
       approvedRun,
+      approvedRun32,
       approvedFolder,
       approvedTask,
       approvedRunHklm,
+      approvedRun32Hklm,
       approvedFolderHklm,
       approvedTaskHklm
     ] = await Promise.all([
       queryApprovedMap(APPROVED_RUN),
+      queryApprovedMap(APPROVED_RUN32),
       queryApprovedMap(APPROVED_FOLDER),
       queryApprovedMap(APPROVED_TASK),
       queryApprovedMap(APPROVED_RUN_HKLM),
+      queryApprovedMap(APPROVED_RUN32_HKLM),
       queryApprovedMap(APPROVED_FOLDER_HKLM),
       queryApprovedMap(APPROVED_TASK_HKLM)
     ])
@@ -351,7 +419,7 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
       sourceKind: 'registry-hkcu',
       canToggle: true,
       trackHkcu: true,
-      approved: approvedRun
+      approved: approvedRun32
     })
 
     // Disabled backups (HKCU) — skip names still present in Run
@@ -375,22 +443,21 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
       // Backup key may not exist
     }
 
+    // HKLM Run stays in place. Windows Settings disables it per user via HKCU StartupApproved.
     await addRegistryRun(HKLM_RUN, {
       idPrefix: 'hklm-run',
       source: 'All Users Run (Registry)',
       sourceKind: 'registry-hklm',
-      canToggle: false,
-      approved: approvedRunHklm.size > 0 ? approvedRunHklm : approvedRun,
-      protectedReason: 'Machine-wide registry key (HKLM) is read-only'
+      canToggle: true,
+      approved: overlayApproved(approvedRunHklm, approvedRun)
     })
 
     await addRegistryRun(HKLM_RUN_WOW, {
       idPrefix: 'hklm-run-wow',
       source: 'All Users Run 32-bit (Registry)',
       sourceKind: 'registry-hklm',
-      canToggle: false,
-      approved: approvedRunHklm.size > 0 ? approvedRunHklm : approvedRun,
-      protectedReason: 'Machine-wide registry key (HKLM) is read-only'
+      canToggle: true,
+      approved: overlayApproved(approvedRun32Hklm, approvedRun32)
     })
 
     // Orphan StartupApproved\Run entries (e.g. Discord) still shown in Windows Settings
@@ -478,6 +545,7 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
           if (file.startsWith('.')) continue
           const fullPath = join(commonDir, file)
           const name = file.replace(/\.(lnk|exe|bat|cmd)$/i, '')
+          const protectedReason = isProtectedStartupName(name)
           pushUnique({
             id: encodeId(['common-startup-folder', file]),
             name,
@@ -485,14 +553,14 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
             source: 'Common Startup folder',
             sourceKind: 'startup-folder',
             enabled: approvedEnabled(
-              approvedFolderHklm.size > 0 ? approvedFolderHklm : approvedFolder,
+              overlayApproved(approvedFolderHklm, approvedFolder),
               file,
               true
             ),
-            canToggle: false,
+            canToggle: !protectedReason,
             impact: classifyStartupImpact(name),
             details: fullPath,
-            protectedReason: 'All-users Startup folder requires administrator rights'
+            protectedReason: protectedReason ?? undefined
           })
         }
       } catch (err) {
@@ -570,11 +638,28 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
 
     const [kind, ...rest] = parts
 
-    if (kind === 'hklm-run' || kind === 'hklm-run-wow' || kind === 'common-startup-folder') {
-      return {
-        success: false,
-        error: 'Cannot modify machine-wide startup entries without administrator rights'
-      }
+    if (kind === 'hklm-run' || kind === 'hklm-run-wow') {
+      const valueName = rest.join('::')
+      return this.setPerUserApproved(valueName, enabled, approvedKeyFor(kind), {
+        idPrefix: kind,
+        name: valueName,
+        source:
+          kind === 'hklm-run-wow'
+            ? 'All Users Run 32-bit (Registry)'
+            : 'All Users Run (Registry)',
+        sourceKind: 'registry-hklm'
+      })
+    }
+
+    if (kind === 'common-startup-folder') {
+      const fileName = rest.join('::')
+      return this.setPerUserApproved(fileName, enabled, APPROVED_FOLDER, {
+        idPrefix: 'common-startup-folder',
+        name: basename(fileName).replace(/\.(lnk|exe|bat|cmd)$/i, ''),
+        source: 'Common Startup folder',
+        sourceKind: 'startup-folder',
+        location: join(commonStartupDir(), fileName)
+      })
     }
 
     if (kind === 'hkcu-run' || kind === 'hkcu-run-wow') {
@@ -600,6 +685,60 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
     return { success: false, error: 'Unsupported startup entry type' }
   }
 
+  /**
+   * Disable or enable a machine-wide startup item for the current user only.
+   * Writes HKCU StartupApproved, which is what Windows Settings does. The HKLM
+   * value is left untouched so no administrator prompt is required.
+   */
+  private async setPerUserApproved(
+    valueName: string,
+    enabled: boolean,
+    approvedKey: string,
+    entry: {
+      idPrefix: string
+      name: string
+      source: string
+      sourceKind: StartupAppEntry['sourceKind']
+      location?: string
+    }
+  ): Promise<StartupMutationResult> {
+    const protectedReason = isProtectedStartupName(valueName) ?? isProtectedStartupName(entry.name)
+    if (protectedReason) {
+      return { success: false, error: protectedReason }
+    }
+
+    try {
+      const userMap = await queryApprovedMap(approvedKey)
+      const machineKey = machineApprovedKey(approvedKey)
+      const machineMap = machineKey ? await queryApprovedMap(machineKey) : new Map<string, boolean>()
+      const approvedName =
+        approvedOriginalName(userMap, valueName) ??
+        approvedOriginalName(machineMap, valueName) ??
+        valueName
+      await setApprovedEnabled(approvedKey, approvedName, enabled)
+      log.info('Toggled startup item for current user', approvedKey, approvedName, enabled)
+      return {
+        success: true,
+        entry: {
+          id: encodeId([entry.idPrefix, valueName]),
+          name: entry.name,
+          location: entry.location ?? '',
+          source: entry.source,
+          sourceKind: entry.sourceKind,
+          enabled,
+          canToggle: true,
+          impact: classifyStartupImpact(entry.name)
+        }
+      }
+    } catch (err) {
+      log.error('Per-user startup toggle failed', valueName, err)
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Failed to update startup approval'
+      }
+    }
+  }
+
   private async setRegistryEnabled(
     valueName: string,
     enabled: boolean,
@@ -612,14 +751,15 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
     }
 
     try {
+      const approvedKey = approvedKeyFor(idPrefix)
       // Prefer StartupApproved toggle when the Run value still exists (matches Windows Settings)
       const rows = await queryRegValues(runKey)
       const active = rows.find((r) => r.name.toLowerCase() === valueName.toLowerCase())
 
       if (active) {
         const approvedName =
-          approvedOriginalName(await queryApprovedMap(APPROVED_RUN), valueName) ?? valueName
-        await setApprovedEnabled(APPROVED_RUN, approvedName, enabled)
+          approvedOriginalName(await queryApprovedMap(approvedKey), valueName) ?? valueName
+        await setApprovedEnabled(approvedKey, approvedName, enabled)
         // Keep backup key clean if re-enabling via Approved
         if (enabled) {
           try {
@@ -650,10 +790,10 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
       }
 
       // Approved-only orphan (e.g. Discord still listed in Settings after Run value removed)
-      const approvedMap = await queryApprovedMap(APPROVED_RUN)
+      const approvedMap = await queryApprovedMap(approvedKey)
       const approvedName = approvedOriginalName(approvedMap, valueName)
       if (approvedName) {
-        await setApprovedEnabled(APPROVED_RUN, approvedName, enabled)
+        await setApprovedEnabled(approvedKey, approvedName, enabled)
         log.info('Toggled orphan StartupApproved Run entry', approvedName, enabled)
         return {
           success: true,
@@ -680,7 +820,7 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
         const row = parsed.find((r) => r.name === valueName) ?? parsed[0]
         if (!row?.command) {
           // Maybe already removed — try Approved only
-          await setApprovedEnabled(APPROVED_RUN, valueName, false)
+          await setApprovedEnabled(approvedKey, valueName, false)
           return {
             success: true,
             entry: {
@@ -704,7 +844,7 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
         await runCommand('reg', ['delete', runKey, '/v', valueName, '/f'], {
           timeoutMs: 10_000
         })
-        await setApprovedEnabled(APPROVED_RUN, valueName, false)
+        await setApprovedEnabled(approvedKey, valueName, false)
 
         log.info('Disabled HKCU Run entry', valueName)
         return {
@@ -739,7 +879,7 @@ export class WindowsStartupAdapter implements PlatformStartupAdapter {
       await runCommand('reg', ['delete', BACKUP_REG_KEY, '/v', valueName, '/f'], {
         timeoutMs: 10_000
       })
-      await setApprovedEnabled(APPROVED_RUN, valueName, true)
+      await setApprovedEnabled(approvedKey, valueName, true)
 
       log.info('Enabled HKCU Run entry', valueName)
       return {

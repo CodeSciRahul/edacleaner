@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   getSelfProcessIds,
   isProtectedProcess,
@@ -33,6 +33,52 @@ describe('exec-utils process protection', () => {
     expect(isSelfCleanerProcess('Google Chrome', 99999, '/Applications/Google Chrome.app')).toBe(false)
     expect(isSelfCleanerProcess('Slack', 99999, '/Applications/Slack.app')).toBe(false)
     expect(isSelfCleanerProcess('Spotify.exe', 99999, 'C:\\Program Files\\Spotify\\Spotify.exe')).toBe(false)
+  })
+
+  it('does not protect every app when a packaged build cwd is the filesystem root', () => {
+    const cwd = vi.spyOn(process, 'cwd').mockReturnValue('/')
+    try {
+      expect(
+        isSelfCleanerProcess(
+          'Google Chrome',
+          99999,
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+        )
+      ).toBe(false)
+      expect(
+        isProtectedProcess('Slack', 99999, '/Applications/Slack.app/Contents/MacOS/Slack')
+      ).toBe(false)
+      expect(
+        isSelfCleanerProcess(
+          'EDA Cleaner',
+          99999,
+          '/Applications/EDA Cleaner.app/Contents/MacOS/EDA Cleaner'
+        )
+      ).toBe(true)
+      expect(
+        isProtectedProcess(
+          'EDA Cleaner Helper',
+          99999,
+          '/Applications/EDA Cleaner.app/Contents/Frameworks/EDA Cleaner Helper.app/Contents/MacOS/EDA Cleaner Helper'
+        )
+      ).toBe(true)
+    } finally {
+      cwd.mockRestore()
+    }
+  })
+
+  it('does not protect every app when a packaged Windows cwd is a drive root', () => {
+    const cwd = vi.spyOn(process, 'cwd').mockReturnValue('C:\\')
+    try {
+      expect(
+        isProtectedProcess('Spotify', 99999, 'C:\\Users\\me\\AppData\\Roaming\\Spotify\\Spotify.exe')
+      ).toBe(false)
+      expect(
+        isSelfCleanerProcess('EDA Cleaner', 99999, 'C:\\Program Files\\EDA Cleaner\\EDA Cleaner.exe')
+      ).toBe(true)
+    } finally {
+      cwd.mockRestore()
+    }
   })
 
   it('protects dev servers and shells from being terminated', () => {
