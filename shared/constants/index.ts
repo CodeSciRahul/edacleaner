@@ -77,7 +77,8 @@ export const IPC_CHANNELS = {
   STARTUP: {
     LIST: 'startup:list',
     SET_ENABLED: 'startup:set-enabled',
-    GET_DETAILS: 'startup:get-details'
+    GET_DETAILS: 'startup:get-details',
+    OPEN_SYSTEM_SETTINGS: 'startup:open-system-settings'
   },
   CLEANUP: {
     SCAN: 'cleanup:scan',

@@ -320,6 +320,16 @@ $rows | ConvertTo-Json -Compress
   }
 }
 
+function lookupApproved(map: Map<string, boolean>, name: string): boolean | undefined {
+  const exact = map.get(name)
+  if (exact !== undefined) return exact
+  const lower = name.toLowerCase()
+  for (const [key, value] of map) {
+    if (key.toLowerCase() === lower) return value
+  }
+  return undefined
+}
+
 async function setApprovedEnabled(key: string, valueName: string, enabled: boolean): Promise<void> {
   const hex = buildStartupApprovedHex(enabled)
   await runCommand(
@@ -327,6 +337,12 @@ async function setApprovedEnabled(key: string, valueName: string, enabled: boole
     ['add', key, '/v', valueName, '/t', 'REG_BINARY', '/d', hex, '/f'],
     { timeoutMs: 10_000 }
   )
+  const applied = lookupApproved(await queryApprovedMap(key), valueName)
+  if (applied !== enabled) {
+    throw new Error(
+      'Windows did not keep this startup change. Close Settings → Apps → Startup and try again.'
+    )
+  }
 }
 
 export class WindowsStartupAdapter implements PlatformStartupAdapter {

@@ -218,7 +218,9 @@ const startupApi = {
   getDetails: (id: string) =>
     invoke<StartupAppEntry | null>(IPC_CHANNELS.STARTUP.GET_DETAILS, id),
   setEnabled: (options: StartupSetEnabledOptions) =>
-    invoke<StartupMutationResult>(IPC_CHANNELS.STARTUP.SET_ENABLED, options)
+    invoke<StartupMutationResult>(IPC_CHANNELS.STARTUP.SET_ENABLED, options),
+  openSystemSettings: () =>
+    invoke<{ opened: true }>(IPC_CHANNELS.STARTUP.OPEN_SYSTEM_SETTINGS)
 }
 
 const cleanupApi = {

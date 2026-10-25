@@ -46,6 +46,8 @@ interface PerformanceHeroProps {
   onBoost: () => void
   onCancel: () => void
   onOpenStartup: () => void
+  isOpeningStartup?: boolean
+  startupOpenError?: string | null
   boostLocked?: boolean
 }
 
@@ -104,6 +106,8 @@ export function PerformanceHero({
   onBoost,
   onCancel,
   onOpenStartup,
+  isOpeningStartup = false,
+  startupOpenError = null,
   boostLocked = false
 }: PerformanceHeroProps): React.ReactElement {
   const { t } = useTranslation()
@@ -271,9 +275,15 @@ export function PerformanceHero({
                 size="sm"
                 variant="outline"
                 className="h-9 gap-2 rounded-lg border-border/80 bg-background/70 px-3 text-[13px] backdrop-blur-sm"
+                disabled={isOpeningStartup}
+                aria-label={t('startupApps.openSystemAria')}
                 onClick={onOpenStartup}
               >
-                <Power className="h-4 w-4" aria-hidden="true" />
+                {isOpeningStartup ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Power className="h-4 w-4" aria-hidden="true" />
+                )}
                 {t('performance.hero.manageStartup')}
               </Button>
             ) : null}
@@ -281,6 +291,11 @@ export function PerformanceHero({
           <p className="text-xs text-muted-foreground">
             {locked ? t('performance.hero.lockedHint') : t('performance.hero.boostHint')}
           </p>
+          {startupOpenError ? (
+            <p className="text-xs text-destructive" role="alert">
+              {startupOpenError}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex shrink-0 justify-center lg:justify-end">

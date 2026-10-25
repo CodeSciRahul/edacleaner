@@ -81,11 +81,25 @@ HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Start
   it('disables an all-users Run entry for the current user without touching HKLM', async () => {
     const previousLevel = process.env.EDA_LOG_LEVEL
     process.env.EDA_LOG_LEVEL = 'error'
+    let wrote = false
     vi.mocked(runCommand).mockImplementation(async (_file, args) => {
-      if (args[0] === 'query') {
-        return { stdout: '\r\n', stderr: '' }
+      if (args[0] === 'add') {
+        wrote = true
+        return { stdout: 'The operation completed successfully.\r\n', stderr: '' }
       }
-      return { stdout: 'The operation completed successfully.\r\n', stderr: '' }
+      if (
+        args[0] === 'query' &&
+        wrote &&
+        String(args[1]).includes('StartupApproved\\Run') &&
+        !String(args[1]).includes('Run32') &&
+        !String(args[1]).startsWith('HKLM\\')
+      ) {
+        return {
+          stdout: '    Spotify    REG_BINARY    030000001122334455667788\r\n',
+          stderr: ''
+        }
+      }
+      return { stdout: '\r\n', stderr: '' }
     })
 
     const adapter = new WindowsStartupAdapter()

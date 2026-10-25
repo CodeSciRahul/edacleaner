@@ -133,6 +133,7 @@ export interface StartupApi {
   list: (forceRefresh?: boolean) => Promise<StartupListResult>
   getDetails: (id: string) => Promise<StartupAppEntry | null>
   setEnabled: (options: StartupSetEnabledOptions) => Promise<StartupMutationResult>
+  openSystemSettings: () => Promise<{ opened: true }>
 }
 
 export interface CleanupApi {

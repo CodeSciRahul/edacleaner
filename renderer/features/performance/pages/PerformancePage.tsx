@@ -92,6 +92,8 @@ export function PerformancePage(): React.ReactElement {
   const [holdTick, setHoldTick] = useState(0)
   /** One-shot count-up from this value after a successful Boost. */
   const [animateFromScore, setAnimateFromScore] = useState<number | null>(null)
+  const [openingStartup, setOpeningStartup] = useState(false)
+  const [startupOpenError, setStartupOpenError] = useState<string | null>(null)
 
   const memory = snapshot?.memory ?? analysis?.memory
   const topProcesses = snapshot?.topProcesses ?? []
@@ -295,6 +297,20 @@ export function PerformancePage(): React.ReactElement {
     }
   }
 
+  const handleOpenSystemStartup = async (): Promise<void> => {
+    setStartupOpenError(null)
+    setOpeningStartup(true)
+    try {
+      await electronService.startup().openSystemSettings()
+    } catch (err) {
+      setStartupOpenError(
+        err instanceof Error ? err.message : t('startupApps.openSystemFailed')
+      )
+    } finally {
+      setOpeningStartup(false)
+    }
+  }
+
   return (
     <>
       <div className="space-y-6 p-content-pad">
@@ -315,7 +331,9 @@ export function PerformancePage(): React.ReactElement {
           boostLocked={!boostAccess.allowed}
           onBoost={() => void handleBoost()}
           onCancel={() => cancelBoost.mutate()}
-          onOpenStartup={() => navigate('/startup-apps')}
+          onOpenStartup={() => void handleOpenSystemStartup()}
+          isOpeningStartup={openingStartup}
+          startupOpenError={startupOpenError}
         />
 
         {!boostAccess.allowed ? (

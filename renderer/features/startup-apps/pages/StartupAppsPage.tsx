@@ -21,6 +21,7 @@ import { ToggleSwitch } from '@/features/apps/components/ToggleSwitch'
 import { StartupAppsHero } from '@/features/startup-apps/components/StartupAppsHero'
 import { useTranslation } from '@/i18n/useTranslation'
 import type { TranslationKey } from '@/i18n/locales/en'
+import { electronService } from '@/services/electron-service'
 import { useFeatureAccess } from '@/features/entitlements/hooks/useFeatureAccess'
 import { FeatureLockedCallout } from '@/features/entitlements/components/FeatureLockedCallout'
 import { FeatureTeaserBlock } from '@/features/entitlements/components/FeatureTeaserBlock'
@@ -70,6 +71,7 @@ export function StartupAppsPage(): React.ReactElement {
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
+  const [openingSystem, setOpeningSystem] = useState(false)
 
   const entries = data?.entries ?? []
   const enabledCount = entries.filter((e) => e.enabled).length
@@ -135,6 +137,21 @@ export function StartupAppsPage(): React.ReactElement {
     }
   }
 
+  const handleOpenSystem = async (): Promise<void> => {
+    setNotice(null)
+    setOpeningSystem(true)
+    try {
+      await electronService.startup().openSystemSettings()
+    } catch (err) {
+      setNotice({
+        type: 'error',
+        text: err instanceof Error ? err.message : t('startupApps.openSystemFailed')
+      })
+    } finally {
+      setOpeningSystem(false)
+    }
+  }
+
   return (
     <div className="space-y-4 p-content-pad">
       <StartupAppsHero
@@ -148,6 +165,8 @@ export function StartupAppsPage(): React.ReactElement {
           setNotice(null)
           void refresh.mutateAsync()
         }}
+        onOpenSystem={() => void handleOpenSystem()}
+        isOpeningSystem={openingSystem}
       />
 
       <FeatureLockedCallout feature="startup_apps" compact />
@@ -369,6 +388,7 @@ export function StartupAppsPage(): React.ReactElement {
                           {!entry.canToggle ? (
                             <Badge
                               variant="outline"
+                              title={entry.protectedReason}
                               className="h-5 border-border/70 px-1.5 text-[10px] font-medium text-muted-foreground"
                             >
                               {t('startupApps.viewOnly')}

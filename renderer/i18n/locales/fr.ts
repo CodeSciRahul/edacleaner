@@ -1158,6 +1158,9 @@ export const fr: Record<TranslationKey, string> = {
   'startupApps.sortSource': 'Source',
   'startupApps.enable': 'Activer',
   'startupApps.disable': 'Désactiver',
+  'startupApps.openSystem': 'Gérer le démarrage',
+  'startupApps.openSystemAria': 'Ouvrir les paramètres de démarrage du système',
+  'startupApps.openSystemFailed': 'Impossible d’ouvrir les paramètres de démarrage du système.',
   'startupApps.viewOnly': 'Lecture seule',
   'startupApps.empty': 'Aucune app au démarrage ne correspond à vos filtres.',
   'startupApps.emptyHint':

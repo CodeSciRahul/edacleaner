@@ -1153,6 +1153,9 @@ export const de: Record<TranslationKey, string> = {
   'startupApps.sortSource': 'Quelle',
   'startupApps.enable': 'Aktivieren',
   'startupApps.disable': 'Deaktivieren',
+  'startupApps.openSystem': 'Autostart verwalten',
+  'startupApps.openSystemAria': 'System-Autostart-Einstellungen öffnen',
+  'startupApps.openSystemFailed': 'System-Autostart-Einstellungen konnten nicht geöffnet werden.',
   'startupApps.viewOnly': 'Nur Anzeige',
   'startupApps.empty': 'Keine Autostart-Apps entsprechen Ihren Filtern.',
   'startupApps.emptyHint':

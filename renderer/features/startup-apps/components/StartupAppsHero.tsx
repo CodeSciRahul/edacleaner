@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Loader2, Power, RefreshCw, Zap } from 'lucide-react'
+import { Loader2, Power, RefreshCw, Settings, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { useTranslation } from '@/i18n/useTranslation'
@@ -16,6 +16,8 @@ interface StartupAppsHeroProps {
   enabledCount: number
   manageableCount: number
   onRefresh: () => void
+  onOpenSystem: () => void
+  isOpeningSystem: boolean
 }
 
 export function StartupAppsHero({
@@ -25,7 +27,9 @@ export function StartupAppsHero({
   totalCount,
   enabledCount,
   manageableCount,
-  onRefresh
+  onRefresh,
+  onOpenSystem,
+  isOpeningSystem
 }: StartupAppsHeroProps): React.ReactElement {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -133,6 +137,20 @@ export function StartupAppsHero({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <Button
+              size="sm"
+              className="h-9 gap-2 rounded-lg px-3 text-[13px]"
+              disabled={isOpeningSystem}
+              aria-label={t('startupApps.openSystemAria')}
+              onClick={onOpenSystem}
+            >
+              {isOpeningSystem ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Settings className="h-4 w-4" aria-hidden="true" />
+              )}
+              {t('startupApps.openSystem')}
+            </Button>
             <Button
               size="sm"
               variant="outline"

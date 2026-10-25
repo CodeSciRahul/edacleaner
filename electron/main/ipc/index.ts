@@ -30,6 +30,7 @@ import {
   entitlementService
 } from '@main/services'
 import { toPublicQueueItem } from '@main/services/offline/security/sanitize-headers'
+import { openSystemStartupSettings } from '@main/services/startup/open-system-startup'
 import { windowManager } from '@main/managers'
 import type { ApiHttpMethod, ApiRequestConfig } from '@shared/interfaces'
 import type {
@@ -460,6 +461,14 @@ export function registerStartupIpc(): void {
       return success(await startupService.getDetails(id))
     } catch (err) {
       return failure(err instanceof Error ? err.message : 'Failed to get startup details')
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.STARTUP.OPEN_SYSTEM_SETTINGS, async () => {
+    try {
+      return success(await openSystemStartupSettings())
+    } catch (err) {
+      return failure(err instanceof Error ? err.message : 'Failed to open startup settings')
     }
   })
 

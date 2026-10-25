@@ -1,6 +1,6 @@
 import { homedir } from 'os'
-import { basename, join } from 'path'
-import { access, rename, readdir, readFile } from 'fs/promises'
+import { basename, dirname, join } from 'path'
+import { access, mkdir, rename, readdir, readFile, writeFile } from 'fs/promises'
 import type { StartupAppEntry, StartupMutationResult } from '@shared/interfaces'
 import type { PlatformStartupAdapter } from './platform-adapter'
 import {
@@ -10,9 +10,81 @@ import {
   isProtectedStartupName
 } from './startup-safety'
 import { runCommand } from '@main/services/boost/platforms/exec-utils'
+import { openSystemStartupSettings } from '@main/services/startup/open-system-startup'
 import { createLogger } from '@main/utils/logger'
 
 const log = createLogger('startup:mac')
+
+/** Shown for SMAppService / Background Items. macOS does not let another app flip that switch. */
+const BTM_LOCKED_REASON =
+  'macOS keeps this switch in System Settings → General → Login Items. EDA Cleaner cannot change that switch.'
+
+const LIST_LOGIN_ITEMS_SCRIPT = `
+tell application "System Events"
+  set output to ""
+  repeat with i in login items
+    set itemName to name of i
+    set itemPath to ""
+    try
+      set itemPath to POSIX path of (path of i as alias)
+    end try
+    if itemPath is "" then
+      try
+        set itemPath to path of i as text
+      end try
+    end if
+    set itemHidden to "false"
+    try
+      if hidden of i then set itemHidden to "true"
+    end try
+    set output to output & itemName & tab & itemPath & tab & itemHidden & linefeed
+  end repeat
+  return output
+end tell
+`.trim()
+
+const DELETE_LOGIN_ITEM_SCRIPT = `
+on run argv
+  set itemName to item 1 of argv
+  tell application "System Events"
+    delete login item itemName
+  end tell
+end run
+`.trim()
+
+const ADD_LOGIN_ITEM_SCRIPT = `
+on run argv
+  set itemPath to item 1 of argv
+  set itemHidden to false
+  if (count of argv) > 1 then
+    if item 2 of argv is "true" then set itemHidden to true
+  end if
+  tell application "System Events"
+    make login item at end with properties {path:itemPath, hidden:itemHidden}
+  end tell
+end run
+`.trim()
+
+interface SavedLoginItem {
+  name: string
+  path: string
+  hidden: boolean
+}
+
+/** Rows from System Events: `name<tab>path<tab>true|false`. */
+export function parseLoginItemsOutput(
+  stdout: string
+): Array<{ name: string; path: string; hidden: boolean }> {
+  const items: Array<{ name: string; path: string; hidden: boolean }> = []
+  for (const line of stdout.split(/\r?\n/)) {
+    const trimmed = line.trim()
+    if (!trimmed.includes('\t')) continue
+    const [name, path, hidden] = trimmed.split('\t')
+    if (!name || !path) continue
+    items.push({ name, path, hidden: hidden === 'true' })
+  }
+  return items
+}
 
 async function pathExists(p: string): Promise<boolean> {
   try {
@@ -81,9 +153,158 @@ async function indexInstalledApplications(): Promise<Map<string, InstalledAppInf
   return map
 }
 
+async function disabledLoginItemsPath(): Promise<string> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { app } = require('electron') as typeof import('electron')
+    if (app && typeof app.getPath === 'function') {
+      const dir = app.getPath('userData')
+      await mkdir(dir, { recursive: true })
+      return join(dir, 'disabled-login-items.json')
+    }
+  } catch {
+    // electron unavailable
+  }
+  const dir = join(homedir(), '.edacleaner')
+  await mkdir(dir, { recursive: true })
+  return join(dir, 'disabled-login-items.json')
+}
+
+async function readDisabledLoginItems(): Promise<SavedLoginItem[]> {
+  try {
+    const path = await disabledLoginItemsPath()
+    if (!(await pathExists(path))) return []
+    const raw = JSON.parse(await readFile(path, 'utf8')) as SavedLoginItem[]
+    if (!Array.isArray(raw)) return []
+    return raw.filter(
+      (item) => item && typeof item.name === 'string' && typeof item.path === 'string'
+    )
+  } catch {
+    return []
+  }
+}
+
+async function writeDisabledLoginItems(items: SavedLoginItem[]): Promise<void> {
+  const path = await disabledLoginItemsPath()
+  await mkdir(dirname(path), { recursive: true })
+  await writeFile(path, JSON.stringify(items, null, 2), 'utf8')
+}
+
+async function openLoginItemsSettings(): Promise<void> {
+  try {
+    await openSystemStartupSettings()
+  } catch (err) {
+    log.warn('Could not open Login Items settings', err)
+  }
+}
+
+function loginItemEntry(
+  item: { name: string; path: string; hidden: boolean },
+  enabled: boolean
+): StartupAppEntry {
+  const protectedReason = isProtectedStartupName(item.name)
+  return {
+    id: encodeId(['login-item', item.name, item.path, item.hidden ? '1' : '0']),
+    name: item.name,
+    location: item.path,
+    source: 'Open at Login',
+    sourceKind: 'other',
+    enabled,
+    canToggle: !protectedReason,
+    impact: classifyStartupImpact(item.name),
+    details: enabled
+      ? 'Shown in System Settings → General → Login Items'
+      : 'Removed from System Settings → General → Login Items. Turn this on to add it back.',
+    protectedReason: protectedReason ?? undefined
+  }
+}
+
+/**
+ * Login items System Settings shows under Open at Login.
+ * Adding and removing them here updates that page.
+ */
+async function listLoginItems(): Promise<StartupAppEntry[]> {
+  if (process.env.VITEST === 'true') return []
+
+  let live: Array<{ name: string; path: string; hidden: boolean }> = []
+  try {
+    const { stdout } = await runCommand('osascript', ['-e', LIST_LOGIN_ITEMS_SCRIPT], {
+      timeoutMs: 8000
+    })
+    live = parseLoginItemsOutput(stdout)
+  } catch (err) {
+    log.warn('Login items list failed', err instanceof Error ? err.message : err)
+  }
+
+  const liveNames = new Set(live.map((item) => item.name.toLowerCase()))
+  const saved = await readDisabledLoginItems()
+  const stillDisabled = saved.filter((item) => !liveNames.has(item.name.toLowerCase()))
+  if (stillDisabled.length !== saved.length) {
+    try {
+      await writeDisabledLoginItems(stillDisabled)
+    } catch (err) {
+      log.warn('Could not update disabled login items', err)
+    }
+  }
+
+  return [
+    ...live.map((item) => loginItemEntry(item, true)),
+    ...stillDisabled.map((item) => loginItemEntry(item, false))
+  ]
+}
+
+async function setLoginItemEnabled(
+  name: string,
+  itemPath: string,
+  hidden: boolean,
+  enabled: boolean,
+  id: string
+): Promise<StartupMutationResult> {
+  const protectedReason = isProtectedStartupName(name)
+  if (protectedReason) return { success: false, error: protectedReason }
+  if (!itemPath) return { success: false, error: 'Login item path is missing' }
+
+  try {
+    if (!enabled) {
+      await runCommand('osascript', ['-e', DELETE_LOGIN_ITEM_SCRIPT, name], { timeoutMs: 8000 })
+      const saved = await readDisabledLoginItems()
+      const next = saved.filter((item) => item.name.toLowerCase() !== name.toLowerCase())
+      next.push({ name, path: itemPath, hidden })
+      await writeDisabledLoginItems(next)
+    } else {
+      await runCommand(
+        'osascript',
+        ['-e', ADD_LOGIN_ITEM_SCRIPT, itemPath, hidden ? 'true' : 'false'],
+        { timeoutMs: 8000 }
+      )
+      const saved = await readDisabledLoginItems()
+      await writeDisabledLoginItems(
+        saved.filter((item) => item.name.toLowerCase() !== name.toLowerCase())
+      )
+    }
+
+    log.info('Updated login item', name, enabled)
+    return {
+      success: true,
+      entry: { ...loginItemEntry({ name, path: itemPath, hidden }, enabled), id }
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to update login item'
+    const denied = /1743|not authorized|not permitted|automation/i.test(message)
+    log.error('Login item toggle failed', err)
+    return {
+      success: false,
+      error: denied
+        ? 'macOS blocked EDA Cleaner from changing login items. Allow EDA Cleaner under System Settings → Privacy & Security → Automation → System Events, then try again.'
+        : message
+    }
+  }
+}
+
 /**
  * Lists modern macOS Background Task Management / SMAppService items without
  * using `sfltool dumpbtm` (which requires admin privileges and prompts the user).
+ * These switches live in System Settings and cannot be changed by another app.
  */
 async function listModernServices(
   installedApps: Map<string, InstalledAppInfo>
@@ -142,10 +363,11 @@ async function listModernServices(
         source: 'Background Items',
         sourceKind: 'launch-agent',
         enabled: isEnabled,
-        canToggle: !protectedReason,
+        canToggle: false,
         impact: classifyStartupImpact(displayName),
-        details: serviceName !== displayName ? `Service: ${serviceName}` : undefined,
-        protectedReason: protectedReason ?? undefined
+        details:
+          'Controlled in System Settings → General → Login Items. That switch is the one macOS uses.',
+        protectedReason: protectedReason ?? BTM_LOCKED_REASON
       })
     }
   } catch (err) {
@@ -157,9 +379,10 @@ async function listModernServices(
 
 /**
  * Lists macOS startup items from:
- * 1. Modern Background Task Management / SMAppService (Microsoft Teams, Docker, etc.)
- * 2. User LaunchAgents (~/Library/LaunchAgents)
- * 3. System LaunchAgents (/Library/LaunchAgents)
+ * 1. Open at Login items (System Settings reflects these)
+ * 2. Background items (System Settings only — view only here)
+ * 3. User LaunchAgents (~/Library/LaunchAgents)
+ * 4. System LaunchAgents (/Library/LaunchAgents)
  */
 export class MacosStartupAdapter implements PlatformStartupAdapter {
   readonly platformId = 'darwin' as const
@@ -171,7 +394,14 @@ export class MacosStartupAdapter implements PlatformStartupAdapter {
     // Index installed applications for friendly name resolution
     const installedApps = await indexInstalledApplications()
 
-    // 1. Modern background services (Teams, Docker, etc.)
+    // 1. Open at Login — the list System Settings actually toggles
+    const loginItems = await listLoginItems()
+    for (const item of loginItems) {
+      entries.push(item)
+      seenNames.add(item.name.toLowerCase())
+    }
+
+    // 2. Modern background services (Teams, Docker, etc.)
     const modernItems = await listModernServices(installedApps)
     for (const item of modernItems) {
       entries.push(item)
@@ -264,50 +494,21 @@ export class MacosStartupAdapter implements PlatformStartupAdapter {
 
     const kind = parts[0]
 
-    // Handle modern BTM services (launchctl enable/disable)
+    if (kind === 'login-item') {
+      const name = parts[1] ?? ''
+      const itemPath = parts[2] ?? ''
+      const hidden = parts[3] === '1'
+      return setLoginItemEnabled(name, itemPath, hidden, enabled, id)
+    }
+
+    // Background Items in System Settings are not writable by another app.
+    // launchctl enable/disable changes a different database, so the Settings switch stays put.
     if (kind === 'btm-service') {
-      const serviceName = parts[1]
-      const displayName = parts[2] || serviceName
-      const appPath = parts[3] || displayName
-
-      const protectedReason =
-        isProtectedStartupName(displayName) ?? isProtectedStartupName(serviceName)
-      if (protectedReason) {
-        return { success: false, error: protectedReason }
-      }
-
-      const uid = typeof process.getuid === 'function' ? process.getuid() : 501
-      const action = enabled ? 'enable' : 'disable'
-
-      try {
-        await runCommand('launchctl', [action, `gui/${uid}/${serviceName}`])
-        if (!enabled) {
-          try {
-            await runCommand('launchctl', ['bootout', `gui/${uid}/${serviceName}`])
-          } catch {
-            // bootout is best effort
-          }
-        }
-        log.info(`Updated BTM service ${serviceName} to ${action}`)
-        return {
-          success: true,
-          entry: {
-            id,
-            name: displayName,
-            location: appPath,
-            source: 'Background Items',
-            sourceKind: 'launch-agent',
-            enabled,
-            canToggle: true,
-            impact: classifyStartupImpact(displayName)
-          }
-        }
-      } catch (err) {
-        log.error('Failed to toggle BTM service', err)
-        return {
-          success: false,
-          error: err instanceof Error ? err.message : 'Failed to update background service'
-        }
+      await openLoginItemsSettings()
+      return {
+        success: false,
+        error:
+          'macOS does not let EDA Cleaner change this. System Settings → General → Login Items is open — use the switch there.'
       }
     }
 
